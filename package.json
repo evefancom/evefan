@@ -1,0 +1,14 @@
+{
+  "name": "evefan",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy index.js",
+    "dev": "wrangler dev index.js",
+    "test": "vitest",
+    "build": "cp index.js dist/index.js"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
