@@ -1,13 +1,13 @@
 import fs from "fs";
 
-let configData;
+let config;
 try {
-  configData = JSON.parse(fs.readFileSync("config.json", "utf8"));
+  config = JSON.parse(fs.readFileSync("config.json", "utf8"));
 } catch (error) {
   throw new Error("Failed to read or parse config.json");
 }
 
-if (!configData.deploy || !configData.deploy.scriptName) {
+if (!config.deploy || !config.deploy.scriptName) {
   throw new Error("deploy.scriptName is not defined in config.json");
 }
 
@@ -19,7 +19,7 @@ if (fs.existsSync("wrangler.toml")) {
   // Merge existing content with new config
   const updatedConfig = existingConfig.replace(
     /^name\s*=.*$/m,
-    `name = "${configData.deploy.scriptName}"`
+    `name = "${config.deploy.scriptName}"`
   );
 
   // Write updated content back to file
