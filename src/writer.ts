@@ -4,26 +4,6 @@ import { DestinationEvent } from "./event";
 import { DestinationType } from "@evefan/evefan-config";
 import { Bindings } from "./env";
 
-async function trySendBatch(
-  queue: Queue,
-  batch: any[],
-  options: QueueSendBatchOptions,
-  maxRetries = 3
-): Promise<void> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      await queue.sendBatch(batch, options);
-      return;
-    } catch (error) {
-      if (attempt === maxRetries - 1) {
-        throw error;
-      }
-      const delayMs = Math.pow(2, attempt) * 100;
-      await delay(delayMs);
-    }
-  }
-}
-
 export async function handleEventFanout(
   config: WorkerConfig,
   env: Bindings,
@@ -53,7 +33,7 @@ export async function handleEventFanout(
           const batchSize = config.queue.batchSize || 1;
           for (let i = 0; i < events.length; i += batchSize) {
             const batch = eventsToSend.slice(i, i + batchSize);
-            await trySendBatch(queue, batch, { delaySeconds: 1 });
+            await queue.sendBatch(batch, { delaySeconds: 1 });
           }
         } catch (e) {
           console.error("Error in processing failedFanouts:", e);
