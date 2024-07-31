@@ -1,14 +1,35 @@
 {
   "name": "evefan",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "deploy": "wrangler deploy index.js",
-    "dev": "wrangler dev index.js",
-    "test": "vitest",
-    "build": "node build.mjs && cp index.js dist/index.js"
-  },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@evefan/evefan-config": "^0.1.8",
+    "@types/node": "20.8.3",
+    "@types/ua-parser-js": "^0.7.39",
+    "@types/uuid": "^10.0.0",
+    "chokidar-cli": "^3.0.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.22.0",
+    "esbuild-plugin-inline-import": "^1.0.4",
+    "typescript": "^5.5.3",
+    "wrangler": "^3.63.0"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20240718.0",
+    "@sagi.io/workers-jwt": "^0.0.26",
+    "hono": "^4.4.11",
+    "postgres": "^3.4.4",
+    "slugify": "^1.6.6",
+    "ua-parser-js": "^1.0.38",
+    "uuid": "^10.0.0"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "predeploy": "NODE_ENV=production npm run build",
+    "deploy": "wrangler deploy --no-bundle",
+    "typecheck": "tsc --noEmit",
+    "predev": "NODE_ENV=dev npm run build",
+    "dev": "concurrently --kill-others --names \"watcher,server\" \"chokidar 'src/**/*' 'config.json' 'build.mjs' --ignore 'src/connectors/index.ts' --silent -c 'npm run build'\" \"wrangler dev\""
   }
 }

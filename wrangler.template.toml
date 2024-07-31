@@ -1,0 +1,20 @@
+name = "analytics-base-worker"
+main = "dist/index.js"
+compatibility_date = "2024-07-01"
+
+[durable_objects]
+bindings = [
+  { name = "BATCHER", class_name = "Batcher" },
+  { name = "HEALTH", class_name = "HealthChecker" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["Batcher"]
+
+[[migrations]]
+tag = "v2"
+new_classes = ["HealthChecker"]
+
+[placement]
+mode = "smart"
