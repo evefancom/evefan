@@ -76,6 +76,59 @@ app.post("/v1/a", workerMiddleware, async (c) => {
 
 // Segment API
 
+app.get("/v1/projects/:writeKey/settings", workerMiddleware, (c) => {
+  const { writeKey } = c.req.param()
+  const config = c.get("config");
+
+  const project = config.sources.find((s) => s.writeKey === writeKey);
+
+  if (!project) {
+    return c.json({ error: "Invalid path or write key provided" }, { status: 404 });
+  }
+
+  return c.json({
+    analyticsNextEnabled: true,
+    edgeFunction: {},
+    enabledMiddleware: {},
+    integrations: {
+      'Segment.io': {
+        addBundledMetadata: true,
+        apiKey: writeKey,
+        maybeBundledConfigIds: {},
+        unbundledIntegrations: [],
+        versionSettings: {
+          componentTypes: ['browser'],
+          version: '4.4.7',
+        },
+      },
+    },
+    legacyVideoPluginsEnabled: false,
+    metrics: {
+      sampleRate: 0.1,
+    },
+    middlewareSettings: {},
+    plan: {
+      group: {
+        __default: {
+          enabled: true,
+        },
+      },
+      identify: {
+        __default: {
+          enabled: true,
+        },
+      },
+      track: {
+        __default: {
+          enabled: true,
+          integrations: {},
+        },
+      },
+    },
+    remotePlugins: [],
+  });
+})
+
 app.post("/v1/track", workerMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, "track");
 });
@@ -130,10 +183,17 @@ async function handleAnalyticsJsMethod(
   c: Context<WorkerEnv>,
   type?: EventType
 ) {
+  const config = c.get("config");
   let events: DestinationEvent[] = [];
 
   try {
     const body = await c.req.json();
+    const writeKey = body.writeKey;
+
+    if (!writeKey || !config.sources.some((s) => s.writeKey === writeKey)) {
+      return c.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     events = body.batch
       ? body.batch.map((b: any) =>
           formatEvent(
