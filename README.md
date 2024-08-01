@@ -96,4 +96,4 @@ To start developing with the Evefan Worker, follow these steps:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Elastic License 2.0 (ELv2) — see the LICENSE file for details.
