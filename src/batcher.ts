@@ -27,14 +27,14 @@ export class Batcher extends DurableObject<BatcherEnv> {
   }
 
   private async flush(config: WorkerConfig) {
-    await this.ctx.blockConcurrencyWhile(async () => {
-      if (this.batchedEvents.length === 0) {
-        return;
-      }
-
-      await handleEventFanout(config, this.env, this.batchedEvents);
+    const eventsToSend = await this.ctx.blockConcurrencyWhile(async () => {
+      const events = [...this.batchedEvents];
       this.batchedEvents = [];
+
+      return events
     });
+
+    await handleEventFanout(config, this.env, eventsToSend);
   }
 
   async fetch(request: Request) {
@@ -56,12 +56,8 @@ export class Batcher extends DurableObject<BatcherEnv> {
     }
   }
 
-  async prepend(events: DestinationEvent[]) {
-    this.batchedEvents.unshift(...events);
-  }
-
   async alarm() {
     const config = await getConfig();
-    await this.flush(config);
+    this.ctx.waitUntil(this.flush(config));
   }
 }

@@ -58,6 +58,10 @@ app.post("/v1/p", workerMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, "page");
 });
 
+app.post("/v1/s", workerMiddleware, async (c) => {
+  return handleAnalyticsJsMethod(c, "screen");
+});
+
 app.post("/v1/i", workerMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, "identify");
 });
@@ -126,9 +130,6 @@ async function handleAnalyticsJsMethod(
   c: Context<WorkerEnv>,
   type?: EventType
 ) {
-  const batcher = c.get("batcher");
-  const config = c.get("config");
-
   let events: DestinationEvent[] = [];
 
   try {
@@ -152,6 +153,15 @@ async function handleAnalyticsJsMethod(
     console.error("Error parsing request body: ", e);
     return c.json({ error: "Error parsing request body" }, { status: 400 });
   }
+  
+  c.executionCtx.waitUntil(processEvents(c, events));
+
+  return c.json({ success: true });
+}
+
+async function processEvents(c: Context<WorkerEnv>, events: DestinationEvent[]) {
+  const config = c.get("config");
+  const batcher = c.get("batcher");
 
   let eventsToSend: DestinationEvent[] = [];
 
@@ -167,12 +177,9 @@ async function handleAnalyticsJsMethod(
     }
   } catch (e) {
     console.error("Error in processing events: ", e);
-    return c.json({ error: "Error processing events" }, { status: 400 });
   }
 
   if (eventsToSend.length > 0) {
-    c.executionCtx.waitUntil(handleEventFanout(config, c.env, eventsToSend));
+    await handleEventFanout(config, c.env, eventsToSend);
   }
-
-  return c.json({ success: true });
 }

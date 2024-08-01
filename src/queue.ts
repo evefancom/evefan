@@ -4,9 +4,11 @@ import { DestinationEvent } from "./event";
 import { fanOutEventData } from "./writer";
 import { Bindings } from "./env";
 
+type QueueEnv = Bindings;
+
 export async function handleQueueEventConsumer(
   batch: MessageBatch<DestinationEvent>,
-  env: Bindings
+  env: QueueEnv
 ) {
   console.debug(
     `Handling batch of ${batch.messages.length} events from queue ${batch.queue}`

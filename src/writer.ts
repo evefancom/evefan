@@ -24,10 +24,6 @@ export async function handleEventFanout(
             body: e.body,
           }));
 
-          const id = env.HEALTH.idFromName(failedFanouts.destinationType);
-          const health = env.HEALTH.get(id);
-          await health.updateEventsState(failedFanouts.failedEvents);
-
           // Cloudflare queues only accept up to 256KB as a batch
           // TODO: Implement a way to split the events array based on the size
           const batchSize = config.queue.batchSize || 1;
@@ -35,6 +31,10 @@ export async function handleEventFanout(
             const batch = eventsToSend.slice(i, i + batchSize);
             await queue.sendBatch(batch, { delaySeconds: 1 });
           }
+
+          const id = env.HEALTH.idFromName(failedFanouts.destinationType);
+          const health = env.HEALTH.get(id);
+          await health.updateEventsState(failedFanouts.failedEvents);
         } catch (e) {
           console.error("Error in processing failedFanouts:", e);
         }
