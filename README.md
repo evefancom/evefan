@@ -79,7 +79,7 @@ To start developing with the Evefan Worker, follow these steps:
    ```
 
 3. Set up your local `config.json`:
-   Create a `config.json` file in the root directory. Use the schema from `@evefan/evefan-config` for the configuration structure. This file should include your Cloudflare credentials.
+   Create a `config.json` file in the root directory. This file should include your Cloudflare credentials. For more details on Evefan configuration, please check our [wiki page](https://github.com/evefancom/evefan/wiki/Evefan-Configuration-Guide).
 
 4. Run the development server:
 
