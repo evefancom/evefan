@@ -1,10 +1,15 @@
-# Evefan Worker
+# Evefan 
 
-Evefan Worker is a Cloudflare Worker designed to handle event fan-out operations efficiently. It leverages various Cloudflare features to ensure high performance, reliability, and scalability.
+Evefan enables developers to privately capture, transform and deliver customer events at any scale. 
+
+Evefan is open source and self-hosted on Cloudflare workers. It can be configured either via Evefan Console or using Wrangler. The quick start guide focuses on console configuring as recommended for most people, but you can see alternative configuration options here. 
+
+## Getting Started
+You can review our official docs for our quick start steps: https://docs.evefan.com
 
 ## High-Level Architecture
 
-The Evefan Worker consists of several key components:
+Evefan consists of several key components:
 
 1. Worker Router
 2. Durable Objects for Batching and Error Tracking
@@ -53,7 +58,7 @@ The queue handler is implemented in the `handleQueueEventConsumer` function in `
 
 ## Supported Destinations
 
-Evefan Worker supports the following destinations for event fan-out:
+Evefan currently supports the following destinations for event fan-out:
 
 1. BigQuery: Google's fully managed, serverless data warehouse
 2. Postgres: Open-source relational database management system
