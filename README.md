@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img id="theme-icon" width="300" src="/console/public/img/brand/evefan-light.png" alt="evefan">
+  <img id="theme-icon" width="300" src="https://console.evefan.com/img/brand/evefan-light.png" alt="evefan">
 </h1>
 <p align="center">
   <p align="center"><b> Evefan — Self-Hosted Segment Alternative</b></p>
@@ -32,7 +32,7 @@ Evefan enables developers to privately capture, transform and deliver customer e
 Evefan is open source and self-hosted on Cloudflare workers. It can be configured either via Evefan Console or using Wrangler. The quick start guide focuses on console configuring as recommended for most people, but you can see alternative configuration options here.
 
 <h1 align="center">
-    <img src="/console/public/img/brand/event-fan.png" alt="event-fan">
+    <img src="https://console.evefan.com/img/brand/event-fan.png" alt="event-fan">
 </h1>
 
 ## Getting Started
