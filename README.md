@@ -1,11 +1,48 @@
-# Evefan 
+<h1 align="center">
+  <img id="theme-icon" width="300" src="/console/public/img/brand/evefan-light.png" alt="evefan">
+</h1>
+<p align="center">
+  <p align="center"><b> Evefan — Self-Hosted Segment Alternative</b></p>
+  <p align="center"><b> 99% Costs Savings with Cloudflare Workers 💸</b></p>
+  <p align="center"><b> Private by Default; no devops headaches to maintain.</b></p>
+  <p align="center"><b>Your Own Internet Scale Events Infrastructure</b></p>
+</p>
 
-Evefan enables developers to privately capture, transform and deliver customer events at any scale. 
+<h4 align="center">
+  <a href="https://docs.evefan.com">Docs</a> |
+  <a href="https://evefan.com">Website</a>
+</h4>
 
-Evefan is open source and self-hosted on Cloudflare workers. It can be configured either via Evefan Console or using Wrangler. The quick start guide focuses on console configuring as recommended for most people, but you can see alternative configuration options here. 
+<h4 align="center">
+  <a href="https://github.com/evefancom/evefan/blob/main/LICENSE.md">
+    <img src="https://img.shields.io/badge/license-ELv2-white.svg" alt="Evefan is released under the Elastic License 2.0" />
+  </a>
+  <a href="https://github.com/evefancom/evefan/issues">
+    <img src="https://img.shields.io/github/commit-activity/m/evefancom/evefan" alt="git commit activity" />
+  </a>
+  <a href="https://twitter.com/evefanhq">
+    <img src="https://img.shields.io/twitter/follow/evefanhq?label=Follow" alt="Evefan Twitter" />
+  </a>
+</h4>
+
+## Introduction
+
+Evefan enables developers to privately capture, transform and deliver customer events at any scale.
+
+Evefan is open source and self-hosted on Cloudflare workers. It can be configured either via Evefan Console or using Wrangler. The quick start guide focuses on console configuring as recommended for most people, but you can see alternative configuration options here.
+
+<h1 align="center">
+    <img src="/console/public/img/brand/event-fan.png" alt="event-fan">
+</h1>
 
 ## Getting Started
+
+By FAR, the simplest way to configure, deploy, and observe Evefan is via [the Console](https://console.evefan.com). 
+
+
 You can review our official docs for our quick start steps: https://docs.evefan.com
+
+We never get access to your data. However, for the inspired, you can always do that yourself using Wrangler, if you like. 
 
 ## High-Level Architecture
 
@@ -35,7 +72,7 @@ The Batcher Durable Object is used to aggregate events before sending them to de
 - Improving overall throughput
 - Minimizing the risk of rate limiting
 
-The Batcher is implemented in `src/batcher.ts` and exported in `src/index.ts`.
+The Batcher is implemented in `src/batcher.ts`.
 
 #### Error Tracking (HealthChecker)
 
@@ -44,7 +81,7 @@ The HealthChecker Durable Object is responsible for:
 - Tracking errors in processing events for destinations
 - Providing insights into the error rates for each destination
 
-The HealthChecker is implemented in `src/health.ts` and exported in `src/index.ts`.
+The HealthChecker is implemented in `src/health.ts`.
 
 ### 3. Queues for Failure Handling
 
@@ -54,7 +91,7 @@ Queues are used to handle failures when sending events to destinations. The queu
 - Implements a backoff strategy for retries
 - Ensures eventual delivery of events
 
-The queue handler is implemented in the `handleQueueEventConsumer` function in `src/queue.ts` and exported in `src/index.ts`.
+The queue handler is implemented in the `handleQueueEventConsumer` function in `src/queue.ts`.
 
 ## Supported Destinations
 
