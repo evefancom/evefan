@@ -5,7 +5,7 @@ import { DestinationEvent, EventType } from "../../event";
 import { propertyWithPath } from "../../utils";
 import { FanOutResult } from "../../writer";
 import { Field, schema } from "../../schema";
-import { BigqueryDestination } from "@evefan/evefan-config";
+import { BigqueryConfig, BigqueryDestination } from "@evefan/evefan-config";
 
 const DESTINATION_TYPE = "bigquery";
 
@@ -115,13 +115,13 @@ type ITableDataInsertAllResponse = {
  * @param fields - The fields of the table
  */
 async function createTable(
-  config: BigqueryDestination,
+  config: BigqueryConfig,
   name: string,
   fields: Field[]
 ) {
   const aud = "https://bigquery.googleapis.com/";
 
-  const projectName = config.config._secret_credentials.project_id;
+  const projectName = config._secret_credentials.project_id;
   const payload = {
     kind: "bigquery#table",
     tableReference: {
@@ -145,7 +145,7 @@ async function createTable(
     "/tables";
 
   const token = await getTokenFromGCPServiceAccount({
-    serviceAccountJSON: config.config._secret_credentials,
+    serviceAccountJSON: config._secret_credentials,
     aud,
   });
 
@@ -181,7 +181,7 @@ async function createTable(
  * @param events - The events to write. All events must be of the same type
  */
 async function writeEvents(
-  config: BigqueryDestination,
+  config: BigqueryConfig,
   type: EventType,
   events: DestinationEvent[]
 ) {
@@ -201,7 +201,7 @@ async function writeEvents(
     }));
   }
 
-  const projectName = config.config._secret_credentials.project_id;
+  const projectName = config._secret_credentials.project_id;
 
   const url =
     "https://bigquery.googleapis.com/bigquery/v2/projects/" +
@@ -213,7 +213,7 @@ async function writeEvents(
     "/insertAll";
 
   const token = await getTokenFromGCPServiceAccount({
-    serviceAccountJSON: config.config._secret_credentials,
+    serviceAccountJSON: config._secret_credentials,
     aud,
   });
 
@@ -291,11 +291,11 @@ export default class BigqueryConnector implements Connector {
     config: WorkerConfig,
     events: DestinationEvent[]
   ): Promise<FanOutResult> {
-    const destinationConfig = config.destinations.find(
+    const destination = config.destinations.find(
       (d) => d.type === DESTINATION_TYPE
     ) as BigqueryDestination;
 
-    if (!destinationConfig) {
+    if (!destination) {
       console.error(`Destination ${DESTINATION_TYPE} not found in config`);
       return {
         destinationType: DESTINATION_TYPE,
@@ -320,7 +320,7 @@ export default class BigqueryConnector implements Connector {
     const failedEvents = (
       await Promise.all(
         eventTypes.map(async (type) => {
-          return await writeEvents(destinationConfig, type, eventsByType[type]);
+          return await writeEvents(destination.config, type, eventsByType[type]);
         })
       )
     ).flatMap((e) => e);

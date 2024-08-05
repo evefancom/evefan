@@ -1,8 +1,8 @@
-import { Connector, loadConnector } from "./connectors";
-import configJson from "./../config.json";
-import { Config, Destination, DestinationType } from "@evefan/evefan-config";
+import { Connector, loadConnector } from './connectors';
+import configJson from './../config.json';
+import { Config, Destination, DestinationType } from '@evefan/evefan-config';
 
-export type WorkerConfig = Omit<Config, "destinations"> & {
+export type WorkerConfig = Omit<Config, 'destinations'> & {
   destinations: Array<
     Destination<DestinationType, any> & { handler: Connector }
   >;
