@@ -53,6 +53,12 @@ const buildUtmParams = (event: DestinationEvent) => {
   };
 };
 
+/**
+ * Transforms a track event to a mixpanel event
+ * @param config Mixpanel config
+ * @param event Destination track event
+ * @returns Mixpanel event payload
+ */
 const transformTrackEvent = (
   config: MixpanelConfig,
   event: DestinationTrackEvent
@@ -93,6 +99,12 @@ const transformTrackEvent = (
   };
 };
 
+/**
+ * Transforms an identify event to a mixpanel identity update payload
+ * @param config Mixpanel config
+ * @param event Destination identify event
+ * @returns Mixpanel identity update payload
+ */
 const transformIdentifyEvent = (
   config: MixpanelConfig,
   event: DestinationIdentifyEvent
@@ -110,6 +122,12 @@ const transformIdentifyEvent = (
   return payload;
 };
 
+/**
+ * Transforms a page or screen event to a mixpanel event
+ * @param config Mixpanel config
+ * @param event Destination page or screen event
+ * @returns Mixpanel event payload
+ */
 const transformPageOrScreenEvent = (
   config: MixpanelConfig,
   event: DestinationPageEvent | DestinationScreenEvent
@@ -153,6 +171,13 @@ const transformPageOrScreenEvent = (
   };
 };
 
+/**
+ * Transforms an alias event to a mixpanel alias creation payload.
+ * Only used when identityMerge is set to 'original'
+ * @param config Mixpanel config
+ * @param event Destination alias event
+ * @returns Mixpanel alias creation payload
+ */
 const transformAliasEvent = (
   config: MixpanelConfig,
   event: DestinationAliasEvent
@@ -167,6 +192,12 @@ const transformAliasEvent = (
   };
 };
 
+/**
+ * Transforms destination events to mixpanel requests
+ * @param config Mixpanel config
+ * @param events Destination events
+ * @returns Mixpanel requests
+ */
 const transformEvents = (
   config: MixpanelConfig,
   events: DestinationEvent[]
@@ -212,6 +243,7 @@ const transformEvents = (
         ...transformAliasEvent(config, event),
       });
     } else if (event.type === 'group') {
+      // Engage request for user update
       engageRequests.push({
         id: event.messageId,
         $token: config._secret_credentials.token,
@@ -223,6 +255,8 @@ const transformEvents = (
           $group_id: event.groupId,
         },
       });
+
+      // Group request for group creation
       groupRequests.push({
         id: event.messageId,
         $token: config._secret_credentials.token,
