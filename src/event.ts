@@ -53,26 +53,11 @@ interface EventBase {
   category?: string;
   //screen resolution is missing
   context: {
-    page: {
-      path: string;
-      referrer: string;
-      search: string;
-      title: string;
-      url: string;
-    };
-    userAgentData: {
-      brands: Array<{
-        brand: string;
-        version: string;
-      }>;
-      mobile: boolean;
-      platform: string;
-    };
-    userAgent: string;
-    locale: string;
-    library: {
+    active?: boolean;
+    app?: {
       name: string;
       version: string;
+      build: string;
     };
     campaign?: {
       source: string;
@@ -82,6 +67,56 @@ interface EventBase {
       name: string;
       //extra
       [key: string]: string;
+    };
+    device?: {
+      id: string;
+      advertisingId: string;
+      manufacturer: string;
+      model: string;
+      name: string;
+      type: string;
+      version: string;
+      token?: string;
+    };
+    ip?: string;
+    library: {
+      name: string;
+      version: string;
+    };
+    locale?: string;
+    network?: {
+      ip: string;
+      city: string;
+      country: string;
+      region: string;
+    };
+    page?: {
+      bluetooth?: string;
+      carrier?: string;
+      cellular?: string;
+      wifi?: string;
+    };
+    os?: {
+      name: string;
+      version: string;
+    };
+    screen?: {
+      density: string;
+      height: number;
+      width: number;
+    };
+    timezone?: string;
+    traits?: {
+      [key: string]: string | number | boolean | object | undefined;
+    };
+    userAgent: string;
+    userAgentData: {
+      brands: Array<{
+        brand: string;
+        version: string;
+      }>;
+      mobile: boolean;
+      platform: string;
     };
   };
   messageId: string;
@@ -93,6 +128,7 @@ interface EventBase {
     unbundled: Array<string>;
     bundledIds: Array<string>;
   };
+  originalTimestamp?: string;
 }
 
 export interface PageEvent extends EventBase {
@@ -127,7 +163,6 @@ export interface TrackEvent extends EventBase {
     value?: string;
     [key: string]: string | undefined;
   };
-  originalTimestamp?: string; //actually an ISO date string
 }
 
 export interface IdentifyEvent extends EventBase {
@@ -228,7 +263,6 @@ export interface IdentifyEvent extends EventBase {
      */
     [key: string]: string | number | boolean | undefined | object;
   };
-  originalTimestamp?: string; //actually an ISO date string
 }
 
 export interface GroupEvent extends EventBase {

@@ -54,14 +54,14 @@ const buildUtmParams = (event: DestinationEvent) => {
 };
 
 /**
- * Transforms a track event to a mixpanel event
+ * Transforms a base event to a mixpanel event
  * @param config Mixpanel config
- * @param event Destination track event
+ * @param event Destination event
  * @returns Mixpanel event payload
  */
-const transformTrackEvent = (
+const transformBaseEvent = (
   config: MixpanelConfig,
-  event: DestinationTrackEvent
+  event: DestinationTrackEvent | DestinationPageEvent | DestinationScreenEvent
 ) => {
   const mappedProperties = constructPayload(event, mapping.event);
 
@@ -74,9 +74,8 @@ const transformTrackEvent = (
   const unixTimestamp = toUnixTimestampInMS(
     event.originalTimestamp || event.timestamp
   );
-  let properties = {
+  let properties: Record<string, any> = {
     ...event.properties,
-    ...propertyWithPath(event, 'context.traits'),
     ...mappedProperties,
     token: config._secret_credentials.token,
     distinct_id: event.userId || event.anonymousId,
@@ -92,6 +91,49 @@ const transformTrackEvent = (
       $user_id: event.userId,
     };
   }
+
+  if (event.context.device) {
+    const { type, token } = event.context.device;
+    if (['ios', 'watchos', 'ipados', 'tvos'].includes(type.toLowerCase())) {
+      const payload = constructPayload(event, mapping.profile.ios);
+      properties = {
+        ...properties,
+        ...payload,
+      };
+      if (token) {
+        properties.$ios_devices = [token];
+      }
+    } else if (type.toLowerCase() === 'android') {
+      const payload = constructPayload(event, mapping.profile.android);
+      properties = {
+        ...properties,
+        ...payload,
+      };
+      if (token) {
+        properties.$android_devices = [token];
+      }
+    }
+  }
+
+  if (event.useragent.browser_family) {
+    properties.$browser = event.useragent.browser_family;
+    properties.$browser_version = event.useragent.browser_version;
+  }
+
+  return properties;
+};
+
+/**
+ * Transforms a track event to a mixpanel event
+ * @param config Mixpanel config
+ * @param event Destination track event
+ * @returns Mixpanel event payload
+ */
+const transformTrackEvent = (
+  config: MixpanelConfig,
+  event: DestinationTrackEvent
+) => {
+  let properties = transformBaseEvent(config, event);
 
   return {
     event: event.event,
@@ -115,10 +157,6 @@ const transformIdentifyEvent = (
     payload.$name = `${payload.$first_name} ${payload.$last_name}`;
   }
 
-  if (config.identityMerge === 'simplified') {
-    payload.$distinct_id = event.userId || `$device:${event.anonymousId}`;
-  }
-
   return payload;
 };
 
@@ -132,25 +170,8 @@ const transformPageOrScreenEvent = (
   config: MixpanelConfig,
   event: DestinationPageEvent | DestinationScreenEvent
 ) => {
-  const mappedProperties = constructPayload(event, mapping.event);
+  let properties = transformBaseEvent(config, event);
 
-  let properties: Record<string, any> = {
-    ...event.properties,
-    ...mappedProperties,
-    token: config._secret_credentials.token,
-    distinct_id: event.userId || event.anonymousId,
-    time: toUnixTimestampInMS(event.timestamp),
-    ...buildUtmParams(event),
-  };
-
-  if (config.identityMerge === 'simplified') {
-    properties = {
-      ...properties,
-      distinct_id: event.userId || `$device:${event.anonymousId}`,
-      $device_id: event.anonymousId,
-      $user_id: event.userId,
-    };
-  }
   if (event.name) {
     properties.name = event.name;
   }
@@ -158,15 +179,21 @@ const transformPageOrScreenEvent = (
     properties.category = event.category;
   }
 
-  let eventName;
   if (event.type === 'page') {
-    eventName = 'Loaded a Page';
-  } else {
-    eventName = 'Loaded a Screen';
+    properties.current_page_title = event.properties.title;
+
+    const url = new URL(event.properties.url);
+
+    properties.current_domain = url.hostname;
+    properties.current_url_path = url.pathname;
+    properties.current_url_protocol = url.protocol;
+    properties.current_url_search = url.search;
+  } else if (event.type === 'screen') {
+    properties.current_page_title = event.name;
   }
 
   return {
-    event: eventName,
+    event: '$mp_web_page_view',
     properties,
   };
 };
@@ -217,7 +244,12 @@ const transformEvents = (
       engageRequests.push({
         id: event.messageId,
         $token: config._secret_credentials.token,
-        $distinct_id: event.userId || event.anonymousId,
+        $distinct_id:
+          config.identityMerge === 'original'
+            ? event.userId || event.anonymousId
+            : event.userId || `$device:${event.anonymousId}`,
+        $ip: event.context.ip,
+        $ignore_time: event.context?.active === false,
         $set: transformIdentifyEvent(config, event),
       });
 
@@ -251,6 +283,7 @@ const transformEvents = (
           config.identityMerge === 'original'
             ? event.userId || event.anonymousId
             : event.userId || `$device:${event.anonymousId}`,
+        $ip: event.context.ip,
         $set: {
           $group_id: event.groupId,
         },
@@ -262,6 +295,7 @@ const transformEvents = (
         $token: config._secret_credentials.token,
         $group_key: 'groupId',
         $group_id: event.groupId,
+        $ip: event.context.ip,
         $set: {
           ...event.traits,
         },
