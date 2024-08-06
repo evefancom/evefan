@@ -7,6 +7,14 @@ export async function delay(ms: number) {
 }
 
 /**
+ * Accepts a timestamp and returns the corresponding unix timestamp in milliseconds
+ * @param timestamp - The timestamp to convert to unix timestamp in milliseconds
+ * @returns The unix timestamp in milliseconds
+ **/
+export const toUnixTimestampInMS = (timestamp: number | string | Date) =>
+  new Date(timestamp).getTime();
+
+/**
  * Convert all nested objects into a single level object by appending the keys with _
  * @param eventObj - The object to flatten
  * @returns The flattened object
@@ -14,7 +22,7 @@ export async function delay(ms: number) {
 export function flattenObject(eventObj: Record<string, any>) {
   const flattenedObj: Record<string, any> = {};
   for (const key in eventObj) {
-    if (typeof eventObj[key] === "object" && eventObj[key] !== null) {
+    if (typeof eventObj[key] === 'object' && eventObj[key] !== null) {
       const flatObject = flattenObject(eventObj[key]);
       for (const flatKey in flatObject) {
         flattenedObj[`${key}_${flatKey}`] = flatObject[flatKey];
@@ -69,5 +77,5 @@ export function mapKeys(keyMap: Record<string, any>, obj: Record<string, any>) {
  * @returns The value of the property or null if it doesn't exist
  */
 export function propertyWithPath(obj: Record<string, any>, path: string): any {
-  return path.split(".").reduce((a, v) => (a && v in a ? a[v] : null), obj);
+  return path.split('.').reduce((a, v) => (a && v in a ? a[v] : null), obj);
 }

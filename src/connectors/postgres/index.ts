@@ -5,7 +5,7 @@ import { DestinationEvent, EventType } from "../../event";
 import { propertyWithPath } from "../../utils";
 import { FanOutResult } from "../../writer";
 import { Field, schema } from "../../schema";
-import { PostgresDestination } from "@evefan/evefan-config";
+import { PostgresConfig, PostgresDestination } from "@evefan/evefan-config";
 
 const DESTINATION_TYPE = "postgres";
 
@@ -32,8 +32,8 @@ const TYPE_MAP = {
  * @param config - The configuration object
  * @returns The Postgres client
  */
-const clientByConfig = (config: PostgresDestination) => {
-  const credentials = config.config._secret_credentials;
+const clientByConfig = (config: PostgresConfig) => {
+  const credentials = config._secret_credentials;
 
   const client = postgres({
     user: credentials.user,
@@ -55,7 +55,7 @@ const clientByConfig = (config: PostgresDestination) => {
  * @param fields - The fields of the table
  */
 const createTable = async (
-  config: PostgresDestination,
+  config: PostgresConfig,
   name: string,
   fields: Field[]
 ) => {
@@ -88,7 +88,7 @@ const createTable = async (
  * @param events - The events to write. All events must be of the same type
  */
 const writeEvents = async (
-  config: PostgresDestination,
+  config: PostgresConfig,
   type: EventType,
   events: DestinationEvent[]
 ) => {
@@ -147,11 +147,11 @@ export default class PostgresConnector implements Connector {
     config: WorkerConfig,
     events: DestinationEvent[]
   ): Promise<FanOutResult> {
-    const destinationConfig = config.destinations.find(
+    const destination = config.destinations.find(
       (d) => d.type === DESTINATION_TYPE
     ) as PostgresDestination;
 
-    if (!destinationConfig) {
+    if (!destination) {
       console.error(`Destination ${DESTINATION_TYPE} not found in config`);
       return {
         destinationType: DESTINATION_TYPE,
@@ -176,7 +176,7 @@ export default class PostgresConnector implements Connector {
     const failedEvents = (
       await Promise.all(
         eventTypes.map(async (type) => {
-          return await writeEvents(destinationConfig, type, eventsByType[type]);
+          return await writeEvents(destination.config, type, eventsByType[type]);
         })
       )
     ).flatMap((e) => e);

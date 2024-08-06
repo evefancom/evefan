@@ -1,7 +1,7 @@
-import UAParser from "ua-parser-js";
-import { removeKeysFromObject } from "./utils";
-import { Context } from "hono";
-import { v4 as uuid4 } from "uuid";
+import UAParser from 'ua-parser-js';
+import { removeKeysFromObject } from './utils';
+import { Context } from 'hono';
+import { v4 as uuid4 } from 'uuid';
 
 export interface UserAgent {
   browser_family?: string;
@@ -32,12 +32,12 @@ export interface CampaignParams {
 }
 
 export type EventType =
-  | "track"
-  | "identify"
-  | "page"
-  | "screen"
-  | "group"
-  | "alias";
+  | 'track'
+  | 'identify'
+  | 'page'
+  | 'screen'
+  | 'group'
+  | 'alias';
 
 interface EventBase {
   timestamp: string;
@@ -53,28 +53,13 @@ interface EventBase {
   category?: string;
   //screen resolution is missing
   context: {
-    page: {
-      path: string;
-      referrer: string;
-      search: string;
-      title: string;
-      url: string;
-    };
-    userAgentData: {
-      brands: Array<{
-        brand: string;
-        version: string;
-      }>;
-      mobile: boolean;
-      platform: string;
-    };
-    userAgent: string;
-    locale: string;
-    library: {
+    active?: boolean;
+    app?: {
       name: string;
       version: string;
+      build: string;
     };
-    campaign: {
+    campaign?: {
       source: string;
       medium: string;
       term: string;
@@ -82,6 +67,56 @@ interface EventBase {
       name: string;
       //extra
       [key: string]: string;
+    };
+    device?: {
+      id: string;
+      advertisingId: string;
+      manufacturer: string;
+      model: string;
+      name: string;
+      type: string;
+      version: string;
+      token?: string;
+    };
+    ip?: string;
+    library: {
+      name: string;
+      version: string;
+    };
+    locale?: string;
+    network?: {
+      ip: string;
+      city: string;
+      country: string;
+      region: string;
+    };
+    page?: {
+      bluetooth?: string;
+      carrier?: string;
+      cellular?: string;
+      wifi?: string;
+    };
+    os?: {
+      name: string;
+      version: string;
+    };
+    screen?: {
+      density: string;
+      height: number;
+      width: number;
+    };
+    timezone?: string;
+    traits?: {
+      [key: string]: string | number | boolean | object | undefined;
+    };
+    userAgent: string;
+    userAgentData: {
+      brands: Array<{
+        brand: string;
+        version: string;
+      }>;
+      mobile: boolean;
+      platform: string;
     };
   };
   messageId: string;
@@ -93,10 +128,11 @@ interface EventBase {
     unbundled: Array<string>;
     bundledIds: Array<string>;
   };
+  originalTimestamp?: string;
 }
 
 export interface PageEvent extends EventBase {
-  type: "page";
+  type: 'page';
   properties: {
     path: string;
     referrer: string;
@@ -110,7 +146,7 @@ export interface PageEvent extends EventBase {
 }
 
 export interface ScreenEvent extends EventBase {
-  type: "screen";
+  type: 'screen';
   properties: {
     [key: string]: string;
   };
@@ -119,7 +155,7 @@ export interface ScreenEvent extends EventBase {
 }
 
 export interface TrackEvent extends EventBase {
-  type: "track";
+  type: 'track';
   event: string;
   properties: {
     revenue?: string;
@@ -127,11 +163,10 @@ export interface TrackEvent extends EventBase {
     value?: string;
     [key: string]: string | undefined;
   };
-  originalTimestamp?: string; //actually an ISO date string
 }
 
 export interface IdentifyEvent extends EventBase {
-  type: "identify";
+  type: 'identify';
   traits: {
     /**
      * Full name of a user. If you only pass a first and last name
@@ -228,11 +263,10 @@ export interface IdentifyEvent extends EventBase {
      */
     [key: string]: string | number | boolean | undefined | object;
   };
-  originalTimestamp?: string; //actually an ISO date string
 }
 
 export interface GroupEvent extends EventBase {
-  type: "group";
+  type: 'group';
   groupId: string;
   traits: {
     /**
@@ -298,7 +332,7 @@ export interface GroupEvent extends EventBase {
 }
 
 export interface AliasEvent extends EventBase {
-  type: "alias";
+  type: 'alias';
   previousId: string;
 }
 
@@ -311,77 +345,77 @@ export type Event =
   | AliasEvent;
 
 export const ReservedPageEventKeys = [
-  "timestamp",
-  "category",
-  "integrations",
-  "userId",
-  "anonymousId",
-  "type",
-  "properties",
-  "context",
-  "messageId",
-  "writeKey",
-  "sentAt",
-  "_metadata",
+  'timestamp',
+  'category',
+  'integrations',
+  'userId',
+  'anonymousId',
+  'type',
+  'properties',
+  'context',
+  'messageId',
+  'writeKey',
+  'sentAt',
+  '_metadata',
 ];
 
 export const ReservedPropertyKeys = {
-  page: ["path", "referrer", "search", "title", "url"],
-  track: ["revenue", "currency", "value"],
+  page: ['path', 'referrer', 'search', 'title', 'url'],
+  track: ['revenue', 'currency', 'value'],
 };
 
 export const ReservedContextKeys = [
-  "page",
-  "userAgentData",
-  "userAgent",
-  "locale",
-  "library",
-  "campaign",
+  'page',
+  'userAgentData',
+  'userAgent',
+  'locale',
+  'library',
+  'campaign',
 ];
 
 export const ReservedUserTraitKeys = [
-  "name",
-  "email",
-  "plan",
-  "avatar",
-  "birthday",
-  "company",
-  "age",
-  "logins",
-  "firstName",
-  "gender",
-  "id",
-  "lastName",
-  "phone",
-  "title",
-  "username",
-  "website",
-  "address",
-  "createdAt",
-  "description",
+  'name',
+  'email',
+  'plan',
+  'avatar',
+  'birthday',
+  'company',
+  'age',
+  'logins',
+  'firstName',
+  'gender',
+  'id',
+  'lastName',
+  'phone',
+  'title',
+  'username',
+  'website',
+  'address',
+  'createdAt',
+  'description',
 ];
 
 export const ReservedGroupTraitKeys = [
-  "address",
-  "avatar",
-  "createdAt",
-  "description",
-  "email",
-  "employees",
-  "id",
-  "industry",
-  "name",
-  "phone",
-  "website",
-  "plan",
+  'address',
+  'avatar',
+  'createdAt',
+  'description',
+  'email',
+  'employees',
+  'id',
+  'industry',
+  'name',
+  'phone',
+  'website',
+  'plan',
 ];
 
 export const ReservedCampaignKeys = [
-  "source",
-  "medium",
-  "term",
-  "content",
-  "name",
+  'source',
+  'medium',
+  'term',
+  'content',
+  'name',
 ];
 
 interface DestinationEventBase {
@@ -456,13 +490,13 @@ export const getLocationFromCFData = (
 
   return {
     // @ts-ignore
-    country: country ?? "",
+    country: country ?? '',
     // @ts-ignore
-    region: region ?? "",
+    region: region ?? '',
     // @ts-ignore
-    city: city ?? "",
-    latitude: latitude !== undefined ? parseFloat(latitude + "") : -1,
-    longitude: longitude !== undefined ? parseFloat(longitude + "") : -1,
+    city: city ?? '',
+    latitude: latitude !== undefined ? parseFloat(latitude + '') : -1,
+    longitude: longitude !== undefined ? parseFloat(longitude + '') : -1,
   };
 };
 
@@ -470,21 +504,21 @@ export const getEventExtraParams = (event: Event, type: EventType) => {
   var extraProperties = {};
   var extraTraits = {};
 
-  if (type === "page" && event.properties) {
+  if (type === 'page' && event.properties) {
     extraProperties = removeKeysFromObject(
       event.properties,
       ReservedPropertyKeys.page
     );
-  } else if (type === "screen" && event.properties) {
+  } else if (type === 'screen' && event.properties) {
     extraProperties = event.properties;
-  } else if (type === "track" && event.properties) {
+  } else if (type === 'track' && event.properties) {
     extraProperties = removeKeysFromObject(
       event.properties,
       ReservedPropertyKeys.track
     );
-  } else if (type === "identify" && event.traits) {
+  } else if (type === 'identify' && event.traits) {
     extraTraits = removeKeysFromObject(event.traits, ReservedUserTraitKeys);
-  } else if (type === "group" && event.traits) {
+  } else if (type === 'group' && event.traits) {
     extraTraits = removeKeysFromObject(event.traits, ReservedGroupTraitKeys);
   }
 

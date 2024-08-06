@@ -1,55 +1,39 @@
-import { MixpanelDestination } from "@evefan/evefan-config";
-import { Connector } from "..";
-import { WorkerConfig } from "../../config";
-import { DestinationEvent } from "../../event";
-import { mapKeys } from "../../utils";
-import { FanOutResult } from "../../writer";
+import { MixpanelConfig, MixpanelDestination } from '@evefan/evefan-config';
+import { Connector } from '..';
+import { WorkerConfig } from '../../config';
+import {
+  DestinationAliasEvent,
+  DestinationEvent,
+  DestinationIdentifyEvent,
+  DestinationPageEvent,
+  DestinationScreenEvent,
+  DestinationTrackEvent,
+} from '../../event';
+import {
+  propertyWithPath,
+  removeKeysFromObject,
+  toUnixTimestampInMS,
+} from '../../utils';
+import { FanOutResult } from '../../writer';
+import { mapping } from './config';
+import { constructPayload } from './mapper';
 
-/**
- *
-    time: new Date(event._timestamp).getTime(),
-    $insert_id: event.eventn_ctx_event_id || context.event_id,
-    $current_url: context.url,
-    $referrer: context.referer,
-    $referring_domain: refDomain,
-    $identified_id: user.id || user.internal_id || user.email,
-    $anon_id: user.anonymous_id || user.hashed_anonymous_id,
-    $distinct_id:
-        user.id || user.internal_id ||
-        user.email ||
-        user.anonymous_id ||
-        user.hashed_anonymous_id,
-    distinct_id:
-        user.id || user.internal_id ||
-        user.email ||
-        user.anonymous_id ||
-        user.hashed_anonymous_id,
-    $email: user.email,
-    ip: event.source_ip,
-    $browser: ua.ua_family,
-    $browser_version: ua.ua_version,
-    $os: ua.os_family,
-    $city: location.city,
-    $region: location.region,
-    $country_code: location.country,
-    mp_country_code: location.country,
-    $screen_width: context.screen_resolution?.split("x")[0],
-    $screen_height: context.screen_resolution?.split("x")[1],
-    utm_medium: utm.medium,
-    utm_source: utm.source,
-    utm_campaign: utm.campaign,
-    utm_content: utm.content,
-    utm_term: utm.term,
-    Revenue: conversion.revenue || event.revenue,
- * 
- * */
+const DESTINATION_TYPE = 'mixpanel';
 
-// Get this from mixpanel.com/settings/project
+interface MixpanelRequest {
+  url: string;
+  data: {
+    body: Record<string, any>[];
+    headers: Record<string, string>;
+  };
+  ids: string[];
+  type: 'engage' | 'group' | 'import';
+}
 
 interface MixpanelResponse {
-  code: number;
-  num_records_imported: number;
-  status: string;
+  code?: number;
+  num_records_imported?: number;
+  status: string | number;
   error?: string;
   failed_records?: Array<{
     index: number;
@@ -59,163 +43,417 @@ interface MixpanelResponse {
   }>;
 }
 
-export class MixpanelConnector implements Connector {
-  private transformTraits(traitsObj: object): object {
-    var reservedTraitAlias = {
-      created: "$created",
-      email: "$email",
-      avatar: "$avatar",
-      firstName: "$first_name",
-      lastName: "$last_name",
-      lastSeen: "$last_seen",
-      name: "$name",
-      username: "$username",
-      phone: "$phone",
-      //rest same - event the reserved ones below
-      plan: "plan",
-      birthday: "birthday",
-      company: "company",
-      age: "age",
-      logins: "logins",
-      gender: "gender",
-      id: "id",
-      website: "website",
-      address: "address",
-      createdAt: "createdAt",
-      description: "description",
-    };
+const buildUtmParams = (event: DestinationEvent) => {
+  return {
+    utm_medium: event.context.campaign?.medium,
+    utm_source: event.context.campaign?.source,
+    utm_campaign: event.context.campaign?.name,
+    utm_content: event.context.campaign?.content,
+    utm_term: event.context.campaign?.term,
+  };
+};
 
-    return mapKeys(reservedTraitAlias, traitsObj);
+/**
+ * Transforms a base event to a mixpanel event
+ * @param config Mixpanel config
+ * @param event Destination event
+ * @returns Mixpanel event payload
+ */
+const transformBaseEvent = (
+  config: MixpanelConfig,
+  event: DestinationTrackEvent | DestinationPageEvent | DestinationScreenEvent
+) => {
+  const mappedProperties = constructPayload(event, mapping.event);
+
+  // This is to conform with SDKs sending timestamp component with messageId
+  // example: "1662363980287-168cf720-6227-4b56-a98e-c49bdc7279e9"
+  if (mappedProperties.$insert_id) {
+    mappedProperties.$insert_id = mappedProperties.$insert_id.slice(-36);
   }
 
-  // in mixpanel all the custom properties just go one after the other.
+  const unixTimestamp = toUnixTimestampInMS(
+    event.originalTimestamp || event.timestamp
+  );
+  let properties: Record<string, any> = {
+    ...event.properties,
+    ...mappedProperties,
+    token: config._secret_credentials.token,
+    distinct_id: event.userId || event.anonymousId,
+    time: unixTimestamp,
+    ...buildUtmParams(event),
+  };
 
-  private transformEvent(event: DestinationEvent): object {
-    let eventToSend = {};
-    let properties = {
-      ...event.extraParams.campaign,
-      ...event.extraParams.context,
-      time: new Date(event.timestamp).getTime(),
-      distinct_id: event.userId || event.anonymousId,
-      $anon_id: event.anonymousId,
-      $insert_id: event.messageId,
-      //$timezone add if possible
-      $city: event.location.city,
-      $region: event.location.region,
-      $country_code: event.location.country,
-      mp_country_code: event.location.country,
-      $browser: event.useragent.browser_family,
-      $browser_version: event.useragent.browser_family,
-      $os: event.useragent.os_family,
-      utm_medium: event.context.campaign ? event.context.campaign.medium : null,
-      utm_source: event.context.campaign ? event.context.campaign.source : null,
-      utm_campaign: event.context.campaign ? event.context.campaign.name : null,
-      utm_content: event.context.campaign
-        ? event.context.campaign.content
-        : null,
-      utm_term: event.context.campaign ? event.context.campaign.term : null,
+  if (config.identityMerge === 'simplified') {
+    properties = {
+      ...properties,
+      distinct_id: event.userId || `$device:${event.anonymousId}`,
+      $device_id: event.anonymousId,
+      $user_id: event.userId,
     };
-    if (event.userId) {
-      (properties as any)["$identified_id"] = event.userId;
-      //only send identified id if there is a userId
-    }
+  }
 
-    if (event.type === "page" || event.type === "screen") {
-      eventToSend = {
-        event: "page_view",
-        properties: properties,
-      };
-    } else if (event.type === "track") {
-      eventToSend = {
-        event: event.event,
-        properties: properties,
-      };
-    } else if (event.type === "identify") {
-      //add traits here
-      const transformedTraits = this.transformTraits(event.traits);
+  if (event.context.device) {
+    const { type, token } = event.context.device;
+    if (['ios', 'watchos', 'ipados', 'tvos'].includes(type.toLowerCase())) {
+      const payload = constructPayload(event, mapping.profile.ios);
       properties = {
-        ...transformedTraits,
         ...properties,
+        ...payload,
       };
-      eventToSend = {
-        event: "$identify",
-        properties: properties,
+      if (token) {
+        properties.$ios_devices = [token];
+      }
+    } else if (type.toLowerCase() === 'android') {
+      const payload = constructPayload(event, mapping.profile.android);
+      properties = {
+        ...properties,
+        ...payload,
       };
-    } else {
-      throw new Error(`Unknown Event type ${(event as any).type}`);
+      if (token) {
+        properties.$android_devices = [token];
+      }
     }
-
-    return eventToSend;
   }
 
+  if (event.useragent.browser_family) {
+    properties.$browser = event.useragent.browser_family;
+    properties.$browser_version = event.useragent.browser_version;
+  }
+
+  return properties;
+};
+
+/**
+ * Transforms a track event to a mixpanel event
+ * @param config Mixpanel config
+ * @param event Destination track event
+ * @returns Mixpanel event payload
+ */
+const transformTrackEvent = (
+  config: MixpanelConfig,
+  event: DestinationTrackEvent
+) => {
+  let properties = transformBaseEvent(config, event);
+
+  return {
+    event: event.event,
+    properties,
+  };
+};
+
+/**
+ * Transforms an identify event to a mixpanel identity update payload
+ * @param config Mixpanel config
+ * @param event Destination identify event
+ * @returns Mixpanel identity update payload
+ */
+const transformIdentifyEvent = (
+  config: MixpanelConfig,
+  event: DestinationIdentifyEvent
+) => {
+  let payload = constructPayload(event, mapping.identify);
+
+  if (!payload.$name && payload.$first_name && payload.$last_name) {
+    payload.$name = `${payload.$first_name} ${payload.$last_name}`;
+  }
+
+  return payload;
+};
+
+/**
+ * Transforms a page or screen event to a mixpanel event
+ * @param config Mixpanel config
+ * @param event Destination page or screen event
+ * @returns Mixpanel event payload
+ */
+const transformPageOrScreenEvent = (
+  config: MixpanelConfig,
+  event: DestinationPageEvent | DestinationScreenEvent
+) => {
+  let properties = transformBaseEvent(config, event);
+
+  if (event.name) {
+    properties.name = event.name;
+  }
+  if (event.category) {
+    properties.category = event.category;
+  }
+
+  if (event.type === 'page') {
+    properties.current_page_title = event.properties.title;
+
+    const url = new URL(event.properties.url);
+
+    properties.current_domain = url.hostname;
+    properties.current_url_path = url.pathname;
+    properties.current_url_protocol = url.protocol;
+    properties.current_url_search = url.search;
+  } else if (event.type === 'screen') {
+    properties.current_page_title = event.name;
+  }
+
+  return {
+    event: '$mp_web_page_view',
+    properties,
+  };
+};
+
+/**
+ * Transforms an alias event to a mixpanel alias creation payload.
+ * Only used when identityMerge is set to 'original'
+ * @param config Mixpanel config
+ * @param event Destination alias event
+ * @returns Mixpanel alias creation payload
+ */
+const transformAliasEvent = (
+  config: MixpanelConfig,
+  event: DestinationAliasEvent
+) => {
+  return {
+    event: '$create_alias',
+    properties: {
+      distinct_id: event.previousId || event.anonymousId,
+      alias: event.userId,
+      token: config._secret_credentials.token,
+    },
+  };
+};
+
+/**
+ * Transforms destination events to mixpanel requests
+ * @param config Mixpanel config
+ * @param events Destination events
+ * @returns Mixpanel requests
+ */
+const transformEvents = (
+  config: MixpanelConfig,
+  events: DestinationEvent[]
+) => {
+  const importRequests: Record<string, any>[] = [];
+  const engageRequests: Record<string, any>[] = [];
+  const groupRequests: Record<string, any>[] = [];
+
+  events.forEach((event) => {
+    if (event.type === 'track') {
+      importRequests.push({
+        id: event.messageId,
+        ...transformTrackEvent(config, event),
+      });
+    } else if (event.type === 'identify') {
+      // Engage request for profile update
+      engageRequests.push({
+        id: event.messageId,
+        $token: config._secret_credentials.token,
+        $distinct_id:
+          config.identityMerge === 'original'
+            ? event.userId || event.anonymousId
+            : event.userId || `$device:${event.anonymousId}`,
+        $ip: event.context.ip,
+        $ignore_time: event.context?.active === false,
+        $set: transformIdentifyEvent(config, event),
+      });
+
+      // Additional import event based on identityMerge config
+      if (config.identityMerge === 'original') {
+        importRequests.push({
+          id: event.messageId,
+          event: '$merge',
+          properties: {
+            $distinct_ids: [event.userId, event.anonymousId],
+            token: config._secret_credentials.token,
+          },
+        });
+      }
+    } else if (event.type === 'page' || event.type === 'screen') {
+      importRequests.push({
+        id: event.messageId,
+        ...transformPageOrScreenEvent(config, event),
+      });
+    } else if (event.type === 'alias' && config.identityMerge === 'original') {
+      importRequests.push({
+        id: event.messageId,
+        ...transformAliasEvent(config, event),
+      });
+    } else if (event.type === 'group') {
+      // Engage request for user update
+      engageRequests.push({
+        id: event.messageId,
+        $token: config._secret_credentials.token,
+        $distinct_id:
+          config.identityMerge === 'original'
+            ? event.userId || event.anonymousId
+            : event.userId || `$device:${event.anonymousId}`,
+        $ip: event.context.ip,
+        $set: {
+          $group_id: event.groupId,
+        },
+      });
+
+      // Group request for group creation
+      groupRequests.push({
+        id: event.messageId,
+        $token: config._secret_credentials.token,
+        $group_key: 'groupId',
+        $group_id: event.groupId,
+        $ip: event.context.ip,
+        $set: {
+          ...event.traits,
+        },
+      });
+    }
+  });
+
+  const requests: MixpanelRequest[] = [];
+
+  // Batch engage requests
+  if (engageRequests.length > 0) {
+    requests.push({
+      url: `https://${config.region}.mixpanel.com/engage?strict=${Number(
+        config.strict
+      )}#profile-set`,
+      data: {
+        body: engageRequests.map((r) => removeKeysFromObject(r, ['id'])),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      ids: engageRequests.map((r) => r.id),
+      type: 'engage',
+    });
+  }
+
+  // Batch group requests
+  if (groupRequests.length > 0) {
+    requests.push({
+      url: `https://${config.region}.mixpanel.com/groups?verbose=1#group-set`,
+      data: {
+        body: groupRequests.map((r) => removeKeysFromObject(r, ['id'])),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      ids: groupRequests.map((r) => r.id),
+      type: 'group',
+    });
+  }
+
+  // Batch imported events
+  if (importRequests.length > 0) {
+    requests.push({
+      url: `https://${config.region}.mixpanel.com/import?strict=${Number(
+        config.strict
+      )}&project_id=${config.projectId}`,
+      data: {
+        body: importRequests.map((r) => removeKeysFromObject(r, ['id'])),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization:
+            'Basic ' + btoa(config._secret_credentials.token + ':'),
+        },
+      },
+      ids: importRequests.map((r) => r.id),
+      type: 'import',
+    });
+  }
+
+  return requests;
+};
+
+export default class MixpanelConnector implements Connector {
   async write(
     config: WorkerConfig,
     events: DestinationEvent[]
   ): Promise<FanOutResult> {
-    console.log("Sending events to Mixpanel");
-    const mixpanelDestination = config.destinations.find(
-      (d) => d.type === "mixpanel"
+    const destination = config.destinations.find(
+      (d) => d.type === DESTINATION_TYPE
     ) as MixpanelDestination;
 
-    if (!mixpanelDestination) {
-      console.error("Could not find mixpanel Config");
+    if (!destination) {
+      console.error('Could not find mixpanel Config');
       return {
-        destinationType: "mixpanel",
+        destinationType: 'mixpanel',
         failedEvents: events.map((e) => ({
-          error: "Destination config not found",
+          error: 'Destination config not found',
           body: e,
         })),
       };
     }
 
-    try {
-      const transformedEvents = events.map(this.transformEvent);
+    console.log(
+      `${DESTINATION_TYPE}: sending ${events.length} event(s) to Mixpanel`
+    );
 
-      const failedEvents = await fetch(
-        `https://api.mixpanel.com/import?strict=${mixpanelDestination.config.strict}&project_id=${mixpanelDestination.config.projectId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization:
-              "Basic " +
-              btoa(mixpanelDestination.config._secret_credentials.token + ":"),
-          },
-          method: "POST",
-          body: JSON.stringify(transformedEvents),
-        }
-      )
-        .then((res) => res.json() as Promise<MixpanelResponse>)
-        .then((res: MixpanelResponse) => {
-          if (
-            res.code !== 200 ||
-            res.status?.toLowerCase() !== "success" ||
-            res.num_records_imported !== transformedEvents.length
-          ) {
-            console.error("Mixpanel error", res);
-            if (res.failed_records && res.failed_records.length > 0) {
-              return res.failed_records.map((r) => ({
-                body: events[r.index],
-                error: r.message,
-              }));
+    const eventMap = events.reduce((acc, event) => {
+      acc[event.messageId] = event;
+      return acc;
+    }, {} as Record<string, DestinationEvent>);
+
+    try {
+      const requests = transformEvents(destination.config, events);
+
+      const failedEvents = (
+        await Promise.all(
+          requests.map(async (request) => {
+            const res = await fetch(request.url, {
+              headers: request.data.headers,
+              method: 'POST',
+              body: JSON.stringify(request.data.body),
+            });
+
+            const response = await res.json<MixpanelResponse>();
+
+            if (request.type === 'engage' || request.type === 'group') {
+              if (response.status === 0) {
+                console.error(
+                  `${DESTINATION_TYPE}: error while sending event to Mixpanel`,
+                  res
+                );
+                return request.ids.map((id) => ({
+                  body: eventMap[id],
+                  error: response.error || 'Unknown mixpanel processing error',
+                }));
+              }
+            } else if (request.type === 'import') {
+              if (response.code !== 200) {
+                if (
+                  response.code !== 200 ||
+                  response.status?.toString().toLowerCase() !== 'success' ||
+                  response.num_records_imported !== request.data.body.length
+                ) {
+                  console.error(
+                    `${DESTINATION_TYPE}: error while sending event to Mixpanel`,
+                    res
+                  );
+                  if (
+                    response.failed_records &&
+                    response.failed_records.length > 0
+                  ) {
+                    return response.failed_records.map((r) => ({
+                      body: eventMap[request.ids[r.index]],
+                      error: r.message,
+                    }));
+                  }
+                  return request.ids.map((id) => ({
+                    body: eventMap[id],
+                    error: 'Unknown mixpanel processing error',
+                  }));
+                }
+              }
             }
-            return events.map((e) => ({
-              body: e,
-              error: "Unknown mixpanel processing error",
-            }));
-          }
-          return [];
-        });
+            return [];
+          })
+        )
+      ).flat();
 
       return {
-        destinationType: "mixpanel",
+        destinationType: 'mixpanel',
         failedEvents,
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
-        destinationType: "mixpanel",
+        destinationType: 'mixpanel',
         failedEvents: events.map((e) => ({
-          // @ts-ignore
-          error: error?.message || "Unknown error",
+          error: error?.message || 'Unknown error',
           body: e,
         })),
       };
