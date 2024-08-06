@@ -489,12 +489,9 @@ export const getLocationFromCFData = (
   } = context;
 
   return {
-    // @ts-ignore
-    country: country ?? '',
-    // @ts-ignore
-    region: region ?? '',
-    // @ts-ignore
-    city: city ?? '',
+    country: (country as string) ?? '',
+    region: (region as string) ?? '',
+    city: (city as string) ?? '',
     latitude: latitude !== undefined ? parseFloat(latitude + '') : -1,
     longitude: longitude !== undefined ? parseFloat(longitude + '') : -1,
   };

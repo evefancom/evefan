@@ -199,10 +199,11 @@ export const schema: Schema = {
         name: 'extra_fields',
         type: 'json',
         transform: (e) => {
-          const { extraParams } = e as DestinationGroupEvent;
+          const { extraParams, location } = e as DestinationGroupEvent;
           return {
             context: {
               ...extraParams.context,
+              location,
               campaign: {
                 ...extraParams.campaign,
               },
@@ -239,10 +240,11 @@ export const schema: Schema = {
         name: 'extra_fields',
         type: 'json',
         transform: (e) => {
-          const { extraParams } = e as DestinationIdentifyEvent;
+          const { extraParams, location } = e as DestinationIdentifyEvent;
           return {
             context: {
               ...extraParams.context,
+              location,
               campaign: {
                 ...extraParams.campaign,
               },
@@ -294,11 +296,12 @@ export const schema: Schema = {
         name: 'extra_fields',
         type: 'json',
         transform: (e) => {
-          const { extraParams } = e as DestinationPageEvent;
+          const { extraParams, location } = e as DestinationPageEvent;
           return {
             context: {
               ...extraParams.context,
               ...extraParams.properties,
+              location,
               campaign: {
                 ...extraParams.campaign,
               },
@@ -325,11 +328,12 @@ export const schema: Schema = {
         name: 'extra_fields',
         type: 'json',
         transform: (e) => {
-          const { extraParams } = e as DestinationScreenEvent;
+          const { extraParams, location } = e as DestinationScreenEvent;
           return {
             context: {
               ...extraParams.context,
               ...extraParams.properties,
+              location,
               campaign: {
                 ...extraParams.campaign,
               },
@@ -360,11 +364,12 @@ export const schema: Schema = {
         name: 'extra_fields',
         type: 'json',
         transform: (e) => {
-          const { extraParams } = e as DestinationTrackEvent;
+          const { extraParams, location } = e as DestinationTrackEvent;
           return {
             context: {
               ...extraParams.context,
               ...extraParams.properties,
+              location,
               campaign: {
                 ...extraParams.campaign,
               },

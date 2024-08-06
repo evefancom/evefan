@@ -28,6 +28,55 @@ export const mapping: MappingSchema = {
       destKey: '$user_id',
     },
     {
+      destKey: '$country_code',
+      sourceKeys: [
+        'location.country',
+        'traits.address.country',
+        'context.traits.address.country',
+        'traits.country',
+        'context.traits.country',
+        'context.location.country',
+      ],
+      required: false,
+    },
+    {
+      destKey: '$city',
+      sourceKeys: [
+        'location.city',
+        'traits.city',
+        'context.traits.city',
+        'traits.address.city',
+        'context.traits.address.city',
+      ],
+      required: false,
+    },
+    {
+      destKey: '$region',
+      sourceKeys: [
+        'location.region',
+        'traits.state',
+        'context.traits.state',
+        'traits.address.state',
+        'context.traits.address.state',
+      ],
+      required: false,
+    },
+    {
+      destKey: '$timezone',
+      sourceKeys: 'location.timezone',
+      required: false,
+    },
+    {
+      destKey: '$latitude',
+      sourceKeys: 'location.latitude',
+      required: false,
+    },
+    {
+      destKey: '$longitude',
+      sourceKeys: 'location.longitude',
+      required: false,
+    },
+    {
       sourceKeys: 'context.page.url',
       destKey: '$current_url',
     },
@@ -216,6 +265,7 @@ export const mapping: MappingSchema = {
     {
       destKey: '$country_code',
       sourceKeys: [
+        'location.country',
         'traits.address.country',
         'context.traits.address.country',
         'traits.country',
@@ -227,43 +277,38 @@ export const mapping: MappingSchema = {
     {
       destKey: '$city',
       sourceKeys: [
+        'location.city',
         'traits.city',
         'context.traits.city',
         'traits.address.city',
         'context.traits.address.city',
-        'context.location.city',
       ],
       required: false,
     },
     {
       destKey: '$region',
       sourceKeys: [
+        'location.region',
         'traits.state',
         'context.traits.state',
         'traits.address.state',
         'context.traits.address.state',
-        'context.location.region',
       ],
       required: false,
     },
     {
-      destKey: '$geo_source',
-      sourceKeys: 'context.location.geoSource',
-      required: false,
-    },
-    {
       destKey: '$timezone',
-      sourceKeys: 'context.location.timezone',
+      sourceKeys: 'location.timezone',
       required: false,
     },
     {
       destKey: '$latitude',
-      sourceKeys: 'context.location.latitude',
+      sourceKeys: 'location.latitude',
       required: false,
     },
     {
       destKey: '$longitude',
-      sourceKeys: 'context.location.longitude',
+      sourceKeys: 'location.longitude',
       required: false,
     },
     {
@@ -389,59 +434,6 @@ export const mapping: MappingSchema = {
       {
         destKey: '$avatar',
         sourceKeys: ['traits.avatar', 'context.traits.avatar'],
-        required: false,
-      },
-      {
-        destKey: '$country_code',
-        sourceKeys: [
-          'traits.address.country',
-          'context.traits.address.country',
-          'traits.country',
-          'context.traits.country',
-          'context.location.country',
-        ],
-        required: false,
-      },
-      {
-        destKey: '$city',
-        sourceKeys: [
-          'traits.city',
-          'context.traits.city',
-          'traits.address.city',
-          'context.traits.address.city',
-          'context.location.city',
-        ],
-        required: false,
-      },
-      {
-        destKey: '$region',
-        sourceKeys: [
-          'traits.state',
-          'context.traits.state',
-          'traits.address.state',
-          'context.traits.address.state',
-          'context.location.region',
-        ],
-        required: false,
-      },
-      {
-        destKey: '$geo_source',
-        sourceKeys: 'context.location.geoSource',
-        required: false,
-      },
-      {
-        destKey: '$timezone',
-        sourceKeys: 'context.location.timezone',
-        required: false,
-      },
-      {
-        destKey: '$latitude',
-        sourceKeys: 'context.location.latitude',
-        required: false,
-      },
-      {
-        destKey: '$longitude',
-        sourceKeys: 'context.location.longitude',
         required: false,
       },
       {
