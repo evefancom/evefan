@@ -19,6 +19,7 @@
     "@cloudflare/workers-types": "^4.20240718.0",
     "@sagi.io/workers-jwt": "^0.0.26",
     "hono": "^4.4.11",
+    "moment": "^2.30.1",
     "postgres": "^3.4.4",
     "slugify": "^1.6.6",
     "ua-parser-js": "^1.0.38",

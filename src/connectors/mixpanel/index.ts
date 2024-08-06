@@ -17,6 +17,7 @@ import {
 import { FanOutResult } from '../../writer';
 import { mapping } from './config';
 import { constructPayload } from './mapper';
+import moment from 'moment';
 
 const DESTINATION_TYPE = 'mixpanel';
 
@@ -234,6 +235,17 @@ const transformEvents = (
   const groupRequests: Record<string, any>[] = [];
 
   events.forEach((event) => {
+    const timestamp = new Date(event.originalTimestamp || event.timestamp);
+
+    if (moment(timestamp).isBefore(moment().subtract(5, 'year'))) {
+      console.log(
+        `${DESTINATION_TYPE}: event ${event.messageId} is too old:`,
+        timestamp,
+        'Skipping...'
+      );
+      return;
+    }
+
     if (event.type === 'track') {
       importRequests.push({
         id: event.messageId,
@@ -379,9 +391,7 @@ export default class MixpanelConnector implements Connector {
       };
     }
 
-    console.log(
-      `${DESTINATION_TYPE}: sending ${events.length} event(s) to Mixpanel`
-    );
+    console.log(`${DESTINATION_TYPE}: sending ${events.length} event(s)`);
 
     const eventMap = events.reduce((acc, event) => {
       acc[event.messageId] = event;
@@ -405,8 +415,8 @@ export default class MixpanelConnector implements Connector {
             if (request.type === 'engage' || request.type === 'group') {
               if (response.status === 0) {
                 console.error(
-                  `${DESTINATION_TYPE}: error while sending event to Mixpanel`,
-                  res
+                  `${DESTINATION_TYPE}: error while sending event to Mixpanel:`,
+                  response
                 );
                 return request.ids.map((id) => ({
                   body: eventMap[id],
@@ -421,8 +431,8 @@ export default class MixpanelConnector implements Connector {
                   response.num_records_imported !== request.data.body.length
                 ) {
                   console.error(
-                    `${DESTINATION_TYPE}: error while sending event to Mixpanel`,
-                    res
+                    `${DESTINATION_TYPE}: error while sending event to Mixpanel:`,
+                    response
                   );
                   if (
                     response.failed_records &&

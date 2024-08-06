@@ -1,7 +1,7 @@
-import { DestinationType } from "@evefan/evefan-config";
-import { DestinationEvent } from "./event";
-import { Batcher } from "./batcher";
-import { HealthChecker } from "./health";
+import { DestinationType } from '@evefan/evefan-config';
+import { DestinationEvent } from './event';
+import { Batcher } from './batcher';
+import { HealthChecker } from './health';
 
 type QueueBindings = {
   [t in Uppercase<DestinationType>]: Queue<DestinationEvent>;

@@ -1,8 +1,8 @@
-import { DurableObject } from "cloudflare:workers";
-import { DestinationEvent } from "./event";
-import { getConfig, WorkerConfig } from "./config";
-import { handleEventFanout } from "./writer";
-import { Bindings } from "./env";
+import { DurableObject } from 'cloudflare:workers';
+import { DestinationEvent } from './event';
+import { getConfig, WorkerConfig } from './config';
+import { handleEventFanout } from './writer';
+import { Bindings } from './env';
 
 type BatcherEnv = Bindings;
 
@@ -31,7 +31,7 @@ export class Batcher extends DurableObject<BatcherEnv> {
       const events = [...this.batchedEvents];
       this.batchedEvents = [];
 
-      return events
+      return events;
     });
 
     await handleEventFanout(config, this.env, eventsToSend);

@@ -1,4 +1,4 @@
-import slugify from "slugify";
+import slugify from 'slugify';
 import {
   DestinationEvent,
   DestinationGroupEvent,
@@ -7,10 +7,10 @@ import {
   DestinationScreenEvent,
   DestinationTrackEvent,
   EventType,
-} from "./event";
-import { flattenObject, mapKeys } from "./utils";
+} from './event';
+import { flattenObject, mapKeys } from './utils';
 
-export type FieldType = "string" | "boolean" | "timestamp" | "json";
+export type FieldType = 'string' | 'boolean' | 'timestamp' | 'json';
 
 export interface Field {
   name: string;
@@ -29,63 +29,63 @@ export type Schema = {
 
 const base: Field[] = [
   {
-    name: "id",
-    type: "string",
-    path: "messageId",
+    name: 'id',
+    type: 'string',
+    path: 'messageId',
   },
   {
-    name: "anonymous_id",
-    type: "string",
-    path: "anonymousId",
+    name: 'anonymous_id',
+    type: 'string',
+    path: 'anonymousId',
   },
   {
-    name: "context_ip",
-    type: "string",
-    path: "context.ip",
+    name: 'context_ip',
+    type: 'string',
+    path: 'context.ip',
   },
   {
-    name: "context_library_name",
-    type: "string",
-    path: "context.library.name",
+    name: 'context_library_name',
+    type: 'string',
+    path: 'context.library.name',
   },
   {
-    name: "context_library_version",
-    type: "string",
-    path: "context.library.version",
+    name: 'context_library_version',
+    type: 'string',
+    path: 'context.library.version',
   },
   {
-    name: "context_locale",
-    type: "string",
-    path: "context.locale",
+    name: 'context_locale',
+    type: 'string',
+    path: 'context.locale',
   },
   {
-    name: "context_page_path",
-    type: "string",
-    path: "context.page.path",
+    name: 'context_page_path',
+    type: 'string',
+    path: 'context.page.path',
   },
   {
-    name: "context_page_referrer",
-    type: "string",
-    path: "context.page.referrer",
+    name: 'context_page_referrer',
+    type: 'string',
+    path: 'context.page.referrer',
   },
   {
-    name: "context_page_title",
-    type: "string",
-    path: "context.page.title",
+    name: 'context_page_title',
+    type: 'string',
+    path: 'context.page.title',
   },
   {
-    name: "context_page_url",
-    type: "string",
-    path: "context.page.url",
+    name: 'context_page_url',
+    type: 'string',
+    path: 'context.page.url',
   },
   {
-    name: "context_user_agent",
-    type: "string",
-    path: "context.userAgent",
+    name: 'context_user_agent',
+    type: 'string',
+    path: 'context.userAgent',
   },
   {
-    name: "context_user_agent_data_brands",
-    type: "json",
+    name: 'context_user_agent_data_brands',
+    type: 'json',
     transform: (e) => {
       const { context } = e;
       return context.userAgentData
@@ -99,64 +99,64 @@ const base: Field[] = [
     },
   },
   {
-    name: "context_user_agent_data_mobile",
-    type: "boolean",
-    path: "context.userAgentData.mobile",
+    name: 'context_user_agent_data_mobile',
+    type: 'boolean',
+    path: 'context.userAgentData.mobile',
   },
   {
-    name: "context_user_agent_data_platform",
-    type: "string",
-    path: "context.userAgentData.platform",
+    name: 'context_user_agent_data_platform',
+    type: 'string',
+    path: 'context.userAgentData.platform',
   },
   {
-    name: "context_campaign_content",
-    type: "string",
-    path: "context.campaign.content",
+    name: 'context_campaign_content',
+    type: 'string',
+    path: 'context.campaign.content',
   },
   {
-    name: "context_campaign_medium",
-    type: "string",
-    path: "context.campaign.medium",
+    name: 'context_campaign_medium',
+    type: 'string',
+    path: 'context.campaign.medium',
   },
   {
-    name: "context_campaign_name",
-    type: "string",
-    path: "context.campaign.name",
+    name: 'context_campaign_name',
+    type: 'string',
+    path: 'context.campaign.name',
   },
   {
-    name: "context_campaign_source",
-    type: "string",
-    path: "context.campaign.source",
+    name: 'context_campaign_source',
+    type: 'string',
+    path: 'context.campaign.source',
   },
   {
-    name: "context_campaign_term",
-    type: "string",
-    path: "context.campaign.term",
+    name: 'context_campaign_term',
+    type: 'string',
+    path: 'context.campaign.term',
   },
   {
-    name: "original_timestamp",
-    type: "timestamp",
-    path: "timestamp",
+    name: 'original_timestamp',
+    type: 'timestamp',
+    path: 'timestamp',
   },
   {
-    name: "timestamp",
-    type: "timestamp",
-    path: "timestamp",
+    name: 'timestamp',
+    type: 'timestamp',
+    path: 'timestamp',
   },
   {
-    name: "received_at",
-    type: "timestamp",
+    name: 'received_at',
+    type: 'timestamp',
     transform: () => new Date(),
   },
   {
-    name: "sent_at",
-    type: "timestamp",
-    path: "sentAt",
+    name: 'sent_at',
+    type: 'timestamp',
+    path: 'sentAt',
   },
   {
-    name: "user_id",
-    type: "string",
-    path: "userId",
+    name: 'user_id',
+    type: 'string',
+    path: 'userId',
   },
 ];
 
@@ -165,9 +165,9 @@ export const schema: Schema = {
     fields: [
       ...base,
       {
-        name: "previous_id",
-        type: "string",
-        path: "previousId",
+        name: 'previous_id',
+        type: 'string',
+        path: 'previousId',
       },
     ],
   },
@@ -175,17 +175,17 @@ export const schema: Schema = {
     fields: [
       ...base,
       {
-        name: "group_id",
-        type: "string",
-        path: "groupId",
+        name: 'group_id',
+        type: 'string',
+        path: 'groupId',
       },
       {
-        name: "traits",
-        type: "json",
+        name: 'traits',
+        type: 'json',
         transform: (e) => {
           const { traits } = e as DestinationGroupEvent;
           const reservedTraitAlias = {
-            createdAt: "created_at",
+            createdAt: 'created_at',
           };
 
           // flatten Object to key_nestedkey format
@@ -196,8 +196,8 @@ export const schema: Schema = {
         },
       },
       {
-        name: "extra_fields",
-        type: "json",
+        name: 'extra_fields',
+        type: 'json',
         transform: (e) => {
           const { extraParams } = e as DestinationGroupEvent;
           return {
@@ -216,16 +216,16 @@ export const schema: Schema = {
     fields: [
       ...base,
       {
-        name: "traits",
-        type: "json",
+        name: 'traits',
+        type: 'json',
         transform: (e) => {
           const { traits } = e as DestinationIdentifyEvent;
           const reservedTraitAlias = {
-            firstName: "first_name",
-            lastName: "last_name",
-            lastSeen: "last_seen",
-            address_postalCode: "address_postal_code",
-            createdAt: "created_at",
+            firstName: 'first_name',
+            lastName: 'last_name',
+            lastSeen: 'last_seen',
+            address_postalCode: 'address_postal_code',
+            createdAt: 'created_at',
           };
 
           // flatten Object to key_nestedkey format
@@ -236,8 +236,8 @@ export const schema: Schema = {
         },
       },
       {
-        name: "extra_fields",
-        type: "json",
+        name: 'extra_fields',
+        type: 'json',
         transform: (e) => {
           const { extraParams } = e as DestinationIdentifyEvent;
           return {
@@ -256,43 +256,43 @@ export const schema: Schema = {
     fields: [
       ...base,
       {
-        name: "category",
-        type: "string",
-        path: "category",
+        name: 'category',
+        type: 'string',
+        path: 'category',
       },
       {
-        name: "name",
-        type: "string",
-        path: "context.page.name",
+        name: 'name',
+        type: 'string',
+        path: 'context.page.name',
       },
       {
-        name: "path",
-        type: "string",
-        path: "context.page.path",
+        name: 'path',
+        type: 'string',
+        path: 'context.page.path',
       },
       {
-        name: "title",
-        type: "string",
-        path: "context.page.title",
+        name: 'title',
+        type: 'string',
+        path: 'context.page.title',
       },
       {
-        name: "url",
-        type: "string",
-        path: "context.page.url",
+        name: 'url',
+        type: 'string',
+        path: 'context.page.url',
       },
       {
-        name: "referrer",
-        type: "string",
-        path: "context.page.referrer",
+        name: 'referrer',
+        type: 'string',
+        path: 'context.page.referrer',
       },
       {
-        name: "search",
-        type: "string",
-        path: "context.page.search",
+        name: 'search',
+        type: 'string',
+        path: 'context.page.search',
       },
       {
-        name: "extra_fields",
-        type: "json",
+        name: 'extra_fields',
+        type: 'json',
         transform: (e) => {
           const { extraParams } = e as DestinationPageEvent;
           return {
@@ -312,18 +312,18 @@ export const schema: Schema = {
     fields: [
       ...base,
       {
-        name: "category",
-        type: "string",
-        path: "category",
+        name: 'category',
+        type: 'string',
+        path: 'category',
       },
       {
-        name: "name",
-        type: "string",
-        path: "context.page.name",
+        name: 'name',
+        type: 'string',
+        path: 'context.page.name',
       },
       {
-        name: "extra_fields",
-        type: "json",
+        name: 'extra_fields',
+        type: 'json',
         transform: (e) => {
           const { extraParams } = e as DestinationScreenEvent;
           return {
@@ -343,22 +343,22 @@ export const schema: Schema = {
     fields: [
       ...base,
       {
-        name: "event",
-        type: "string",
+        name: 'event',
+        type: 'string',
         transform: (e) =>
           slugify((e as DestinationTrackEvent).event, {
-            replacement: "_",
+            replacement: '_',
             lower: true,
           }),
       },
       {
-        name: "event_text",
-        type: "string",
-        path: "event",
+        name: 'event_text',
+        type: 'string',
+        path: 'event',
       },
       {
-        name: "extra_fields",
-        type: "json",
+        name: 'extra_fields',
+        type: 'json',
         transform: (e) => {
           const { extraParams } = e as DestinationTrackEvent;
           return {

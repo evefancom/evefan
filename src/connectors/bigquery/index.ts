@@ -1,30 +1,30 @@
-import { getTokenFromGCPServiceAccount } from "@sagi.io/workers-jwt";
-import { Connector } from "..";
-import { WorkerConfig } from "../../config";
-import { DestinationEvent, EventType } from "../../event";
-import { propertyWithPath } from "../../utils";
-import { FanOutResult } from "../../writer";
-import { Field, schema } from "../../schema";
-import { BigqueryConfig, BigqueryDestination } from "@evefan/evefan-config";
+import { getTokenFromGCPServiceAccount } from '@sagi.io/workers-jwt';
+import { Connector } from '..';
+import { WorkerConfig } from '../../config';
+import { DestinationEvent, EventType } from '../../event';
+import { propertyWithPath } from '../../utils';
+import { FanOutResult } from '../../writer';
+import { Field, schema } from '../../schema';
+import { BigqueryConfig, BigqueryDestination } from '@evefan/evefan-config';
 
-const DESTINATION_TYPE = "bigquery";
+const DESTINATION_TYPE = 'bigquery';
 
-const DATASET_NAME = "evefan";
+const DATASET_NAME = 'evefan';
 
 const TABLE_MAP = {
-  alias: "aliases",
-  track: "tracks",
-  page: "pages",
-  screen: "screens",
-  identify: "identifies",
-  group: "groups",
+  alias: 'aliases',
+  track: 'tracks',
+  page: 'pages',
+  screen: 'screens',
+  identify: 'identifies',
+  group: 'groups',
 };
 
 const TYPE_MAP = {
-  string: "STRING",
-  boolean: "BOOLEAN",
-  timestamp: "TIMESTAMP",
-  json: "JSON",
+  string: 'STRING',
+  boolean: 'BOOLEAN',
+  timestamp: 'TIMESTAMP',
+  json: 'JSON',
 };
 
 type IErrorProto = {
@@ -119,11 +119,11 @@ async function createTable(
   name: string,
   fields: Field[]
 ) {
-  const aud = "https://bigquery.googleapis.com/";
+  const aud = 'https://bigquery.googleapis.com/';
 
   const projectName = config._secret_credentials.project_id;
   const payload = {
-    kind: "bigquery#table",
+    kind: 'bigquery#table',
     tableReference: {
       datasetId: DATASET_NAME,
       projectId: projectName,
@@ -138,11 +138,11 @@ async function createTable(
   };
 
   const url =
-    "https://bigquery.googleapis.com/bigquery/v2/projects/" +
+    'https://bigquery.googleapis.com/bigquery/v2/projects/' +
     projectName +
-    "/datasets/" +
+    '/datasets/' +
     DATASET_NAME +
-    "/tables";
+    '/tables';
 
   const token = await getTokenFromGCPServiceAccount({
     serviceAccountJSON: config._secret_credentials,
@@ -151,11 +151,11 @@ async function createTable(
 
   const response = (await (
     await fetch(url, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(payload),
       headers: {
-        "content-type": "application/json;charset=UTF-8",
-        Authorization: "Bearer " + token,
+        'content-type': 'application/json;charset=UTF-8',
+        Authorization: 'Bearer ' + token,
       },
     })
   ).json()) as ITableInsertResponse;
@@ -185,10 +185,10 @@ async function writeEvents(
   type: EventType,
   events: DestinationEvent[]
 ) {
-  const aud = "https://bigquery.googleapis.com/";
+  const aud = 'https://bigquery.googleapis.com/';
 
   if (events.filter((e) => e.type !== type).length > 0) {
-    throw new Error("All events must be of the same type");
+    throw new Error('All events must be of the same type');
   }
 
   try {
@@ -204,13 +204,13 @@ async function writeEvents(
   const projectName = config._secret_credentials.project_id;
 
   const url =
-    "https://bigquery.googleapis.com/bigquery/v2/projects/" +
+    'https://bigquery.googleapis.com/bigquery/v2/projects/' +
     projectName +
-    "/datasets/" +
+    '/datasets/' +
     DATASET_NAME +
-    "/tables/" +
+    '/tables/' +
     TABLE_MAP[type] +
-    "/insertAll";
+    '/insertAll';
 
   const token = await getTokenFromGCPServiceAccount({
     serviceAccountJSON: config._secret_credentials,
@@ -226,7 +226,7 @@ async function writeEvents(
         : null;
 
       // BigQuery requires JSON fields to be stringified before sending
-      if (field.type === "json") {
+      if (field.type === 'json') {
         r[field.name] = JSON.stringify(r[field.name]);
       }
 
@@ -246,11 +246,11 @@ async function writeEvents(
   const failedEvents = [];
   const response = (await (
     await fetch(url, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(payload),
       headers: {
-        "content-type": "application/json;charset=UTF-8",
-        Authorization: "Bearer " + token,
+        'content-type': 'application/json;charset=UTF-8',
+        Authorization: 'Bearer ' + token,
       },
     })
   ).json()) as ITableDataInsertAllResponse;
@@ -261,17 +261,17 @@ async function writeEvents(
         console.error(error);
         return JSON.stringify(error);
       })
-      .join("\n");
+      .join('\n');
     console.error(errStr);
     response.insertErrors.map(({ errors, index }) => {
-      failedEvents.push({ error: errors.join("\n"), body: events[index] });
+      failedEvents.push({ error: errors.join('\n'), body: events[index] });
     });
   }
   if (response.error) {
     console.error(response.error);
     failedEvents.push(
       ...events.map((e) => ({
-        error: response.error!.errors.join("\n"),
+        error: response.error!.errors.join('\n'),
         body: e,
       }))
     );
@@ -300,13 +300,13 @@ export default class BigqueryConnector implements Connector {
       return {
         destinationType: DESTINATION_TYPE,
         failedEvents: events.map((body) => ({
-          error: "Destination config not found",
+          error: 'Destination config not found',
           body,
         })),
       };
     }
 
-    console.log(`Fanning ${events.length} to ${DESTINATION_TYPE}`);
+    console.log(`${DESTINATION_TYPE}: sending ${events.length} event(s)`);
 
     const eventTypes = [...new Set(events.map((e) => e.type))];
 
@@ -320,7 +320,11 @@ export default class BigqueryConnector implements Connector {
     const failedEvents = (
       await Promise.all(
         eventTypes.map(async (type) => {
-          return await writeEvents(destination.config, type, eventsByType[type]);
+          return await writeEvents(
+            destination.config,
+            type,
+            eventsByType[type]
+          );
         })
       )
     ).flatMap((e) => e);

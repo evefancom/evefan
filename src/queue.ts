@@ -1,8 +1,8 @@
-import { DestinationType } from "@evefan/evefan-config";
-import { getConfig } from "./config";
-import { DestinationEvent } from "./event";
-import { fanOutEventData } from "./writer";
-import { Bindings } from "./env";
+import { DestinationType } from '@evefan/evefan-config';
+import { getConfig } from './config';
+import { DestinationEvent } from './event';
+import { fanOutEventData } from './writer';
+import { Bindings } from './env';
 
 type QueueEnv = Bindings;
 
@@ -17,7 +17,7 @@ export async function handleQueueEventConsumer(
   const maxRetentionPeriod = 4 * 24 * 60 * 60 * 1000; // 4 days in milliseconds
 
   // Extract destination type from queue name (last part of the queue name)
-  const destinationType = batch.queue.split("-").pop() as DestinationType;
+  const destinationType = batch.queue.split('-').pop() as DestinationType;
 
   try {
     const config = await getConfig();
@@ -125,7 +125,7 @@ export async function handleQueueEventConsumer(
     }
   } catch (error) {
     console.error(
-      "Error when processing queue message for queue " + batch.queue,
+      'Error when processing queue message for queue ' + batch.queue,
       error
     );
   }

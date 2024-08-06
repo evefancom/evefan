@@ -1,30 +1,30 @@
-import postgres, { PostgresError } from "postgres";
-import { Connector } from "..";
-import { WorkerConfig } from "../../config";
-import { DestinationEvent, EventType } from "../../event";
-import { propertyWithPath } from "../../utils";
-import { FanOutResult } from "../../writer";
-import { Field, schema } from "../../schema";
-import { PostgresConfig, PostgresDestination } from "@evefan/evefan-config";
+import postgres, { PostgresError } from 'postgres';
+import { Connector } from '..';
+import { WorkerConfig } from '../../config';
+import { DestinationEvent, EventType } from '../../event';
+import { propertyWithPath } from '../../utils';
+import { FanOutResult } from '../../writer';
+import { Field, schema } from '../../schema';
+import { PostgresConfig, PostgresDestination } from '@evefan/evefan-config';
 
-const DESTINATION_TYPE = "postgres";
+const DESTINATION_TYPE = 'postgres';
 
-const DUPLICATE_TABLE = "42P07";
+const DUPLICATE_TABLE = '42P07';
 
 const TABLE_MAP = {
-  alias: "aliases",
-  track: "tracks",
-  page: "pages",
-  screen: "screens",
-  identify: "identifies",
-  group: "groups",
+  alias: 'aliases',
+  track: 'tracks',
+  page: 'pages',
+  screen: 'screens',
+  identify: 'identifies',
+  group: 'groups',
 };
 
 const TYPE_MAP = {
-  string: "text",
-  boolean: "boolean",
-  timestamp: "timestamptz",
-  json: "jsonb",
+  string: 'text',
+  boolean: 'boolean',
+  timestamp: 'timestamptz',
+  json: 'jsonb',
 };
 
 /**
@@ -63,7 +63,7 @@ const createTable = async (
     const sql = clientByConfig(config);
     const columns = fields.map((f) => `${f.name} ${TYPE_MAP[f.type]}`);
     await sql.unsafe(
-      `CREATE TABLE IF NOT EXISTS ${name} (${columns.join(", ")})`
+      `CREATE TABLE IF NOT EXISTS ${name} (${columns.join(', ')})`
     );
     console.log(`${DESTINATION_TYPE}: table ${name} created successfully.`);
   } catch (e: any) {
@@ -93,7 +93,7 @@ const writeEvents = async (
   events: DestinationEvent[]
 ) => {
   if (events.filter((e) => e.type !== type).length > 0) {
-    throw new Error("All events must be of the same type");
+    throw new Error('All events must be of the same type');
   }
 
   try {
@@ -156,13 +156,13 @@ export default class PostgresConnector implements Connector {
       return {
         destinationType: DESTINATION_TYPE,
         failedEvents: events.map((body) => ({
-          error: "Destination config not found",
+          error: 'Destination config not found',
           body,
         })),
       };
     }
 
-    console.log(`Fanning ${events.length} to ${DESTINATION_TYPE}`);
+    console.log(`${DESTINATION_TYPE}: sending ${events.length} event(s)`);
 
     const eventTypes = [...new Set(events.map((e) => e.type))];
 
@@ -176,7 +176,11 @@ export default class PostgresConnector implements Connector {
     const failedEvents = (
       await Promise.all(
         eventTypes.map(async (type) => {
-          return await writeEvents(destination.config, type, eventsByType[type]);
+          return await writeEvents(
+            destination.config,
+            type,
+            eventsByType[type]
+          );
         })
       )
     ).flatMap((e) => e);

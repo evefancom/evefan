@@ -541,18 +541,13 @@ export const getEventExtraParams = (event: Event, type: EventType) => {
   };
 };
 
-export function formatEvent(
-  event: Event,
-  context: Context,
-  type: EventType
-): DestinationEvent {
-  const destinationEvent: DestinationEvent = {
+export function formatEvent(event: Event, context: Context, type: EventType) {
+  return {
     ...event,
+    type: event.type || type,
     messageId: event.messageId || uuid4(),
     extraParams: getEventExtraParams(event, type),
     location: getLocationFromCFData(context.req.raw.cf),
     useragent: getUserAgentFromUAString(event.context.userAgent),
   };
-
-  return destinationEvent;
 }

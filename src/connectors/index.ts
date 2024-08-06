@@ -1,6 +1,6 @@
-import { WorkerConfig } from "../config";
-import { DestinationEvent } from "../event";
-import { FanOutResult } from "../writer";
+import { WorkerConfig } from '../config';
+import { DestinationEvent } from '../event';
+import { FanOutResult } from '../writer';
 
 export interface Connector {
   write(

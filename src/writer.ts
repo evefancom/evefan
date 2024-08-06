@@ -1,8 +1,8 @@
-import { delay } from "./utils";
-import { WorkerConfig } from "./config";
-import { DestinationEvent } from "./event";
-import { DestinationType } from "@evefan/evefan-config";
-import { Bindings } from "./env";
+import { delay } from './utils';
+import { WorkerConfig } from './config';
+import { DestinationEvent } from './event';
+import { DestinationType } from '@evefan/evefan-config';
+import { Bindings } from './env';
 
 export async function handleEventFanout(
   config: WorkerConfig,
@@ -10,7 +10,7 @@ export async function handleEventFanout(
   events: DestinationEvent[]
 ) {
   return new Promise<void>(async (resolve) => {
-    console.log("Processing received events: " + events.length);
+    console.log('Processing received events: ' + events.length);
     const failedEvents = await fanOutEventData(config, events);
 
     await Promise.all(
@@ -36,7 +36,7 @@ export async function handleEventFanout(
           const health = env.HEALTH.get(id);
           await health.updateEventsState(failedFanouts.failedEvents);
         } catch (e) {
-          console.error("Error in processing failedFanouts:", e);
+          console.error('Error in processing failedFanouts:', e);
         }
       })
     );
