@@ -9,11 +9,7 @@ import {
   DestinationScreenEvent,
   DestinationTrackEvent,
 } from '../../event';
-import {
-  propertyWithPath,
-  removeKeysFromObject,
-  toUnixTimestampInMS,
-} from '../../utils';
+import { removeKeysFromObject, toUnixTimestampInMS } from '../../utils';
 import { FanOutResult } from '../../writer';
 import { mapping } from './config';
 import { constructPayload } from './mapper';
@@ -46,11 +42,11 @@ interface MixpanelResponse {
 
 const buildUtmParams = (event: DestinationEvent) => {
   return {
-    utm_medium: event.context.campaign?.medium,
-    utm_source: event.context.campaign?.source,
-    utm_campaign: event.context.campaign?.name,
-    utm_content: event.context.campaign?.content,
-    utm_term: event.context.campaign?.term,
+    utm_medium: event.context?.campaign?.medium,
+    utm_source: event.context?.campaign?.source,
+    utm_campaign: event.context?.campaign?.name,
+    utm_content: event.context?.campaign?.content,
+    utm_term: event.context?.campaign?.term,
   };
 };
 
@@ -93,7 +89,7 @@ const transformBaseEvent = (
     };
   }
 
-  if (event.context.device) {
+  if (event.context?.device) {
     const { type, token } = event.context.device;
     if (['ios', 'watchos', 'ipados', 'tvos'].includes(type.toLowerCase())) {
       const payload = constructPayload(event, mapping.profile.ios);
@@ -116,9 +112,9 @@ const transformBaseEvent = (
     }
   }
 
-  if (event.useragent.browser_family) {
-    properties.$browser = event.useragent.browser_family;
-    properties.$browser_version = event.useragent.browser_version;
+  if (event.userAgent.browserFamily) {
+    properties.$browser = event.userAgent.browserFamily;
+    properties.$browser_version = event.userAgent.browserVersion;
   }
 
   return properties;
@@ -181,14 +177,16 @@ const transformPageOrScreenEvent = (
   }
 
   if (event.type === 'page') {
-    properties.current_page_title = event.properties.title;
+    properties.current_page_title = event.properties?.title;
 
-    const url = new URL(event.properties.url);
+    if (event.properties?.url) {
+      const url = new URL(event.properties?.url || '');
 
-    properties.current_domain = url.hostname;
-    properties.current_url_path = url.pathname;
-    properties.current_url_protocol = url.protocol;
-    properties.current_url_search = url.search;
+      properties.current_domain = url.hostname;
+      properties.current_url_path = url.pathname;
+      properties.current_url_protocol = url.protocol;
+      properties.current_url_search = url.search;
+    }
   } else if (event.type === 'screen') {
     properties.current_page_title = event.name;
   }
@@ -260,7 +258,7 @@ const transformEvents = (
           config.identityMerge === 'original'
             ? event.userId || event.anonymousId
             : event.userId || `$device:${event.anonymousId}`,
-        $ip: event.context.ip,
+        $ip: event.context?.ip,
         $ignore_time: event.context?.active === false,
         $set: transformIdentifyEvent(config, event),
       });
@@ -295,7 +293,7 @@ const transformEvents = (
           config.identityMerge === 'original'
             ? event.userId || event.anonymousId
             : event.userId || `$device:${event.anonymousId}`,
-        $ip: event.context.ip,
+        $ip: event.context?.ip,
         $set: {
           $group_id: event.groupId,
         },
@@ -307,7 +305,7 @@ const transformEvents = (
         $token: config._secret_credentials.token,
         $group_key: 'groupId',
         $group_id: event.groupId,
-        $ip: event.context.ip,
+        $ip: event.context?.ip,
         $set: {
           ...event.traits,
         },

@@ -1,10 +1,10 @@
 import { getTokenFromGCPServiceAccount } from '@sagi.io/workers-jwt';
 import { Connector } from '..';
 import { WorkerConfig } from '../../config';
-import { DestinationEvent, EventType } from '../../event';
+import { DestinationEvent, DestinationEventType } from '../../event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
-import { Field, schema } from '../../schema';
+import { Field, schema } from '../../persistance/schema';
 import { BigqueryConfig, BigqueryDestination } from '@evefan/evefan-config';
 
 const DESTINATION_TYPE = 'bigquery';
@@ -182,7 +182,7 @@ async function createTable(
  */
 async function writeEvents(
   config: BigqueryConfig,
-  type: EventType,
+  type: DestinationEventType,
   events: DestinationEvent[]
 ) {
   const aud = 'https://bigquery.googleapis.com/';
@@ -314,7 +314,7 @@ export default class BigqueryConnector implements Connector {
     const eventsByType = eventTypes.reduce((acc, type) => {
       acc[type] = events.filter((e) => e.type === type);
       return acc;
-    }, {} as Record<EventType, DestinationEvent[]>);
+    }, {} as Record<DestinationEventType, DestinationEvent[]>);
 
     // Write events to BigQuery
     const failedEvents = (

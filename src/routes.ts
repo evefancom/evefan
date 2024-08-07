@@ -1,12 +1,13 @@
 import { Context, Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { cors } from 'hono/cors';
-import { formatEvent, EventType, DestinationEvent } from './event';
+import { formatEvent, DestinationEvent } from './event';
 import { getConfig, WorkerConfig } from './config';
 import { handleEventFanout } from './writer';
 import { Bindings } from './env';
 import { Batcher } from './batcher';
 import { DestinationType } from '@evefan/evefan-config';
+import { EventType } from './schema';
 
 type WorkerEnv = {
   Bindings: Bindings;
@@ -213,7 +214,7 @@ async function handleAnalyticsJsMethod(
       ? body.map((b) => formatEvent(b, c, type!!))
       : [formatEvent(body, c, type!!)];
   } catch (e: any) {
-    console.error('Error parsing request body: ', e);
+    console.error('Error parsing request body: ', JSON.stringify(e));
     return c.json({ error: 'Error parsing request body' }, { status: 400 });
   }
 

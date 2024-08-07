@@ -1,10 +1,10 @@
 import postgres, { PostgresError } from 'postgres';
 import { Connector } from '..';
 import { WorkerConfig } from '../../config';
-import { DestinationEvent, EventType } from '../../event';
+import { DestinationEvent, DestinationEventType } from '../../event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
-import { Field, schema } from '../../schema';
+import { Field, schema } from '../../persistance/schema';
 import { PostgresConfig, PostgresDestination } from '@evefan/evefan-config';
 
 const DESTINATION_TYPE = 'postgres';
@@ -89,7 +89,7 @@ const createTable = async (
  */
 const writeEvents = async (
   config: PostgresConfig,
-  type: EventType,
+  type: DestinationEventType,
   events: DestinationEvent[]
 ) => {
   if (events.filter((e) => e.type !== type).length > 0) {
@@ -170,7 +170,7 @@ export default class PostgresConnector implements Connector {
     const eventsByType = eventTypes.reduce((acc, type) => {
       acc[type] = events.filter((e) => e.type === type);
       return acc;
-    }, {} as Record<EventType, DestinationEvent[]>);
+    }, {} as Record<DestinationEventType, DestinationEvent[]>);
 
     // Write events to Postgres
     const failedEvents = (

@@ -21,6 +21,8 @@ export async function handleQueueEventConsumer(
 
   try {
     const config = await getConfig();
+    const id = env.HEALTH.idFromName(destinationType);
+    const health = env.HEALTH.get(id);
 
     // Up to 18 retries fit in the 4 day period allowed by cloudflare for failed messages
     const maxRetries = 18;
@@ -63,8 +65,6 @@ export async function handleQueueEventConsumer(
       );
 
       // Reset health check for successful messages
-      const id = env.HEALTH.idFromName(destinationType);
-      const health = env.HEALTH.get(id);
       await health.resetEventsState(
         successfulMessages.map((m) => m.body.messageId)
       );
@@ -121,6 +121,11 @@ export async function handleQueueEventConsumer(
     if (remainingEvents.length > 0) {
       console.warn(
         `${destinationType}: ${remainingEvents.length} failed events will be discarded`
+      );
+
+      // Reset health check for discarded messages
+      await health.resetEventsState(
+        remainingEvents.map((m) => m.body.messageId)
       );
     }
   } catch (error) {

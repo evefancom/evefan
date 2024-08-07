@@ -2,347 +2,73 @@ import UAParser from 'ua-parser-js';
 import { removeKeysFromObject } from './utils';
 import { Context } from 'hono';
 import { v4 as uuid4 } from 'uuid';
+import {
+  AliasEvent,
+  EventType,
+  GroupEvent,
+  IdentifyEvent,
+  PageEvent,
+  ScreenEvent,
+  TrackEvent,
+  Event,
+  EventSchema,
+} from './schema';
 
-export interface UserAgent {
-  browser_family?: string;
-  browser_version?: string;
-  os_family?: string;
-  os_version?: string;
-  device_family?: string;
-  device_brand?: string;
-  device_model?: string;
+/**
+ * Represents user agent information parsed from the User-Agent string.
+ */
+export type UserAgent = {
+  /** Browser family (e.g., Chrome, Firefox) */
+  browserFamily?: string;
+  /** Browser version */
+  browserVersion?: string;
+  /** Operating system family (e.g., Windows, macOS) */
+  osFamily?: string;
+  /** Operating system version */
+  osVersion?: string;
+  /** Device family (e.g., iPhone, Samsung) */
+  deviceFamily?: string;
+  /** Device brand */
+  deviceBrand?: string;
+  /** Device model */
+  deviceModel?: string;
+  /** Indicates if the user agent is a bot */
   bot?: boolean;
-}
+};
 
-export interface Location {
+/**
+ * Represents location information.
+ */
+export type Location = {
+  /** Country of the location */
   country: string;
+  /** Region or state of the location */
   region: string;
+  /** City of the location */
   city: string;
+  /** Latitude coordinate */
   latitude: number;
+  /** Longitude coordinate */
   longitude: number;
-}
+};
 
+/**
+ * Represents the parameters of a marketing campaign.
+ */
 export interface CampaignParams {
+  /** The source of the campaign (e.g., google, newsletter) */
   source: string;
+  /** The medium of the campaign (e.g., cpc, banner, email) */
   medium: string;
+  /** The terms or keywords associated with the campaign */
   term: string;
+  /** The content identifier of the ad or content */
   content: string;
+  /** The name of the campaign */
   name: string;
+  /** Additional custom parameters for the campaign */
   [key: string]: string;
 }
-
-export type EventType =
-  | 'track'
-  | 'identify'
-  | 'page'
-  | 'screen'
-  | 'group'
-  | 'alias';
-
-interface EventBase {
-  timestamp: string;
-  integrations: Record<string, unknown>;
-  anonymousId: string;
-  type: EventType;
-  properties?: {
-    [key: string]: string | undefined;
-  };
-  traits?: {
-    [key: string]: string | number | boolean | object | undefined;
-  };
-  category?: string;
-  //screen resolution is missing
-  context: {
-    active?: boolean;
-    app?: {
-      name: string;
-      version: string;
-      build: string;
-    };
-    campaign?: {
-      source: string;
-      medium: string;
-      term: string;
-      content: string;
-      name: string;
-      //extra
-      [key: string]: string;
-    };
-    device?: {
-      id: string;
-      advertisingId: string;
-      manufacturer: string;
-      model: string;
-      name: string;
-      type: string;
-      version: string;
-      token?: string;
-    };
-    ip?: string;
-    library: {
-      name: string;
-      version: string;
-    };
-    locale?: string;
-    network?: {
-      ip: string;
-      city: string;
-      country: string;
-      region: string;
-    };
-    page?: {
-      bluetooth?: string;
-      carrier?: string;
-      cellular?: string;
-      wifi?: string;
-    };
-    os?: {
-      name: string;
-      version: string;
-    };
-    screen?: {
-      density: string;
-      height: number;
-      width: number;
-    };
-    timezone?: string;
-    traits?: {
-      [key: string]: string | number | boolean | object | undefined;
-    };
-    userAgent: string;
-    userAgentData: {
-      brands: Array<{
-        brand: string;
-        version: string;
-      }>;
-      mobile: boolean;
-      platform: string;
-    };
-  };
-  messageId: string;
-  writeKey: string;
-  userId: string | null;
-  sentAt: string;
-  _metadata: {
-    bundled: Array<string>;
-    unbundled: Array<string>;
-    bundledIds: Array<string>;
-  };
-  originalTimestamp?: string;
-}
-
-export interface PageEvent extends EventBase {
-  type: 'page';
-  properties: {
-    path: string;
-    referrer: string;
-    search: string;
-    title: string;
-    url: string;
-    [key: string]: string;
-  };
-  name?: string;
-  category?: string;
-}
-
-export interface ScreenEvent extends EventBase {
-  type: 'screen';
-  properties: {
-    [key: string]: string;
-  };
-  name?: string;
-  category?: string;
-}
-
-export interface TrackEvent extends EventBase {
-  type: 'track';
-  event: string;
-  properties: {
-    revenue?: string;
-    currency?: string;
-    value?: string;
-    [key: string]: string | undefined;
-  };
-}
-
-export interface IdentifyEvent extends EventBase {
-  type: 'identify';
-  traits: {
-    /**
-     * Full name of a user. If you only pass a first and last name
-     * Segment automatically fills in the full name for you.
-     */
-    name?: string;
-    /**
-     * Email address of a user.
-     */
-    email?: string;
-    /**
-     * Plan that a user is on.
-     */
-    plan?: string;
-    /**
-     * URL to an avatar image for the user.
-     */
-    avatar?: string;
-    /**
-     * Date the user’s account was first created. Segment recommends using ISO-8601 date strings.
-     */
-    birthday?: string;
-    /**
-     * Company the user represents, optionally containing: name, id, industry, employee_count or plan
-     */
-    company?: {
-      name?: string;
-      id?: string;
-      industry?: string;
-      employee_count?: number;
-      plan?: string;
-    };
-    /**
-     * Age of a user.
-     */
-    age?: number;
-    /**
-     * Number of logins of a user.
-     */
-    logins?: number;
-    /**
-     * First name of a user.
-     */
-    firstName?: string;
-    /**
-     * Gender of a user.
-     */
-    gender?: string;
-    /**
-     * Unique ID in your database for a user.
-     */
-    id?: string;
-    /**
-     * Last name of a user.
-     */
-    lastName?: string;
-    /**
-     * Phone number of a user.
-     */
-    phone?: string;
-    /**
-     * Title of a user, usually related to their position at a specific company. Example: “VP of Engineering”
-     */
-    title?: string;
-    /**
-     * User’s username. This should be unique to each user, like the usernames of Twitter or GitHub.
-     */
-    username?: string;
-    /**
-     * Website of a user.
-     */
-    website?: string;
-    /**
-     * Street address of a user. This should be a dictionary containing
-     * optional city, country, postalCode, state, or street.
-     */
-    address?: {
-      street?: string;
-      city?: string;
-      state?: string;
-      postalCode?: string;
-      country?: string;
-    };
-    /**
-     * Date the user’s account was first created. Segment recommends using ISO-8601 date strings.
-     */
-    createdAt?: string;
-    /**
-     * Description of the user.
-     */
-    description?: string;
-    /**
-     * Extra traits
-     */
-    [key: string]: string | number | boolean | undefined | object;
-  };
-}
-
-export interface GroupEvent extends EventBase {
-  type: 'group';
-  groupId: string;
-  traits: {
-    /**
-     * Street address of a group. This should be a dictionary containing
-     * optional city, country, postalCode, state, or street.
-     */
-    address?: {
-      street?: string;
-      city?: string;
-      state?: string;
-      postalCode?: string;
-      country?: string;
-    };
-    /**
-     * URL to an avatar image for the group.
-     */
-    avatar?: string;
-    /**
-     * Date the group’s account was first created. Segment recommends ISO-8601 date strings.
-     */
-    createdAt?: string;
-    /**
-     * Description of the group, like their personal bio.
-     */
-    description?: string;
-    /**
-     * Email address of group.
-     */
-    email?: string;
-    /**
-     * Number of employees of a group, typically used for companies.
-     */
-    employees?: string;
-    /**
-     * Unique ID in your database for a group.
-     */
-    id?: string;
-    /**
-     * Industry a user works in, or a group is part of.
-     */
-    industry?: string;
-    /**
-     * Name of a group.
-     */
-    name?: string;
-    /**
-     * Phone number of a group.
-     */
-    phone?: string;
-    /**
-     * Website of a group.
-     */
-    website?: string;
-    /**
-     * Plan that a group is in.
-     */
-    plan?: string;
-    /**
-     * Extra traits
-     */
-    [key: string]: string | number | boolean | undefined | object;
-  };
-}
-
-export interface AliasEvent extends EventBase {
-  type: 'alias';
-  previousId: string;
-}
-
-export type Event =
-  | PageEvent
-  | ScreenEvent
-  | TrackEvent
-  | IdentifyEvent
-  | GroupEvent
-  | AliasEvent;
 
 export const ReservedPageEventKeys = [
   'timestamp',
@@ -418,15 +144,18 @@ export const ReservedCampaignKeys = [
   'name',
 ];
 
-interface DestinationEventBase {
+type DestinationEventBase = {
+  messageId: string;
+  type: EventType;
+  timestamp: string;
   location: Location;
-  useragent: UserAgent;
+  userAgent: UserAgent;
   extraParams: {
     properties: Record<string, any>;
     context: Record<string, any>;
     campaign: Record<string, any>;
   };
-}
+};
 
 export type DestinationPageEvent = PageEvent & DestinationEventBase;
 
@@ -448,7 +177,9 @@ export type DestinationEvent =
   | DestinationGroupEvent
   | DestinationAliasEvent;
 
-export const getUserAgentFromUAString = (uaString: string): UserAgent => {
+export type DestinationEventType = EventType;
+
+export const getUserAgentFromUAString = (uaString?: string): UserAgent => {
   /**
    * {
    * ua: '',
@@ -462,13 +193,13 @@ export const getUserAgentFromUAString = (uaString: string): UserAgent => {
 
   const uaParsed = new UAParser(uaString).getResult();
   return {
-    browser_family: uaParsed.browser.name,
-    browser_version: uaParsed.browser.version,
-    os_family: uaParsed.os.name,
-    os_version: uaParsed.os.version,
-    device_family: uaParsed.device.model,
-    device_brand: uaParsed.device.vendor,
-    device_model: uaParsed.device.model,
+    browserFamily: uaParsed.browser.name,
+    browserVersion: uaParsed.browser.version,
+    osFamily: uaParsed.os.name,
+    osVersion: uaParsed.os.version,
+    deviceFamily: uaParsed.device.model,
+    deviceBrand: uaParsed.device.vendor,
+    deviceModel: uaParsed.device.model,
     bot: false,
   };
 };
@@ -500,6 +231,8 @@ export const getLocationFromCFData = (
 export const getEventExtraParams = (event: Event, type: EventType) => {
   var extraProperties = {};
   var extraTraits = {};
+  var eventContextExtra = {};
+  var eventCampaignExtra = {};
 
   if (type === 'page' && event.properties) {
     extraProperties = removeKeysFromObject(
@@ -519,15 +252,19 @@ export const getEventExtraParams = (event: Event, type: EventType) => {
     extraTraits = removeKeysFromObject(event.traits, ReservedGroupTraitKeys);
   }
 
-  const eventContextExtra = removeKeysFromObject(
-    event.context,
-    ReservedContextKeys
-  );
+  if (event.context) {
+    eventContextExtra = removeKeysFromObject(
+      event.context,
+      ReservedContextKeys
+    );
+  }
 
-  const eventCampaignExtra = removeKeysFromObject(
-    event.context.campaign || {},
-    ReservedCampaignKeys
-  );
+  if (event.context?.campaign) {
+    eventCampaignExtra = removeKeysFromObject(
+      event.context.campaign,
+      ReservedCampaignKeys
+    );
+  }
 
   //empty objects, should it be something else ?
   return {
@@ -538,13 +275,22 @@ export const getEventExtraParams = (event: Event, type: EventType) => {
   };
 };
 
-export function formatEvent(event: Event, context: Context, type: EventType) {
+export function formatEvent(
+  rawEvent: Record<string, any>,
+  context: Context,
+  type: EventType
+) {
+  const event = EventSchema.parse({
+    ...rawEvent,
+    type: rawEvent.type || type,
+    messageId: rawEvent.messageId || uuid4(),
+    sentAt: rawEvent.sentAt || new Date().toISOString(),
+    timestamp: rawEvent.timestamp || new Date().toISOString(),
+  });
   return {
     ...event,
-    type: event.type || type,
-    messageId: event.messageId || uuid4(),
     extraParams: getEventExtraParams(event, type),
     location: getLocationFromCFData(context.req.raw.cf),
-    useragent: getUserAgentFromUAString(event.context.userAgent),
-  };
+    userAgent: getUserAgentFromUAString(event.context?.userAgent),
+  } as DestinationEvent;
 }
