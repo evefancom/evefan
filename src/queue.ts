@@ -135,3 +135,74 @@ export async function handleQueueEventConsumer(
     );
   }
 }
+
+export async function checkCloudflareQueuesConfiguration(): Promise<
+  Record<DestinationType, string[]>
+> {
+  const config = await getConfig();
+
+  if (!config.queue.credentials.accountId || !config.queue.credentials.apiKey) {
+    throw new Error('Cloudflare queue credentials are not set');
+  }
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${config.queue.credentials.accountId}/queues`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.queue.credentials.apiKey}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = (await response.json()) as {
+    success: boolean;
+    result: Array<{
+      queue_name: string;
+      consumers: Array<{ script: string }>;
+    }>;
+  };
+
+  if (!data.success) {
+    throw new Error('Failed to fetch Cloudflare queues');
+  }
+
+  const configuredQueues = new Map(
+    data.result.map((queue) => [queue.queue_name, queue])
+  );
+  // @ts-ignore
+  const errors: Record<DestinationType, string[]> = {};
+
+  config.destinations.forEach((dest) => {
+    const queueName = `${config.deploy.scriptName}-${dest.type}`;
+    const deadLetterQueueName = `${config.deploy.scriptName}-dl-${dest.type}`;
+    const destErrors: string[] = [];
+
+    if (!configuredQueues.has(queueName)) {
+      destErrors.push(`Missing queue: ${queueName}`);
+    } else {
+      const queue = configuredQueues.get(queueName)!;
+      if (queue.consumers.length === 0) {
+        destErrors.push(`No consumers for queue: ${queueName}`);
+      } else if (queue.consumers[0].script !== config.deploy.scriptName) {
+        destErrors.push(
+          `Consumer script name mismatch for queue: ${queueName}. Expected: ${config.deploy.scriptName}, Found: ${queue.consumers[0].script}`
+        );
+      }
+    }
+
+    if (!configuredQueues.has(deadLetterQueueName)) {
+      destErrors.push(`Missing dead letter queue: ${deadLetterQueueName}`);
+    }
+
+    if (destErrors.length > 0) {
+      errors[dest.type] = destErrors;
+    }
+  });
+
+  return errors;
+}
