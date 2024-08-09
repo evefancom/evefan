@@ -8,6 +8,7 @@ import { Bindings } from './env';
 import { Batcher } from './batcher';
 import { DestinationType } from '@evefan/evefan-config';
 import { EventType } from './schema';
+import { checkCloudflareQueuesConfiguration } from './queue';
 
 type WorkerEnv = {
   Bindings: Bindings;
@@ -180,7 +181,9 @@ app.get('/v1/health', workerMiddleware, consoleAuthMiddleware, async (c) => {
     state[d.type] = errors;
   }
 
-  return c.json(state);
+  const queueErrors = await checkCloudflareQueuesConfiguration();
+
+  return c.json({ ...state, ...queueErrors });
 });
 
 async function handleAnalyticsJsMethod(
