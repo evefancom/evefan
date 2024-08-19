@@ -3,9 +3,9 @@
 </h1>
 <p align="center">
   <p align="center"><b> Evefan — Self-Hosted Segment Alternative</b></p>
-  <p align="center"><b> 99% Costs Savings with Cloudflare Workers 💸</b></p>
+  <p align="center"><b> Achieve 99% Costs Savings with Cloudflare Workers 💸</b></p>
   <p align="center"><b> Private by Default; no devops headaches to maintain.</b></p>
-  <p align="center"><b>Your Own Internet Scale Events Infrastructure</b></p>
+  <p align="center"><b>Your Very Own Internet Scale Events Infrastructure</b></p>
 </p>
 
 <h4 align="center">
@@ -29,7 +29,7 @@
 
 Evefan enables developers to privately capture, transform and deliver customer events at any scale.
 
-Evefan is open source and self-hosted on Cloudflare workers. It can be configured either via Evefan Console or using Wrangler. The quick start guide focuses on console configuring as recommended for most people, but you can see alternative configuration options here.
+Evefan is open source and self-hosted on Cloudflare workers. It can be configured either via Evefan Console or using Wrangler. Get started in minutes using the [Evefan Console](https://console.evefan.com).
 
 <h1 align="center">
     <img src="https://console.evefan.com/img/brand/event-fan.png" alt="event-fan">
@@ -37,61 +37,15 @@ Evefan is open source and self-hosted on Cloudflare workers. It can be configure
 
 ## Getting Started
 
-By FAR, the simplest way to configure, deploy, and observe Evefan is via [the Console](https://console.evefan.com). 
-
+By FAR, the simplest way to configure, deploy, and observe Evefan is via [the Console](https://console.evefan.com).
 
 You can review our official docs for our quick start steps: https://docs.evefan.com
 
-We never get access to your data. However, for the inspired, you can always do that yourself using Wrangler, if you like. 
+We never get access to your data. However, for the inspired, you can always do that yourself using Wrangler using our [alternative configuration guide here](https://github.com/evefancom/evefan/wiki).
 
 ## High-Level Architecture
 
-Evefan consists of several key components:
-
-1. Worker Router
-2. Durable Objects for Batching and Error Tracking
-3. Queues for Failure Handling
-
-### 1. Worker Router
-
-The worker router is the entry point for all incoming requests. It's responsible for:
-
-- Parsing incoming requests
-- Routing requests to the appropriate handlers
-- Initializing and coordinating with other components
-
-The router is implemented in the `app.fetch` function, which is exported as the main fetch handler in `src/index.ts`.
-
-### 2. Durable Objects
-
-#### Batching (Batcher)
-
-The Batcher Durable Object is used to aggregate events before sending them to destinations. This helps in:
-
-- Reducing the number of API calls to destinations
-- Improving overall throughput
-- Minimizing the risk of rate limiting
-
-The Batcher is implemented in `src/batcher.ts`.
-
-#### Error Tracking (HealthChecker)
-
-The HealthChecker Durable Object is responsible for:
-
-- Tracking errors in processing events for destinations
-- Providing insights into the error rates for each destination
-
-The HealthChecker is implemented in `src/health.ts`.
-
-### 3. Queues for Failure Handling
-
-Queues are used to handle failures when sending events to destinations. The queue system:
-
-- Stores failed events for retry
-- Implements a backoff strategy for retries
-- Ensures eventual delivery of events
-
-The queue handler is implemented in the `handleQueueEventConsumer` function in `src/queue.ts`.
+You can read more about the architecture in our [Architecture documentation](/architecture.md).
 
 ## Supported Destinations
 
