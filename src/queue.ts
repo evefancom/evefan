@@ -14,9 +14,9 @@ export async function handleQueueEventConsumer(
     `Handling batch of ${batch.messages.length} events from queue ${batch.queue}`
   );
   const currentTime = Date.now();
-  const maxRetentionPeriod = 4 * 24 * 60 * 60 * 1000; // 4 days in milliseconds
+  const maxRetentionPeriod = 4 * 24 * 60 * 60 * 1000; // 4 days in milliseconds.
 
-  // Extract destination type from queue name (last part of the queue name)
+  // Extract destination type from queue name (last part of the queue name).
   const destinationType = batch.queue.split('-').pop() as DestinationType;
 
   try {
@@ -24,7 +24,7 @@ export async function handleQueueEventConsumer(
     const id = env.HEALTH.idFromName(destinationType);
     const health = env.HEALTH.get(id);
 
-    // Up to 18 retries fit in the 4 day period allowed by cloudflare for failed messages
+    // Up to 18 retries fit in the 4 day period allowed by cloudflare for failed messages.
     const maxRetries = 18;
 
     const destination = config.destinations.find(
@@ -64,16 +64,16 @@ export async function handleQueueEventConsumer(
         `${destinationType}: acknowledging ${successfulMessages.length} successful events`
       );
 
-      // Reset health check for successful messages
+      // Reset health check for successful messages.
       await health.resetEventsState(
         successfulMessages.map((m) => m.body.messageId)
       );
     }
 
-    // Ack successful messages (may need check by event id)
+    // Ack successful messages (may need check by event id).
     successfulMessages.forEach((message) => message.ack());
 
-    // requeue failed messages that haven't reached max retries
+    // Requeue failed messages that haven't reached max retries.
     const messagesToRequeue = batch.messages.filter(
       (message) =>
         (failed.some((failedEvent) =>
@@ -93,7 +93,7 @@ export async function handleQueueEventConsumer(
     }
 
     messagesToRequeue.forEach((message) => {
-      // Exponential backoff with a cap of 12 hours
+      // Exponential backoff with a cap of 12 hours.
       const delaySeconds = Math.min(
         Math.pow(2, message.attempts + 1),
         12 * 60 * 60
@@ -107,7 +107,7 @@ export async function handleQueueEventConsumer(
       });
     });
 
-    // Save failed messages that have reached max retries or max retention period to S3
+    // Save failed messages that have reached max retries or max retention period to S3.
     const remainingEvents = batch.messages.filter(
       (message) =>
         failed.some((failedEvent) =>
@@ -123,7 +123,7 @@ export async function handleQueueEventConsumer(
         `${destinationType}: ${remainingEvents.length} failed events will be discarded`
       );
 
-      // Reset health check for discarded messages
+      // Reset health check for discarded messages.
       await health.resetEventsState(
         remainingEvents.map((m) => m.body.messageId)
       );
