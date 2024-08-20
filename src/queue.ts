@@ -102,6 +102,7 @@ export async function handleQueueEventConsumer(
       console.debug(
         `${destinationType}: retrying event ${message.id} with attempts ${message.attempts} in ${delaySeconds} seconds`
       );
+
       message.retry({
         delaySeconds,
       });
@@ -144,6 +145,7 @@ export async function checkCloudflareQueuesConfiguration(): Promise<
   if (!config.queue.credentials.accountId || !config.queue.credentials.apiKey) {
     throw new Error('Cloudflare queue credentials are not set');
   }
+
   const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${config.queue.credentials.accountId}/queues`,
     {
@@ -174,6 +176,7 @@ export async function checkCloudflareQueuesConfiguration(): Promise<
   const configuredQueues = new Map(
     data.result.map((queue) => [queue.queue_name, queue])
   );
+
   // @ts-ignore
   const errors: Record<DestinationType, string[]> = {};
 
