@@ -57,6 +57,8 @@ Evefan currently supports the following destinations for event fan-out:
 
 Each destination has its own specific implementation for data insertion and error handling, ensuring optimal performance and reliability.
 
+Missing an integration? [Let us know](https://tally.so/r/mDev0q) to prioritize it. 
+
 ## Getting Started with Development
 
 To start developing with the Evefan Worker, follow these steps:
