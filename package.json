@@ -3,7 +3,7 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@evefan/evefan-config": "^0.1.11",
+    "@evefan/evefan-config": "^0.1.15",
     "@types/node": "20.8.3",
     "@types/ua-parser-js": "^0.7.39",
     "@types/uuid": "^10.0.0",
