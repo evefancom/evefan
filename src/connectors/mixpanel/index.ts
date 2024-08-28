@@ -1,4 +1,8 @@
-import { MixpanelConfig, MixpanelDestination } from '@evefan/evefan-config';
+import {
+  DestinationType,
+  MixpanelConfig,
+  MixpanelDestination,
+} from '@evefan/evefan-config';
 import { Connector } from '..';
 import { WorkerConfig } from '../../config';
 import {
@@ -372,7 +376,8 @@ const transformEvents = (
 export default class MixpanelConnector implements Connector {
   async write(
     config: WorkerConfig,
-    events: DestinationEvent[]
+    events: DestinationEvent[],
+    destinationType: DestinationType
   ): Promise<FanOutResult> {
     const destination = config.destinations.find(
       (d) => d.type === DESTINATION_TYPE

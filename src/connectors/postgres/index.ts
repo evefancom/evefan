@@ -5,7 +5,11 @@ import { DestinationEvent, DestinationEventType } from '../../event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
 import { Field, schema } from '../../persistance/schema';
-import { PostgresConfig, PostgresDestination } from '@evefan/evefan-config';
+import {
+  DestinationType,
+  PostgresConfig,
+  PostgresDestination,
+} from '@evefan/evefan-config';
 
 const DESTINATION_TYPE = 'postgres';
 
@@ -145,7 +149,8 @@ const writeEvents = async (
 export default class PostgresConnector implements Connector {
   async write(
     config: WorkerConfig,
-    events: DestinationEvent[]
+    events: DestinationEvent[],
+    destinationType: DestinationType
   ): Promise<FanOutResult> {
     const destination = config.destinations.find(
       (d) => d.type === DESTINATION_TYPE

@@ -1,7 +1,7 @@
 import { delay } from './utils';
 import { WorkerConfig } from './config';
 import { DestinationEvent } from './event';
-import { DestinationType } from '@evefan/evefan-config';
+import { DestinationType, isCloudDestination } from '@evefan/evefan-config';
 import { Bindings } from './env';
 
 export async function handleEventFanout(
@@ -52,7 +52,8 @@ async function attemptWriteWithShortBackoff(
   destinationType: DestinationType,
   writeHandler: (
     config: WorkerConfig,
-    events: DestinationEvent[]
+    events: DestinationEvent[],
+    destinationType: DestinationType
   ) => Promise<FanOutResult>,
   events: DestinationEvent[],
   attempt = 1,
@@ -63,7 +64,7 @@ async function attemptWriteWithShortBackoff(
     await rateLimit(destinationType, maxRps);
 
     // NOTE: recursion here won't work properly, rework so that it handles correctly handling retrying only the failed events
-    return await writeHandler(config, events);
+    return await writeHandler(config, events, destinationType);
   } catch (error: any) {
     if (attempt > MAX_RETRIES) {
       return {
@@ -106,6 +107,56 @@ async function rateLimit(destination: string, maxRps: number): Promise<void> {
   requestCounter.count++;
 }
 
+async function forwardEventsToConsole(
+  config: WorkerConfig,
+  events: DestinationEvent[],
+  destinationType: DestinationType
+): Promise<FanOutResult> {
+  const url = config.deploy.consoleUrl;
+  const environmentId = config.deploy.environmentId;
+  const environmentSecret = config.deploy.environmentSecret;
+
+  if (!url || !environmentId || !environmentSecret) {
+    console.error(
+      'Console URL, environment ID or environment secret not set, cannot forward events to console'
+    );
+
+    return {
+      destinationType: destinationType,
+      failedEvents: events.map((event) => ({
+        body: event,
+        error: 'Console URL, environment ID or environment secret not set',
+      })),
+    };
+  }
+
+  const res = await fetch(`${url}/cloud-event`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-evefan-environment-secret': environmentSecret,
+      'x-evefan-environment-id': environmentId,
+    },
+    body: JSON.stringify(events),
+  });
+
+  if (res.status !== 200) {
+    const body: any = await res.json();
+    return {
+      destinationType,
+      failedEvents: events.map((e) => ({
+        body: e,
+        error: `Received status ${res.status} from Console with message ${body.error}`,
+      })),
+    };
+  }
+
+  return {
+    destinationType,
+    failedEvents: [],
+  };
+}
+
 export type FailedEvent = {
   body: DestinationEvent;
   error: string;
@@ -134,7 +185,13 @@ export async function fanOutEventData(
   await Promise.all(
     destinations.map(async (destination) => {
       if (!destination.handler) {
-        return;
+        if (isCloudDestination(destination.type)) {
+          destination.handler = {
+            write: forwardEventsToConsole,
+          };
+        } else {
+          return;
+        }
       }
       const batchSize = destination.config.batchSize || 1;
       for (let i = 0; i < events.length; i += batchSize) {

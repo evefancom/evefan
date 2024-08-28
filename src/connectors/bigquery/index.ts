@@ -5,7 +5,11 @@ import { DestinationEvent, DestinationEventType } from '../../event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
 import { Field, schema } from '../../persistance/schema';
-import { BigqueryConfig, BigqueryDestination } from '@evefan/evefan-config';
+import {
+  BigqueryConfig,
+  BigqueryDestination,
+  DestinationType,
+} from '@evefan/evefan-config';
 
 const DESTINATION_TYPE = 'bigquery';
 
@@ -289,7 +293,8 @@ async function writeEvents(
 export default class BigqueryConnector implements Connector {
   async write(
     config: WorkerConfig,
-    events: DestinationEvent[]
+    events: DestinationEvent[],
+    destinationType: DestinationType
   ): Promise<FanOutResult> {
     const destination = config.destinations.find(
       (d) => d.type === DESTINATION_TYPE
