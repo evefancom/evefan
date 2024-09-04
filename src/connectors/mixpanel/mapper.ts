@@ -1,4 +1,4 @@
-import { DestinationEvent } from '../../event';
+import { DestinationEvent } from '../../schema/event';
 import { propertyWithPath } from '../../utils';
 import { Mapping } from './config';
 

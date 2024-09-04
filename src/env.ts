@@ -1,5 +1,5 @@
 import { DestinationType } from '@evefan/evefan-config';
-import { DestinationEvent } from './event';
+import { DestinationEvent } from './schema/event';
 import { Batcher } from './batcher';
 import { HealthChecker } from './health';
 

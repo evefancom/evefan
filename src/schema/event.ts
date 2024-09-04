@@ -1,5 +1,5 @@
 import UAParser from 'ua-parser-js';
-import { removeKeysFromObject } from './utils';
+import { removeKeysFromObject } from '../utils';
 import { Context } from 'hono';
 import { v4 as uuid4 } from 'uuid';
 import {
@@ -12,7 +12,7 @@ import {
   TrackEvent,
   Event,
   EventSchema,
-} from './schema';
+} from './input';
 
 /**
  * Represents user agent information parsed from the User-Agent string.

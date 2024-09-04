@@ -1,6 +1,6 @@
 import { DestinationType } from '@evefan/evefan-config';
 import { WorkerConfig } from '../config';
-import { DestinationEvent } from '../event';
+import { DestinationEvent } from '../schema/event';
 import { FanOutResult } from '../writer';
 
 export interface Connector {

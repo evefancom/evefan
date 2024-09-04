@@ -1,13 +1,13 @@
 import { Context, Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { cors } from 'hono/cors';
-import { formatEvent, DestinationEvent } from './event';
+import { formatEvent, DestinationEvent } from './schema/event';
 import { getConfig, WorkerConfig } from './config';
 import { handleEventFanout } from './writer';
 import { Bindings } from './env';
 import { Batcher } from './batcher';
 import { DestinationType } from '@evefan/evefan-config';
-import { EventType } from './schema';
+import { EventType } from './schema/input';
 import { checkCloudflareQueuesConfiguration } from './queue';
 
 type WorkerEnv = {

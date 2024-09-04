@@ -6,7 +6,7 @@ import {
   DestinationIdentifyEvent,
   DestinationGroupEvent,
   DestinationAliasEvent,
-} from './../event';
+} from './event';
 
 export type FieldType = 'string' | 'timestamp' | 'float' | 'json';
 

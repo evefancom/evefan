@@ -1,10 +1,10 @@
 import { Connector } from '..';
 import { WorkerConfig } from '../../config';
-import { DestinationEvent } from '../../event';
+import { DestinationEvent } from '../../schema/event';
 import { FanOutResult } from '../../writer';
 import { DestinationType, S3DeltaConfig } from '@evefan/evefan-config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { schema } from '../../persistance/schema';
+import { schema } from '../../schema/databases';
 
 export default class S3Connector implements Connector {
   private client: S3Client | null = null;
