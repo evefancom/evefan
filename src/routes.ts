@@ -144,9 +144,15 @@ app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
       .replace('https://', '')
       .replace('http://', '');
 
+    // delta lake scanning is not available in browsers so we'll default to read_parquet with hive partitioning
+    const isLikelyBrowser =
+      !!c.req.header('Sec-Fetch-Site') || !!c.req.header('Sec-CH-UA');
+
     // @ts-ignore
     settings.integrations['evefan'] = {
-      evefan: `read_parquet('s3://${s3Host}/*/*/*.parquet?writeKey=${writeKey}', hive_partitioning = true) as evefan`,
+      evefan: isLikelyBrowser
+        ? `read_parquet('${config.deploy.hostUrl}/s3/*/*/*.parquet?writeKey=${writeKey}', hive_partitioning = true) as evefan`
+        : `delta_scan('${config.deploy.hostUrl}/s3?writeKey=${writeKey}') as evefan`,
     };
   }
 
