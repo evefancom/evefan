@@ -301,12 +301,17 @@ async function handleS3Request(
   }
 
   const s3Client = new S3Client({
-    endpoint: s3Config.url,
+    endpoint: s3Config.url.includes('cloudflarestorage')
+      ? s3Config.url
+      : undefined,
     credentials: {
       accessKeyId: s3Config._secret_credentials.accessKeyId,
       secretAccessKey: s3Config._secret_credentials.secretAccessKey,
     },
-    region: 'auto',
+    region: s3Config.url.includes('cloudflarestorage')
+      ? 'auto'
+      : // <bucket-name>.s3.[region].amazonaws.com
+        s3Config.url.split('.')[2],
   });
 
   const key = c.req.path.replace('/v1/s3/', '');
