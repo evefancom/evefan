@@ -140,7 +140,7 @@ app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
 
     // @ts-ignore
     settings.integrations['s3delta'] = {
-      queryFrom: `read_parquet('s3://${s3Host}/*/*/*.parquet', hive_partitioning = true)`,
+      queryFrom: `read_parquet('s3://${s3Host}/*/*/*.parquet?writeKey=${writeKey}', hive_partitioning = true)`,
     };
   }
 
