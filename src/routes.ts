@@ -91,7 +91,7 @@ app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
     );
   }
 
-  return c.json({
+  const settings = {
     analyticsNextEnabled: true,
     edgeFunction: {},
     enabledMiddleware: {},
@@ -131,7 +131,20 @@ app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
       },
     },
     remotePlugins: [],
-  });
+  };
+
+  if (config.destinations.some((d) => d.type === 's3delta')) {
+    const s3Host = config.deploy.hostUrl
+      .replace('https://', '')
+      .replace('http://', '');
+
+    // @ts-ignore
+    settings.integrations['evefan'] = {
+      evefan: `read_parquet('s3://${s3Host}/*/*/*.parquet?writeKey=${writeKey}', hive_partitioning = true) as evefan`,
+    };
+  }
+
+  return c.json(settings);
 });
 
 app.post('/v1/track', workerMiddleware, async (c) => {
