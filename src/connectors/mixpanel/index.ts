@@ -12,7 +12,7 @@ import {
   DestinationPageEvent,
   DestinationScreenEvent,
   DestinationTrackEvent,
-} from '../../event';
+} from '../../schema/event';
 import { removeKeysFromObject, toUnixTimestampInMS } from '../../utils';
 import { FanOutResult } from '../../writer';
 import { mapping } from './config';

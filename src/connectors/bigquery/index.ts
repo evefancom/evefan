@@ -1,10 +1,10 @@
 import { getTokenFromGCPServiceAccount } from '@sagi.io/workers-jwt';
 import { Connector } from '..';
 import { WorkerConfig } from '../../config';
-import { DestinationEvent } from '../../event';
+import { DestinationEvent } from '../../schema/event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
-import { Field, schema } from '../../persistance/schema';
+import { Field, schema } from '../../schema/databases';
 import {
   BigqueryConfig,
   BigqueryDestination,

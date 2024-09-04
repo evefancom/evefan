@@ -1,6 +1,6 @@
 import { DestinationType } from '@evefan/evefan-config';
 import { getConfig } from './config';
-import { DestinationEvent } from './event';
+import { DestinationEvent } from './schema/event';
 import { fanOutEventData } from './writer';
 import { Bindings } from './env';
 

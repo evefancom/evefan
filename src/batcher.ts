@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
-import { DestinationEvent } from './event';
+import { DestinationEvent } from './schema/event';
 import { getConfig, WorkerConfig } from './config';
 import { handleEventFanout } from './writer';
 import { Bindings } from './env';

@@ -1,6 +1,6 @@
 import { delay } from './utils';
 import { WorkerConfig } from './config';
-import { DestinationEvent } from './event';
+import { DestinationEvent } from './schema/event';
 import { DestinationType, isCloudDestination } from '@evefan/evefan-config';
 import { Bindings } from './env';
 
