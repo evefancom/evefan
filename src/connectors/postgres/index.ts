@@ -1,8 +1,7 @@
-import postgres, { PostgresError } from 'postgres';
+import postgres from 'postgres';
 import { Connector } from '..';
 import { WorkerConfig } from '../../config';
-import { DestinationEvent, DestinationEventType } from '../../event';
-import { propertyWithPath } from '../../utils';
+import { DestinationEvent } from '../../event';
 import { FanOutResult } from '../../writer';
 import { Field, schema } from '../../persistance/schema';
 import {
@@ -12,139 +11,97 @@ import {
 } from '@evefan/evefan-config';
 
 const DESTINATION_TYPE = 'postgres';
+const TABLE_NAME = 'events';
 
-const DUPLICATE_TABLE = '42P07';
-
-const TABLE_MAP = {
-  alias: 'aliases',
-  track: 'tracks',
-  page: 'pages',
-  screen: 'screens',
-  identify: 'identifies',
-  group: 'groups',
+const TYPE_MAP: { [key: string]: string } = {
+  string: 'TEXT',
+  boolean: 'BOOLEAN',
+  timestamp: 'TIMESTAMPTZ',
+  json: 'JSONB',
+  float: 'DOUBLE PRECISION',
 };
 
-const TYPE_MAP = {
-  string: 'text',
-  boolean: 'boolean',
-  timestamp: 'timestamptz',
-  json: 'jsonb',
-};
-
-/**
- * Get Postgres client from config
- * @param config - The configuration object
- * @returns The Postgres client
- */
-const clientByConfig = (config: PostgresConfig) => {
+function clientByConfig(config: PostgresConfig) {
   const credentials = config._secret_credentials;
-
-  const client = postgres({
+  return postgres({
     user: credentials.user,
     password: credentials.password,
     host: credentials.host,
     port: credentials.port,
     database: credentials.database,
-    // Ignore notices
-    onnotice: () => {},
   });
+}
 
-  return client;
-};
+async function createTableIfNotExists(sql: postgres.Sql, fields: Field[]) {
+  const columnDefinitions = fields
+    .map((f) =>
+      f.name === 'id'
+        ? `"${f.name}" ${TYPE_MAP[f.type] || f.type} PRIMARY KEY`
+        : `"${f.name}" ${TYPE_MAP[f.type] || f.type}`
+    )
+    .join(', ');
 
-/**
- * Create a new table in Postgres if it doesn't exist
- * @param config - The configuration object
- * @param name - The name of the table to create
- * @param fields - The fields of the table
- */
-const createTable = async (
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS "${TABLE_NAME}" (
+      ${columnDefinitions}
+    )
+  `);
+
+  console.log(
+    `${DESTINATION_TYPE}: table ${TABLE_NAME} created or already exists.`
+  );
+}
+
+async function writeEvents(
   config: PostgresConfig,
-  name: string,
-  fields: Field[]
-) => {
-  try {
-    const sql = clientByConfig(config);
-    const columns = fields.map((f) => `${f.name} ${TYPE_MAP[f.type]}`);
-    await sql.unsafe(
-      `CREATE TABLE IF NOT EXISTS ${name} (${columns.join(', ')})`
-    );
-    console.log(`${DESTINATION_TYPE}: table ${name} created successfully.`);
-  } catch (e: any) {
-    const { code } = e as PostgresError;
-    // Duplicate table error can still occur
-    // if the table is being created concurrently
-    if (code === DUPLICATE_TABLE) {
-      console.log(
-        `${DESTINATION_TYPE}: table ${name} already exists. Skipping...`
-      );
-    } else {
-      console.error(`${DESTINATION_TYPE}: failed to create table ${name}:`, e);
-      throw e;
-    }
-  }
-};
-
-/**
- * Write events to Postgres
- * @param config - The configuration object
- * @param type - The type of the event
- * @param events - The events to write. All events must be of the same type
- */
-const writeEvents = async (
-  config: PostgresConfig,
-  type: DestinationEventType,
   events: DestinationEvent[]
-) => {
-  if (events.filter((e) => e.type !== type).length > 0) {
-    throw new Error('All events must be of the same type');
-  }
+): Promise<any[]> {
+  const sql = clientByConfig(config);
 
   try {
-    // Create table if it doesn't exist
-    await createTable(config, TABLE_MAP[type], schema[type].fields);
-  } catch (e: any) {
-    return events.map((event) => ({
-      error: e.message,
-      body: event,
-    }));
-  }
+    await createTableIfNotExists(sql, schema.fields);
 
-  const row = (e: DestinationEvent) => {
-    return schema[type].fields.reduce((r, field) => {
-      r[field.name] = field.path
-        ? propertyWithPath(e, field.path)
-        : field.transform
-        ? field.transform(e)
-        : null;
-      return r;
-    }, {} as Record<string, any>);
-  };
+    const columns = schema.fields.map((f) => f.name);
+    const placeholders = schema.fields.map((_, i) => `$${i + 1}`).join(', ');
 
-  const failedEvents = [];
+    const values = events.flatMap((event) =>
+      schema.fields.map((field) => {
+        let value = field.path
+          ? event[field.path as keyof DestinationEvent]
+          : field.transform
+          ? field.transform(event)
+          : null;
 
-  try {
-    const sql = clientByConfig(config);
-    await sql`INSERT INTO ${sql(TABLE_MAP[type])} ${sql(events.map(row))}`;
+        // Handle undefined values
+        if (value === undefined) {
+          value = null;
+        }
+        return value;
+      })
+    );
+
+    const query = `
+      INSERT INTO "${TABLE_NAME}" (${columns.map((c) => `"${c}"`).join(', ')})
+      VALUES (${placeholders})
+    `;
+
+    const result = await sql.unsafe(query, values);
+
     console.log(
-      `${DESTINATION_TYPE}: ${events.length} event(s) written to ${TABLE_MAP[type]} table.`
+      `${DESTINATION_TYPE}: ${result.count} event(s) written to ${TABLE_NAME} table.`
     );
-  } catch (e: any) {
-    const { message } = e as PostgresError;
-    console.error(
-      `${DESTINATION_TYPE}: failed to write events to ${TABLE_MAP[type]} table:`,
-      message
-    );
-    failedEvents.push(
-      ...events.map((event) => ({
-        error: message,
-        body: event,
-      }))
-    );
-  }
 
-  return failedEvents;
-};
+    return result;
+  } catch (error) {
+    console.error(
+      `${DESTINATION_TYPE}: failed to write events to ${TABLE_NAME} table:`,
+      error
+    );
+    throw error;
+  } finally {
+    await sql.end();
+  }
+}
 
 export default class PostgresConnector implements Connector {
   async write(
@@ -169,30 +126,20 @@ export default class PostgresConnector implements Connector {
 
     console.log(`${DESTINATION_TYPE}: sending ${events.length} event(s)`);
 
-    const eventTypes = [...new Set(events.map((e) => e.type))];
-
-    // Group events by type
-    const eventsByType = eventTypes.reduce((acc, type) => {
-      acc[type] = events.filter((e) => e.type === type);
-      return acc;
-    }, {} as Record<DestinationEventType, DestinationEvent[]>);
-
-    // Write events to Postgres
-    const failedEvents = (
-      await Promise.all(
-        eventTypes.map(async (type) => {
-          return await writeEvents(
-            destination.config,
-            type,
-            eventsByType[type]
-          );
-        })
-      )
-    ).flatMap((e) => e);
-
-    return {
-      destinationType: DESTINATION_TYPE,
-      failedEvents,
-    };
+    try {
+      await writeEvents(destination.config, events);
+      return {
+        destinationType: DESTINATION_TYPE,
+        failedEvents: [],
+      };
+    } catch (error: any) {
+      return {
+        destinationType: DESTINATION_TYPE,
+        failedEvents: events.map((event) => ({
+          error: error.message,
+          body: event,
+        })),
+      };
+    }
   }
 }
