@@ -139,8 +139,8 @@ app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
       .replace('http://', '');
 
     // @ts-ignore
-    settings.integrations['s3delta'] = {
-      queryFrom: `read_parquet('s3://${s3Host}/*/*/*.parquet?writeKey=${writeKey}', hive_partitioning = true)`,
+    settings.integrations['evefan'] = {
+      evefan: `read_parquet('s3://${s3Host}/*/*/*.parquet?writeKey=${writeKey}', hive_partitioning = true) as evefan`,
     };
   }
 
