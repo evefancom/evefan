@@ -1,7 +1,7 @@
 import { getTokenFromGCPServiceAccount } from '@sagi.io/workers-jwt';
 import { Connector } from '..';
 import { WorkerConfig } from '../../config';
-import { DestinationEvent, DestinationEventType } from '../../event';
+import { DestinationEvent } from '../../event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
 import { Field, schema } from '../../persistance/schema';
@@ -12,126 +12,54 @@ import {
 } from '@evefan/evefan-config';
 
 const DESTINATION_TYPE = 'bigquery';
-
 const DATASET_NAME = 'evefan';
-
-const TABLE_MAP = {
-  alias: 'aliases',
-  track: 'tracks',
-  page: 'pages',
-  screen: 'screens',
-  identify: 'identifies',
-  group: 'groups',
-};
+const TABLE_NAME = 'events';
 
 const TYPE_MAP = {
   string: 'STRING',
   boolean: 'BOOLEAN',
   timestamp: 'TIMESTAMP',
   json: 'JSON',
+  float: 'FLOAT',
 };
 
 type IErrorProto = {
-  /**
-   * Debugging information. This property is internal to Google and should not be used.
-   */
   debugInfo?: string;
-  /**
-   * Specifies where the error occurred, if present.
-   */
   location?: string;
-  /**
-   * A human-readable description of the error.
-   */
   message?: string;
-  /**
-   * A short error code that summarizes the error.
-   */
   reason?: string;
 };
 
-/**
- * An error describing why the request failed.
- **/
 type IError = {
-  /**
-   * HTTP error code indicating the nature of the error.
-   */
   code: number;
-
-  /**
-   * A description of the error.
-   */
   message: string;
-
-  /**
-   * A list of errors which occurred during the request.
-   */
   errors: Array<IErrorProto>;
-
-  /**
-   * The human-readable status of the response.
-   */
   status: string;
 };
 
 type ITableInsertResponse = {
-  /**
-   * The resource type of the response.
-   */
   kind?: string;
-
-  /**
-   * An error describing why the request failed.
-   */
   error?: IError;
 };
 
 type ITableDataInsertAllResponse = {
-  /**
-   * An array of errors for rows that were not inserted.
-   */
   insertErrors?: Array<{
-    /**
-     * Error information for the row indicated by the index property.
-     */
     errors: Array<IErrorProto>;
-    /**
-     * The index of the row that error applies to.
-     */
     index: number;
   }>;
-  /**
-   * The resource type of the response.
-   */
   kind?: string;
-
-  /**
-   * An error describing why the request failed.
-   */
   error?: IError;
 };
 
-/**
- * Create a new table in BigQuery if it doesn't exist
- * @param config - The configuration object
- * @param name - The name of the table to create
- * @param fields - The fields of the table
- */
-async function createTable(
-  config: BigqueryConfig,
-  name: string,
-  fields: Field[]
-) {
+async function createTable(config: BigqueryConfig, fields: Field[]) {
   const aud = 'https://bigquery.googleapis.com/';
-
   const projectName = config._secret_credentials.project_id;
   const payload = {
     kind: 'bigquery#table',
     tableReference: {
       datasetId: DATASET_NAME,
       projectId: projectName,
-      tableId: name,
+      tableId: TABLE_NAME,
     },
     schema: {
       fields: fields.map((f) => ({
@@ -141,12 +69,7 @@ async function createTable(
     },
   };
 
-  const url =
-    'https://bigquery.googleapis.com/bigquery/v2/projects/' +
-    projectName +
-    '/datasets/' +
-    DATASET_NAME +
-    '/tables';
+  const url = `https://bigquery.googleapis.com/bigquery/v2/projects/${projectName}/datasets/${DATASET_NAME}/tables`;
 
   const token = await getTokenFromGCPServiceAccount({
     serviceAccountJSON: config._secret_credentials,
@@ -168,36 +91,19 @@ async function createTable(
     return;
   }
 
-  // If table already exists, ignore the error
-  // otherwise throw an error
   if (response?.error && response.error?.code !== 409) {
-    console.error(`Failed to create table ${name}:`, response?.error);
+    console.error(`Failed to create table ${TABLE_NAME}:`, response?.error);
     throw new Error(response.error?.message);
   }
 
-  console.log(`${DESTINATION_TYPE}: table ${name} created successfully.`);
+  console.log(`${DESTINATION_TYPE}: table ${TABLE_NAME} created successfully.`);
 }
 
-/**
- * Write events to BigQuery
- * @param config - The configuration object
- * @param type - The type of the event
- * @param events - The events to write. All events must be of the same type
- */
-async function writeEvents(
-  config: BigqueryConfig,
-  type: DestinationEventType,
-  events: DestinationEvent[]
-) {
+async function writeEvents(config: BigqueryConfig, events: DestinationEvent[]) {
   const aud = 'https://bigquery.googleapis.com/';
 
-  if (events.filter((e) => e.type !== type).length > 0) {
-    throw new Error('All events must be of the same type');
-  }
-
   try {
-    // Create table if it doesn't exist
-    await createTable(config, TABLE_MAP[type], schema[type].fields);
+    await createTable(config, schema.fields);
   } catch (e: any) {
     return events.map((event) => ({
       error: e.message,
@@ -207,14 +113,7 @@ async function writeEvents(
 
   const projectName = config._secret_credentials.project_id;
 
-  const url =
-    'https://bigquery.googleapis.com/bigquery/v2/projects/' +
-    projectName +
-    '/datasets/' +
-    DATASET_NAME +
-    '/tables/' +
-    TABLE_MAP[type] +
-    '/insertAll';
+  const url = `https://bigquery.googleapis.com/bigquery/v2/projects/${projectName}/datasets/${DATASET_NAME}/tables/${TABLE_NAME}/insertAll`;
 
   const token = await getTokenFromGCPServiceAccount({
     serviceAccountJSON: config._secret_credentials,
@@ -222,14 +121,13 @@ async function writeEvents(
   });
 
   const row = (e: DestinationEvent) => {
-    return schema[type].fields.reduce((r, field) => {
+    return schema.fields.reduce((r, field) => {
       r[field.name] = field.path
         ? propertyWithPath(e, field.path)
         : field.transform
         ? field.transform(e)
         : null;
 
-      // BigQuery requires JSON fields to be stringified before sending
       if (field.type === 'json') {
         r[field.name] = JSON.stringify(r[field.name]);
       }
@@ -241,9 +139,7 @@ async function writeEvents(
   const payload = {
     rows: events.map((e) => ({
       insertId: e.messageId,
-      json: {
-        ...row(e),
-      },
+      json: row(e),
     })),
   };
 
@@ -284,7 +180,7 @@ async function writeEvents(
   console.log(
     `${DESTINATION_TYPE}: ${
       events.length - failedEvents.length
-    } event(s) written to ${TABLE_MAP[type]} table.`
+    } event(s) written to ${TABLE_NAME} table.`
   );
 
   return failedEvents;
@@ -313,26 +209,7 @@ export default class BigqueryConnector implements Connector {
 
     console.log(`${DESTINATION_TYPE}: sending ${events.length} event(s)`);
 
-    const eventTypes = [...new Set(events.map((e) => e.type))];
-
-    // Group events by type
-    const eventsByType = eventTypes.reduce((acc, type) => {
-      acc[type] = events.filter((e) => e.type === type);
-      return acc;
-    }, {} as Record<DestinationEventType, DestinationEvent[]>);
-
-    // Write events to BigQuery
-    const failedEvents = (
-      await Promise.all(
-        eventTypes.map(async (type) => {
-          return await writeEvents(
-            destination.config,
-            type,
-            eventsByType[type]
-          );
-        })
-      )
-    ).flatMap((e) => e);
+    const failedEvents = await writeEvents(destination.config, events);
 
     return {
       destinationType: DESTINATION_TYPE,
