@@ -54,7 +54,6 @@ export default class S3Connector implements Connector {
     const url = new URL(config.url);
     this.client = new S3Client({
       endpoint: config.url,
-      region: 'us-east-1', // Set the appropriate region or extract from config
       credentials: {
         accessKeyId: config._secret_credentials.accessKeyId,
         secretAccessKey: config._secret_credentials.secretAccessKey,
