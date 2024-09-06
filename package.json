@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.637.0",
+    "@aws-sdk/s3-request-presigner": "^3.645.0",
     "@cloudflare/workers-types": "^4.20240718.0",
     "@sagi.io/workers-jwt": "^0.0.26",
     "hono": "^4.5.8",
