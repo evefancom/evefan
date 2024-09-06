@@ -134,23 +134,6 @@ app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
     remotePlugins: [],
   };
 
-  if (config.destinations.some((d) => d.type === 's3delta')) {
-    const s3Host = config.deploy.hostUrl
-      .replace('https://', '')
-      .replace('http://', '');
-
-    // delta lake scanning is not available in browsers so we'll default to read_parquet with hive partitioning
-    const isLikelyBrowser =
-      !!c.req.header('Sec-Fetch-Site') || !!c.req.header('Sec-CH-UA');
-
-    // @ts-ignore
-    settings.integrations['evefan'] = {
-      evefan: isLikelyBrowser
-        ? `read_parquet('${config.deploy.hostUrl}/s3/*/*/*.parquet?writeKey=${writeKey}', hive_partitioning = true) as evefan`
-        : `delta_scan('${config.deploy.hostUrl}/s3?writeKey=${writeKey}') as evefan`,
-    };
-  }
-
   return c.json(settings);
 });
 
@@ -275,7 +258,6 @@ async function processEvents(
 }
 
 // S3 compatible endpoints
-// GET also handles HEAD https://github.com/honojs/hono/issues/1130 and returns without a body, just headers
 app.get('/v1/s3/*', workerMiddleware, async (c) => {
   const method = c.req.method as 'GET' | 'HEAD' | 'LIST';
   const isListRequest = !c.req.path.endsWith('.parquet');

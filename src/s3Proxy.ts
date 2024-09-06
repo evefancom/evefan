@@ -151,7 +151,7 @@ async function handleVirtualMergedFileFetch(
         Bucket: s3Config.bucket,
         Key: file.Key,
       });
-      return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+      return await getSignedUrl(s3Client, command, { expiresIn: 60 });
     })
   );
 
