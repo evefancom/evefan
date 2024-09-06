@@ -9,14 +9,9 @@ import { Batcher } from './batcher';
 import { DestinationType, S3DeltaConfig } from '@evefan/evefan-config';
 import { EventType } from './schema/input';
 import { checkCloudflareQueuesConfiguration } from './queue';
-import {
-  S3Client,
-  GetObjectCommand,
-  HeadObjectCommand,
-  ListObjectsV2Command,
-} from '@aws-sdk/client-s3';
+import { handleS3ProxyRequest } from './s3Proxy';
 
-type WorkerEnv = {
+export type WorkerEnv = {
   Bindings: Bindings;
   Variables: {
     config: WorkerConfig;
@@ -283,78 +278,6 @@ async function processEvents(
 // GET also handles HEAD https://github.com/honojs/hono/issues/1130 and returns without a body, just headers
 app.get('/v1/s3/*', workerMiddleware, async (c) => {
   const method = c.req.method as 'GET' | 'HEAD' | 'LIST';
-  const isListRequest = c.req.path === '/v1/s3';
-  return handleS3Request(c, isListRequest ? 'LIST' : method);
+  const isListRequest = !c.req.path.endsWith('.parquet');
+  return handleS3ProxyRequest(c, isListRequest ? 'LIST' : method);
 });
-
-async function handleS3Request(
-  c: Context<WorkerEnv>,
-  method: 'GET' | 'HEAD' | 'LIST'
-) {
-  const config = c.get('config');
-  const writeKey = c.req.query('writeKey');
-
-  // Authenticate the writeKey
-  if (!writeKey || !config.sources.some((s) => s.writeKey === writeKey)) {
-    return c.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const s3Config = config.destinations.find((d) => d.type === 's3delta')
-    ?.config as S3DeltaConfig;
-
-  if (!s3Config) {
-    return c.json({ error: 'S3 configuration not found' }, { status: 404 });
-  }
-
-  const s3Client = new S3Client({
-    endpoint: s3Config.url.includes('cloudflarestorage')
-      ? s3Config.url
-      : undefined,
-    credentials: {
-      accessKeyId: s3Config._secret_credentials.accessKeyId,
-      secretAccessKey: s3Config._secret_credentials.secretAccessKey,
-    },
-    region: s3Config.url.includes('cloudflarestorage')
-      ? 'auto'
-      : // <bucket-name>.s3.[region].amazonaws.com
-        s3Config.url.split('.')[2],
-  });
-
-  const key = c.req.path.replace('/v1/s3/', '');
-
-  try {
-    if (method === 'LIST') {
-      const command = new ListObjectsV2Command({
-        Bucket: s3Config.bucket,
-        Prefix: key.split('/').slice(0, -1).join('/') + '/',
-      });
-      const response = await s3Client.send(command);
-      return c.json(response);
-    } else {
-      const command =
-        method === 'GET'
-          ? new GetObjectCommand({
-              Bucket: s3Config.bucket,
-              Key: key,
-            })
-          : new HeadObjectCommand({
-              Bucket: s3Config.bucket,
-              Key: key,
-            });
-      const response = await s3Client.send(command);
-
-      return new Response(response.Body as ReadableStream, {
-        status: 200,
-        headers: {
-          'Content-Length': response.ContentLength?.toString() || '0',
-          'Content-Type': response.ContentType || 'application/octet-stream',
-          'Last-Modified': response.LastModified?.toUTCString() || '',
-          ETag: response.ETag || '',
-        },
-      });
-    }
-  } catch (e) {
-    console.error('Error in handling S3 request: ', e);
-    return c.json({ error: 'Error in handling S3 request' }, { status: 500 });
-  }
-}

@@ -5,6 +5,7 @@ import { execSync } from 'child_process';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 import inlineImportPlugin from 'esbuild-plugin-inline-import';
+import { readFileSync } from 'fs';
 
 if (!fs.existsSync('config.json')) {
   console.error('config.json not found');
@@ -65,6 +66,29 @@ try {
         },
       }),
       inlineImportPlugin(),
+      {
+        name: 'wasm',
+        setup(build) {
+          build.onResolve({ filter: /\.wasm$/ }, (args) => {
+            const wasmFileName = path.basename(args.path);
+            const sourceWasmPath = path.resolve(args.resolveDir, args.path);
+            const destWasmPath = path.resolve(
+              process.cwd(),
+              'dist',
+              wasmFileName
+            );
+
+            // Ensure the destination directory exists
+            fs.mkdirSync(path.dirname(destWasmPath), { recursive: true });
+
+            // Copy WASM file to dist folder
+            fs.copyFileSync(sourceWasmPath, destWasmPath);
+
+            // Return a path relative to the output file
+            return { path: './' + wasmFileName, external: true };
+          });
+        },
+      },
     ],
     platform: 'browser',
     conditions: ['worker', 'browser'],
@@ -77,9 +101,12 @@ try {
     bundle: true,
     treeShaking: true,
     minify: process.NODE_ENV === 'production',
-    external: ['cloudflare:workers'],
+    external: ['cloudflare:workers', '*.wasm'],
     define: {
       IS_CLOUDFLARE_WORKER: 'true',
+    },
+    loader: {
+      '.wasm': 'file',
     },
   });
 

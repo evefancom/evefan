@@ -1,0 +1,29 @@
+{
+  "name": "parquet-wasm",
+  "type": "module",
+  "collaborators": [
+    "Kyle Barron <kylebarron2@gmail.com>"
+  ],
+  "description": "WebAssembly Parquet reader and writer.",
+  "version": "0.6.1",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kylebarron/parquet-wasm"
+  },
+  "files": [
+    "parquet_wasm_bg.wasm",
+    "parquet_wasm.js",
+    "parquet_wasm.d.ts"
+  ],
+  "main": "parquet_wasm.js",
+  "types": "parquet_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "keywords": [
+    "parquet",
+    "webassembly",
+    "arrow"
+  ]
+}
