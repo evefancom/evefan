@@ -13,8 +13,11 @@ import initWasm, {
   transformParquetStream,
 } from './lib/parquet-wasm/parquet_wasm';
 import binary from './lib/parquet-wasm/parquet_wasm_bg.wasm';
+import { ParquetFile } from './lib/parquet-wasm/parquet_wasm';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 function debugTempLog(...message: any) {
+  // TODO: remove this when we have a logger and proper dev/prod flag
   // console.debug(message);
 }
 
@@ -62,63 +65,66 @@ export async function handleS3ProxyRequest(
   });
 
   try {
-    if (method === 'LIST') {
-      debugTempLog(`Handling LIST request for key: ${key}`);
-      return await handleListRequest(c, s3Client, s3Config, key);
-    } else if (method === 'HEAD') {
-      debugTempLog(`Handling HEAD request for key: ${key}`);
-      const command = new HeadObjectCommand({
-        Bucket: s3Config.bucket,
-        Key: key,
-      });
-      debugTempLog(
-        `Sending HeadObjectCommand for bucket: ${s3Config.bucket}, key: ${key}`
-      );
-      const response = await s3Client.send(command);
-      debugTempLog(`HeadObjectCommand response:`, response);
-      return new Response(null, {
-        status: 200,
-        headers: {
-          'Content-Length': response.ContentLength?.toString() || '0',
-          'Content-Type': response.ContentType || 'application/octet-stream',
-          'Last-Modified': response.LastModified?.toUTCString() || '',
-          ETag: response.ETag || '',
-        },
-      });
-    } else {
-      // GET request
-      debugTempLog(`Handling GET request for key: ${key}`);
-      if (key.includes('virtual_')) {
-        debugTempLog(`Handling virtual merged file fetch for key: ${key}`);
-        return await handleVirtualMergedFileFetch(c, key, s3Client, s3Config);
-      } else {
-        const command = new GetObjectCommand({
+    switch (method) {
+      case 'LIST':
+        debugTempLog(`Handling LIST request for key: ${key}`);
+        return await handleListRequest(c, s3Client, s3Config, key);
+
+      case 'HEAD':
+        debugTempLog(`Handling HEAD request for key: ${key}`);
+        const headCommand = new HeadObjectCommand({
           Bucket: s3Config.bucket,
           Key: key,
         });
         debugTempLog(
-          `Sending GetObjectCommand for bucket: ${s3Config.bucket}, key: ${key}`
+          `Sending HeadObjectCommand for bucket: ${s3Config.bucket}, key: ${key}`
         );
-        const response = await s3Client.send(command);
-        debugTempLog(`GetObjectCommand response:`, response);
-        const stream = response.Body?.transformToWebStream();
-
-        return new Response(stream, {
+        const headResponse = await s3Client.send(headCommand);
+        debugTempLog(`HeadObjectCommand response:`, headResponse);
+        return new Response(null, {
+          status: 200,
           headers: {
-            'Content-Type': 'application/octet-stream',
-            'Content-Disposition': `attachment; filename="${key}"`,
+            'Content-Length': headResponse.ContentLength?.toString() || '0',
+            'Content-Type':
+              headResponse.ContentType || 'application/octet-stream',
+            'Last-Modified': headResponse.LastModified?.toUTCString() || '',
+            ETag: headResponse.ETag || '',
           },
         });
-      }
+
+      case 'GET':
+        debugTempLog(`Handling GET request for key: ${key}`);
+        if (key.includes('virtual_')) {
+          debugTempLog(`Handling virtual merged file fetch for key: ${key}`);
+          return await handleVirtualMergedFileFetch(c, key, s3Client, s3Config);
+        } else {
+          const getCommand = new GetObjectCommand({
+            Bucket: s3Config.bucket,
+            Key: key,
+          });
+          debugTempLog(
+            `Sending GetObjectCommand for bucket: ${s3Config.bucket}, key: ${key}`
+          );
+          const getResponse = await s3Client.send(getCommand);
+          debugTempLog(`GetObjectCommand response:`, getResponse);
+          const stream = getResponse.Body?.transformToWebStream();
+
+          return new Response(stream, {
+            headers: {
+              'Content-Type': 'application/octet-stream',
+              'Content-Disposition': `attachment; filename="${key}"`,
+            },
+          });
+        }
+
+      default:
+        return c.json({ error: 'Unsupported method' }, { status: 405 });
     }
   } catch (e) {
     console.error(`Error in handling S3 ${method} request: `, e);
     return c.json({ error: 'Error in handling S3 request' }, { status: 500 });
   }
 }
-
-import { ParquetFile } from './lib/parquet-wasm/parquet_wasm';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 async function handleVirtualMergedFileFetch(
   c: Context<WorkerEnv>,
