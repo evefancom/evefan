@@ -29,6 +29,7 @@ function clientByConfig(config: PostgresConfig) {
     host: credentials.host,
     port: credentials.port,
     database: credentials.database,
+    onnotice: () => {}, // This will ignore all notices
   });
 }
 
