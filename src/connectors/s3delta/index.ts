@@ -77,9 +77,9 @@ export default class S3DeltaConnector implements Connector {
     // Create string representations for all fields
     const formatted = events.map(formatEventForDatabases);
     const data = {
-      id: formatted.map((e) => String(e.id)),
-      type: formatted.map((e) => String(e.type)),
-      timestamp: formatted.map((e) => String(e.timestamp)),
+      id: formatted.map((e) => e.id ?? ''),
+      type: formatted.map((e) => e.type ?? ''),
+      timestamp: formatted.map((e) => e.timestamp ?? new Date().toISOString()),
       properties: formatted.map((e) => JSON.stringify(e.properties)),
       metadata: formatted.map((e) => JSON.stringify(e.metadata)),
       context: formatted.map((e) => JSON.stringify(e.context)),
