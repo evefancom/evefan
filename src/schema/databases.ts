@@ -130,3 +130,23 @@ export const schema: Schema = {
     },
   ],
 };
+
+export function formatEventForDatabases(event: DestinationEvent): {
+  [K in Schema['fields'][number]['name']]: any;
+} {
+  return schema.fields.reduce((formattedEvent, field) => {
+    let value = field.path
+      ? event[field.path as keyof DestinationEvent]
+      : field.transform
+      ? field.transform(event)
+      : null;
+
+    // Handle undefined values
+    if (value === undefined) {
+      value = null;
+    }
+
+    formattedEvent[field.name] = value;
+    return formattedEvent;
+  }, {} as Record<string, any>);
+}
