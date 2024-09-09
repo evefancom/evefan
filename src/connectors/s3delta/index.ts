@@ -4,13 +4,20 @@ import { DestinationEvent } from '../../schema/event';
 import { FanOutResult } from '../../writer';
 import { DestinationType, S3DeltaConfig } from '@evefan/evefan-config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { schema } from '../../schema/databases';
+import { formatEventForDatabases } from '../../schema/databases';
+import initWasm, {
+  Compression,
+  Table,
+  writeParquet,
+  WriterPropertiesBuilder,
+} from './../../lib/parquet-wasm';
+import binary from './../../lib/parquet-wasm/parquet_wasm_bg.wasm';
+import * as arrow from 'apache-arrow';
 
-export default class S3Connector implements Connector {
+export default class S3DeltaConnector implements Connector {
   private client: S3Client | null = null;
 
   constructor() {
-    // Bind the methods to ensure 'this' context is maintained
     this.write = this.write.bind(this);
     this.initializeClient = this.initializeClient.bind(this);
     this.writeEvents = this.writeEvents.bind(this);
@@ -35,6 +42,7 @@ export default class S3Connector implements Connector {
     }
 
     try {
+      await initWasm(binary);
       this.initializeClient(s3Config);
       await this.writeEvents(s3Config, events);
       return { destinationType, failedEvents: [] };
@@ -51,16 +59,41 @@ export default class S3Connector implements Connector {
   }
 
   private initializeClient(config: S3DeltaConfig): void {
-    const url = new URL(config.url);
     this.client = new S3Client({
       endpoint: config.url,
       credentials: {
         accessKeyId: config._secret_credentials.accessKeyId,
         secretAccessKey: config._secret_credentials.secretAccessKey,
       },
+      region:
+        config.url.includes('cloudflarestorage') ||
+        config.url.includes('localhost')
+          ? 'auto'
+          : config.url.split('.')[2],
     });
   }
 
+  private createArrowTable(events: DestinationEvent[]): arrow.Table {
+    // Create string representations for all fields
+    const formatted = events.map(formatEventForDatabases);
+    const data = {
+      id: formatted.map((e) => e.id ?? ''),
+      type: formatted.map((e) => e.type ?? ''),
+      timestamp: formatted.map((e) => e.timestamp ?? new Date().toISOString()),
+      properties: formatted.map((e) => JSON.stringify(e.properties)),
+      metadata: formatted.map((e) => JSON.stringify(e.metadata)),
+      context: formatted.map((e) => JSON.stringify(e.context)),
+      user_id: formatted.map((e) => e.user_id ?? ''),
+      anonymous_id: formatted.map((e) => e.anonymous_id ?? ''),
+      external_id: formatted.map((e) => e.external_id ?? ''),
+      value: formatted.map((e) => (e.value > 0 ? e.value : 0)),
+      partition_key: formatted.map((e) => e.partition_key ?? ''),
+      extra_fields: formatted.map((e) => JSON.stringify(e.extra_fields)),
+    };
+
+    // Create the table with the defined schema and data
+    return arrow.tableFromArrays(data);
+  }
   private async writeEvents(
     config: S3DeltaConfig,
     events: DestinationEvent[]
@@ -71,63 +104,31 @@ export default class S3Connector implements Connector {
     const day = now.getUTCDate().toString().padStart(2, '0');
     const timestamp = now.getTime();
 
-    const filePath = `y=${year}/m=${month}/d=${day}/${timestamp}.json`;
-    const ndjsonData = events
-      .map((event) => this.transformEventToNDJSON(event))
-      .join('\n');
+    const filePath = `y=${year}/m=${month}/d=${day}/${timestamp}.parquet`;
+    // Create an Arrow table using the new function
+    const table = this.createArrowTable(events);
 
-    await this.writeToS3(config, filePath, ndjsonData);
-    console.log(
-      `Wrote ${events.length} events to s3://${this.getBucketName(
-        config
-      )}/${filePath}`
-    );
-  }
+    // Convert Arrow table to Wasm table
+    const wasmTable = Table.fromIPCStream(arrow.tableToIPC(table, 'stream'));
 
-  private transformEventToNDJSON(event: DestinationEvent): string {
-    const transformedEvent = schema.fields.reduce((acc, field) => {
-      if (field.path) {
-        acc[field.name] = this.propertyWithPath(event, field.path);
-      } else if (field.transform) {
-        acc[field.name] = field.transform(event);
-      } else {
-        acc[field.name] = null;
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    // Set up writer properties
+    const writerProperties = new WriterPropertiesBuilder()
+      .setCompression(Compression.SNAPPY)
+      .build();
 
-    return JSON.stringify(transformedEvent);
-  }
+    // Write Parquet data
+    const parquetUint8Array = writeParquet(wasmTable, writerProperties);
 
-  private propertyWithPath(obj: any, path: string): any {
-    return path.split('.').reduce((prev, curr) => {
-      return prev && prev[curr];
-    }, obj);
-  }
+    // Upload to S3
+    const outputParams = {
+      Bucket: config.bucket,
+      Key: filePath,
+      Body: parquetUint8Array,
+      ContentType: 'application/octet-stream',
+    };
+    const outputCommand = new PutObjectCommand(outputParams);
+    await this.client!.send(outputCommand);
 
-  private async writeToS3(
-    config: S3DeltaConfig,
-    key: string,
-    data: string
-  ): Promise<void> {
-    const command = new PutObjectCommand({
-      Bucket: this.getBucketName(config),
-      Key: key,
-      Body: data,
-    });
-
-    try {
-      const result = await this.client?.send(command);
-      if (!result || !result.ETag) {
-        throw new Error('Failed to write to S3');
-      }
-    } catch (error) {
-      console.error('Error writing to S3:', error);
-      throw error;
-    }
-  }
-
-  private getBucketName(config: S3DeltaConfig): string {
-    return 'evefan';
+    console.log(`S3 Delta: ${events.length} event(s) written to ${filePath}`);
   }
 }
