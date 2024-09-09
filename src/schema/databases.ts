@@ -135,14 +135,12 @@ export function formatEventForDatabases(event: DestinationEvent): {
   [K in Schema['fields'][number]['name']]: any;
 } {
   return schema.fields.reduce((formattedEvent, field) => {
-    let value = field.path
-      ? event[field.path as keyof DestinationEvent]
-      : field.transform
-      ? field.transform(event)
-      : null;
-
-    // Handle undefined values
-    if (value === undefined) {
+    let value;
+    if (field.path) {
+      value = event[field.path as keyof DestinationEvent] ?? null;
+    } else if (field.transform) {
+      value = field.transform(event) ?? null;
+    } else {
       value = null;
     }
 
