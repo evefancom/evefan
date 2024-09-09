@@ -89,6 +89,23 @@ try {
           });
         },
       },
+      {
+        name: 'patch-arrow',
+        setup(build) {
+          build.onLoad({ filter: /valid\.mjs$/ }, async (args) => {
+            const customFunction = `
+export function createIsValidFunction() {
+  return () => true;
+}
+`;
+
+            return {
+              contents: customFunction,
+              loader: 'js',
+            };
+          });
+        },
+      },
     ],
     platform: 'browser',
     conditions: ['worker', 'browser'],
