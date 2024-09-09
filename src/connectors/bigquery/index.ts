@@ -4,7 +4,7 @@ import { WorkerConfig } from '../../config';
 import { DestinationEvent } from '../../schema/event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
-import { Field, schema } from '../../schema/databases';
+import { Field, databaseSchema } from '../../schema/databases';
 import {
   BigqueryConfig,
   BigqueryDestination,
@@ -103,7 +103,7 @@ async function writeEvents(config: BigqueryConfig, events: DestinationEvent[]) {
   const aud = 'https://bigquery.googleapis.com/';
 
   try {
-    await createTable(config, schema.fields);
+    await createTable(config, databaseSchema.fields);
   } catch (e: any) {
     return events.map((event) => ({
       error: e.message,
@@ -121,7 +121,7 @@ async function writeEvents(config: BigqueryConfig, events: DestinationEvent[]) {
   });
 
   const row = (e: DestinationEvent) => {
-    return schema.fields.reduce((r, field) => {
+    return databaseSchema.fields.reduce((r, field) => {
       r[field.name] = field.path
         ? propertyWithPath(e, field.path)
         : field.transform

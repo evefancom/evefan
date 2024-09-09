@@ -3,7 +3,7 @@ import { Connector } from '..';
 import { WorkerConfig } from '../../config';
 import { DestinationEvent } from '../../schema/event';
 import { FanOutResult } from '../../writer';
-import { Field, schema } from '../../schema/databases';
+import { Field, databaseSchema } from '../../schema/databases';
 import {
   DestinationType,
   PostgresConfig,
@@ -60,13 +60,15 @@ async function writeEvents(
   const sql = clientByConfig(config);
 
   try {
-    await createTableIfNotExists(sql, schema.fields);
+    await createTableIfNotExists(sql, databaseSchema.fields);
 
-    const columns = schema.fields.map((f) => f.name);
-    const placeholders = schema.fields.map((_, i) => `$${i + 1}`).join(', ');
+    const columns = databaseSchema.fields.map((f) => f.name);
+    const placeholders = databaseSchema.fields
+      .map((_, i) => `$${i + 1}`)
+      .join(', ');
 
     const values = events.flatMap((event) =>
-      schema.fields.map((field) => {
+      databaseSchema.fields.map((field) => {
         let value = field.path
           ? event[field.path as keyof DestinationEvent]
           : field.transform

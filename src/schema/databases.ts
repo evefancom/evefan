@@ -17,11 +17,11 @@ export interface Field {
   transform?: (e: DestinationEvent) => any;
 }
 
-export type Schema = {
+export type DatabaseSchema = {
   fields: Field[];
 };
 
-export const schema: Schema = {
+export const databaseSchema: DatabaseSchema = {
   fields: [
     { name: 'id', type: 'string', path: 'messageId' },
     { name: 'type', type: 'string', path: 'type' },
@@ -132,9 +132,9 @@ export const schema: Schema = {
 };
 
 export function formatEventForDatabases(event: DestinationEvent): {
-  [K in Schema['fields'][number]['name']]: any;
+  [K in DatabaseSchema['fields'][number]['name']]: any;
 } {
-  return schema.fields.reduce((formattedEvent, field) => {
+  return databaseSchema.fields.reduce((formattedEvent, field) => {
     let value;
     if (field.path) {
       value = event[field.path as keyof DestinationEvent] ?? null;
