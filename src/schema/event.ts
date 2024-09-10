@@ -12,6 +12,7 @@ import {
   TrackEvent,
   Event,
   EventSchema,
+  WriteEvent,
 } from './input';
 
 /**
@@ -175,7 +176,8 @@ export type DestinationEvent =
   | DestinationTrackEvent
   | DestinationIdentifyEvent
   | DestinationGroupEvent
-  | DestinationAliasEvent;
+  | DestinationAliasEvent
+  | WriteEvent;
 
 export type DestinationEventType = EventType;
 

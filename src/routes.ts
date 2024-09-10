@@ -7,9 +7,10 @@ import { handleEventFanout } from './writer';
 import { Bindings } from './env';
 import { Batcher } from './batcher';
 import { DestinationType, S3DeltaConfig } from '@evefan/evefan-config';
-import { EventType } from './schema/input';
+import { EventType, WriteEvent, WriteSchema } from './schema/input';
 import { checkCloudflareQueuesConfiguration } from './queue';
 import { handleS3ProxyRequest } from './s3Proxy';
+import { formatEventForDatabases } from './schema/databases';
 
 export type WorkerEnv = {
   Bindings: Bindings;
@@ -228,6 +229,39 @@ async function handleAnalyticsJsMethod(
 
   return c.json({ success: true });
 }
+
+app.post('/v1/write', workerMiddleware, async (c) => {
+  try {
+    const body = await c.req.json();
+
+    // Validate the input data
+    const result = WriteSchema.safeParse({
+      ...body,
+      type: body.type ?? 'write',
+      id: body.id ?? crypto.randomUUID(),
+      timestamp: body.timestamp || new Date().toISOString(),
+    });
+
+    if (!result.success) {
+      console.error('Write validation error:', result.error);
+      return c.json(
+        { error: 'Invalid input write data', details: result.error.errors },
+        { status: 400 }
+      );
+    }
+
+    // Process the event
+    c.executionCtx.waitUntil(processEvents(c, [result.data]));
+
+    return c.json({
+      success: true,
+      message: 'Write event processed successfully',
+    });
+  } catch (e: any) {
+    console.error('Error processing write request:', e);
+    return c.json({ error: 'Error processing write request' }, { status: 500 });
+  }
+});
 
 async function processEvents(
   c: Context<WorkerEnv>,

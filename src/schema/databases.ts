@@ -7,6 +7,7 @@ import {
   DestinationGroupEvent,
   DestinationAliasEvent,
 } from './event';
+import { WriteEvent } from './input';
 
 export type FieldType = 'string' | 'timestamp' | 'float' | 'json';
 
@@ -88,6 +89,14 @@ export const databaseSchema: DatabaseSchema = {
               ...aliasEvent.extraParams.properties,
             });
             break;
+          case 'write': {
+            const writeEvent = e as WriteEvent;
+            Object.assign(props, {
+              ...writeEvent.properties,
+              ...writeEvent.extraParams.properties,
+            });
+            break;
+          }
         }
 
         return props;

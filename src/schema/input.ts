@@ -428,4 +428,30 @@ export const EventSchema = z.intersection(
   )
 );
 
+import { databaseSchema, FieldType } from './databases';
+
+const fieldTypeToZodType = (fieldType: FieldType) => {
+  switch (fieldType) {
+    case 'string':
+      return z.string().nullable();
+    case 'timestamp':
+      return z.string().datetime().nullable();
+    case 'float':
+      return z.number().nullable();
+    case 'json':
+      return z.record(z.unknown()).nullable();
+    default:
+      return z.unknown().nullable();
+  }
+};
+
 export type Event = z.infer<typeof EventSchema>;
+
+const WriteSchemaFields = databaseSchema.fields.reduce((acc, field) => {
+  acc[field.name] = fieldTypeToZodType(field.type);
+  return acc;
+}, {} as Record<string, z.ZodType>);
+
+export const WriteSchema = z.object(WriteSchemaFields);
+
+export type WriteEvent = z.infer<typeof WriteSchema>;
