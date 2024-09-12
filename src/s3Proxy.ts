@@ -192,21 +192,34 @@ async function handleVirtualMergedFileFetch(
   s3Client: S3Client,
   s3Config: S3DeltaConfig
 ) {
-  debugTempLog(`Handling virtual merged file fetch for key: ${key}`);
+  debugTempLog(`[handleVirtualMergedFileFetch] Starting for key: ${key}`);
   const { startTime, endTime, size } = extractTimeRangeFromMergedFileName(key);
   debugTempLog(
-    `Extracted time range: ${startTime} - ${endTime}, size: ${size}`
+    `[handleVirtualMergedFileFetch] Extracted time range: startTime=${startTime}, endTime=${endTime}, size=${size}`
   );
+
+  debugTempLog(`[handleVirtualMergedFileFetch] Fetching files in time range`);
   const filesToMerge = await getFilesInTimeRange(
     s3Client,
     s3Config,
     startTime,
     endTime
   );
-  debugTempLog(`Files to merge:`, filesToMerge);
+  debugTempLog(
+    `[handleVirtualMergedFileFetch] Files to merge: ${filesToMerge.length}`
+  );
+  filesToMerge.forEach((file, index) => {
+    debugTempLog(
+      `[handleVirtualMergedFileFetch] File ${index + 1}: Key=${
+        file.Key
+      }, Size=${file.Size}`
+    );
+  });
+
+  debugTempLog(`[handleVirtualMergedFileFetch] Initializing WASM`);
   await initWasm(binary);
 
-  // Generate presigned URLs for each file
+  debugTempLog(`[handleVirtualMergedFileFetch] Generating presigned URLs`);
   const presignedUrls = await Promise.all(
     filesToMerge.map(async (file) => {
       const command = new GetObjectCommand({
@@ -216,44 +229,83 @@ async function handleVirtualMergedFileFetch(
       return await getSignedUrl(s3Client, command, { expiresIn: 60 });
     })
   );
+  debugTempLog(
+    `[handleVirtualMergedFileFetch] Generated ${presignedUrls.length} presigned URLs`
+  );
 
-  // Create an array of ReadableStreams, one for each file
+  debugTempLog(`[handleVirtualMergedFileFetch] Creating file streams`);
   const fileStreams = await Promise.all(
-    presignedUrls.map(async (url) => {
+    presignedUrls.map(async (url, index) => {
+      debugTempLog(`[handleVirtualMergedFileFetch] Fetching file ${index + 1}`);
       const response = await fetch(url);
-      // Create a Blob from the response
+      debugTempLog(
+        `[handleVirtualMergedFileFetch] File ${index + 1} fetched, status: ${
+          response.status
+        }`
+      );
       const blob = await response.blob();
+      debugTempLog(
+        `[handleVirtualMergedFileFetch] File ${index + 1} blob created, size: ${
+          blob.size
+        }`
+      );
       const fileInstance = await ParquetFile.fromFile(blob);
+      debugTempLog(
+        `[handleVirtualMergedFileFetch] File ${
+          index + 1
+        } ParquetFile instance created`
+      );
       return fileInstance.stream();
     })
   );
+  debugTempLog(
+    `[handleVirtualMergedFileFetch] Created ${fileStreams.length} file streams`
+  );
 
-  // Combine all file streams
+  debugTempLog(`[handleVirtualMergedFileFetch] Combining streams`);
   const combinedStream = new ReadableStream({
     async start(controller) {
-      for (const stream of fileStreams) {
+      for (const [index, stream] of fileStreams.entries()) {
+        debugTempLog(
+          `[handleVirtualMergedFileFetch] Processing stream ${index + 1}`
+        );
         const reader = stream.getReader();
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            debugTempLog(
+              `[handleVirtualMergedFileFetch] Stream ${
+                index + 1
+              } processing complete`
+            );
+            break;
+          }
           controller.enqueue(value);
         }
       }
       controller.close();
+      debugTempLog(
+        `[handleVirtualMergedFileFetch] All streams combined and closed`
+      );
     },
   });
 
-  // Transform the combined stream into a Parquet byte stream
+  debugTempLog(
+    `[handleVirtualMergedFileFetch] Transforming combined stream to Parquet byte stream`
+  );
   const parquetByteStream = await transformParquetStream(combinedStream);
 
-  // Tee the stream once
+  debugTempLog(`[handleVirtualMergedFileFetch] Teeing the stream`);
   const [responseStream, uploadStream] = parquetByteStream.tee();
 
-  debugTempLog(`Starting async task to merge and upload file: ${key}`);
+  debugTempLog(
+    `[handleVirtualMergedFileFetch] Starting async task to merge and upload file: ${key}`
+  );
   c.executionCtx.waitUntil(
     mergeAndUploadFile(s3Client, s3Config, key, filesToMerge, uploadStream)
   );
 
+  debugTempLog(`[handleVirtualMergedFileFetch] Returning response stream`);
   return new Response(responseStream, {
     headers: {
       'Content-Type': 'application/octet-stream',
@@ -318,14 +370,23 @@ async function getFilesInTimeRange(
   endTime: string
 ) {
   debugTempLog(`Getting files in time range: ${startTime} - ${endTime}`);
+
+  // Convert millisecond timestamps to Date objects
+  const startDate = new Date(parseInt(startTime));
+  const endDate = new Date(parseInt(endTime));
+
+  // Format the date for the prefix
+  const year = startDate.getUTCFullYear();
+  const month = (startDate.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = startDate.getUTCDate().toString().padStart(2, '0');
+  const prefix = `year=${year}/month=${month}/day=${day}/`;
+
   const command = new ListObjectsV2Command({
     Bucket: s3Config.bucket,
-    Prefix: `year=${startTime.slice(0, 4)}/`,
+    Prefix: prefix,
   });
   debugTempLog(
-    `Sending ListObjectsV2Command for bucket: ${
-      s3Config.bucket
-    }, prefix: year=${startTime.slice(0, 4)}/`
+    `Sending ListObjectsV2Command for bucket: ${s3Config.bucket}, prefix: ${prefix}`
   );
   const response = await s3Client.send(command);
   debugTempLog(`ListObjectsV2Command response:`, response);
@@ -333,9 +394,11 @@ async function getFilesInTimeRange(
 
   const filteredFiles = allFiles.filter((file) => {
     const fileTimestamp = file.Key?.split('/').pop()?.split('.')[0];
-    return (
-      fileTimestamp && fileTimestamp >= startTime && fileTimestamp <= endTime
-    );
+    if (fileTimestamp) {
+      const fileDate = new Date(parseInt(fileTimestamp));
+      return fileDate >= startDate && fileDate <= endDate;
+    }
+    return false;
   });
   debugTempLog(`Filtered files:`, filteredFiles);
   return filteredFiles;
