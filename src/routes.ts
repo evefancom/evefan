@@ -258,12 +258,8 @@ async function processEvents(
 }
 
 // S3 compatible endpoints
-app.get('/v1/s3/:writeKey/*', workerMiddleware, async (c) => {
-  const writeKey = c.req.param('writeKey');
-  if (!writeKey) {
-    return c.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+app.get('/v1/s3/*', workerMiddleware, async (c) => {
   const method = c.req.method as 'GET' | 'HEAD' | 'LIST';
   const isListRequest = !c.req.path.endsWith('.parquet');
-  return handleS3ProxyRequest(c, isListRequest ? 'LIST' : method, writeKey);
+  return handleS3ProxyRequest(c, isListRequest ? 'LIST' : method);
 });

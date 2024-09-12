@@ -24,12 +24,12 @@ function debugTempLog(...message: any) {
 
 export async function handleS3ProxyRequest(
   c: Context<WorkerEnv>,
-  method: 'GET' | 'HEAD' | 'LIST',
-  writeKey: string
+  method: 'GET' | 'HEAD' | 'LIST'
 ) {
   debugTempLog(`S3 Proxy Request: Method=${method}, Path=${c.req.path}`);
   const config = c.get('config');
 
+  const writeKey = c.req.header('X-Amz-Security-Token');
   if (!writeKey || !config.sources.some((s) => s.writeKey === writeKey)) {
     return c.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -41,7 +41,7 @@ export async function handleS3ProxyRequest(
     return c.json({ error: 'S3 configuration not found' }, { status: 404 });
   }
 
-  let key = c.req.path.replace(`/v1/s3/${writeKey}/`, '');
+  let key = c.req.path.replace(`/v1/s3/evefan/`, '');
 
   if (key.length === 0 && c.req.query('prefix')) {
     key = c.req.query('prefix') || '';
@@ -314,6 +314,8 @@ async function handleVirtualMergedFileFetch(
   });
 }
 
+import { Readable } from 'stream';
+
 async function mergeAndUploadFile(
   s3Client: S3Client,
   s3Config: S3DeltaConfig,
@@ -324,13 +326,26 @@ async function mergeAndUploadFile(
   try {
     debugTempLog(`Merging and uploading file: ${key}`);
 
+    // Wrap the stream in a Web-standard ReadableStream
+    const webReadableStream = new ReadableStream({
+      async start(controller) {
+        const reader = parquetByteStream.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          controller.enqueue(value);
+        }
+        controller.close();
+      },
+    });
+
     // Create a new Upload object
     const upload = new Upload({
       client: s3Client,
       params: {
         Bucket: s3Config.bucket,
         Key: key.replace('virtual_', ''),
-        Body: parquetByteStream,
+        Body: webReadableStream,
       },
     });
 
@@ -360,6 +375,7 @@ async function mergeAndUploadFile(
     debugTempLog(`Merged file uploaded and original files deleted: ${key}`);
   } catch (error) {
     console.error('Error in merging and uploading file:', error);
+    throw error;
   }
 }
 
