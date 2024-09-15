@@ -120,7 +120,6 @@ async function handleGetRequest(
   const headers: HeadersInit = {};
   if (rangeHeader) {
     headers['Range'] = rangeHeader;
-    debugTempLog('rangeHeader', rangeHeader);
   }
   const response = await fetch(presignedUrl, { headers });
 
@@ -139,6 +138,16 @@ async function handleGetRequest(
   };
 
   if (rangeHeader) {
+    if (
+      rangeHeader.split('=')[1] !==
+      response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+    ) {
+      debugTempLog(
+        'NO MATCH',
+        rangeHeader.split('=')[1],
+        response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+      );
+    }
     responseHeaders['Content-Range'] =
       response.headers.get('Content-Range') || '';
     responseHeaders['Content-Length'] =
@@ -296,7 +305,7 @@ function combineStreams(...streams: ReadableStream<Uint8Array>[]) {
   (async () => {
     for (const stream of streams) {
       // Pipe the current stream to the writable side of the TransformStream
-      console.log('piping stream...');
+      debugTempLog('piping stream...');
       await stream.pipeTo(writable, { preventClose: true });
     }
     writable.getWriter().close();
@@ -306,16 +315,19 @@ function combineStreams(...streams: ReadableStream<Uint8Array>[]) {
 }
 
 function createWriterProperties() {
-  return new WriterPropertiesBuilder()
-    .setWriterVersion(WriterVersion.V1)
-    .setCompression(Compression.SNAPPY)
-    .setDictionaryEnabled(true)
-    .setStatisticsEnabled(EnabledStatistics.Chunk)
-    .setDataPageSizeLimit(1024 * 1024)
-    .setDictionaryPageSizeLimit(1024 * 1024)
-    .setMaxRowGroupSize(1024 * 1024)
-    .setCreatedBy(`evefan-${Date.now()}`)
-    .build();
+  return (
+    new WriterPropertiesBuilder()
+      .setWriterVersion(WriterVersion.V1)
+      .setCompression(Compression.SNAPPY)
+      .setDictionaryEnabled(true)
+      .setStatisticsEnabled(EnabledStatistics.Chunk)
+      .setDataPageSizeLimit(1024 * 1024)
+      .setDictionaryPageSizeLimit(1024 * 1024)
+      .setMaxRowGroupSize(1024 * 1024)
+      // TODO: include the evefan deployed version and environment Id
+      .setCreatedBy(`evefan-${Date.now()}`)
+      .build()
+  );
 }
 
 async function mergeAndUploadFile(
@@ -324,16 +336,10 @@ async function mergeAndUploadFile(
   key: string,
   mergedParquetStream: ReadableStream<Uint8Array>
 ) {
-  // Create a Response object from the stream
+  // Improvements: Handle this via a stream with the S3 Upload utility
   const response = new Response(mergedParquetStream);
-
-  // Get the Blob from the Response
   const blob = await response.blob();
-
-  // Convert Blob to ArrayBuffer
   const arrayBuffer = await blob.arrayBuffer();
-
-  // Create the PutObjectCommand
   const putObjectCommand = new PutObjectCommand({
     Bucket: s3Config.bucket,
     Key: key,
@@ -342,9 +348,9 @@ async function mergeAndUploadFile(
 
   try {
     await s3Client.send(putObjectCommand);
-    console.log(`Successfully uploaded merged file: ${key}`);
+    debugTempLog(`Successfully uploaded merged file: ${key}`);
   } catch (error) {
-    console.error(`Failed to upload merged file: ${error}`);
+    debugTempLog(`Failed to upload merged file: ${error}`);
   }
 }
 
@@ -406,17 +412,13 @@ async function handleListRequest(
   key: string,
   writeKey: string
 ) {
-  debugTempLog(`Handling LIST request for key: ${key}`);
   const command = new ListObjectsV2Command({
     Bucket: s3Config.bucket,
     Prefix: key,
   });
-  debugTempLog(
-    `Sending ListObjectsV2Command for bucket: ${s3Config.bucket}, prefix: ${key}`
-  );
-  const response = await s3Client.send(command);
-  debugTempLog(`ListObjectsV2Command response:`, JSON.stringify(response));
-  const files = response.Contents || [];
+
+  const existingListResponse = await s3Client.send(command);
+  const files = existingListResponse.Contents || [];
 
   const filesByDay = groupFilesByDay(
     files.filter(
@@ -425,25 +427,19 @@ async function handleListRequest(
   );
 
   const virtualMergedFiles = constructVirtualMergedFiles(filesByDay);
-  debugTempLog(`Virtual merged files:`, virtualMergedFiles);
 
-  // Sort all files by their key (which includes the timestamp)
-  virtualMergedFiles.sort((a, b) => (a.Key || '').localeCompare(b.Key || ''));
+  const filesToRespond = [
+    ...files.filter((f) => f.Key?.includes('virtual_')),
+    ...virtualMergedFiles,
+  ];
+  filesToRespond.sort((a, b) => (a.Key || '').localeCompare(b.Key || ''));
 
-  const acceptHeader = c.req.header('Accept');
-  if (acceptHeader && acceptHeader.includes('application/json')) {
-    return c.json({
-      ...response,
-      Contents: virtualMergedFiles,
-    });
-  } else {
-    const xmlResponse = generateXMLResponse(response, virtualMergedFiles);
-    return new Response(xmlResponse, {
-      headers: {
-        'Content-Type': 'application/xml',
-      },
-    });
-  }
+  const xmlResponse = generateXMLResponse(existingListResponse, filesToRespond);
+  return new Response(xmlResponse, {
+    headers: {
+      'Content-Type': 'application/xml',
+    },
+  });
 }
 
 function generateXMLResponse(response: any, virtualMergedFiles: any[]): string {
@@ -539,37 +535,4 @@ function constructVirtualMergedFiles(filesByDay: Record<string, any[]>): any[] {
   }
 
   return virtualFiles;
-}
-
-function calculateTotalSize(files: any[]): number {
-  return files.reduce((total, file) => total + (file.Size || 0), 0);
-}
-
-function parseRangeHeader(
-  rangeHeader: string,
-  totalSize: number
-): { start: number; end: number } {
-  const rangeMatch = rangeHeader.match(/bytes=(\d*)-(\d*)/);
-  if (!rangeMatch) {
-    throw new Error('Invalid Range Header');
-  }
-
-  let start = parseInt(rangeMatch[1], 10);
-  let end = parseInt(rangeMatch[2], 10);
-
-  if (isNaN(start)) {
-    // Suffix byte range
-    start = totalSize - end;
-    end = totalSize - 1;
-  } else if (isNaN(end)) {
-    // From start to the end
-    end = totalSize - 1;
-  }
-
-  // Validate range
-  if (start > end || start < 0 || end >= totalSize) {
-    throw new Error('Invalid Range Values');
-  }
-
-  return { start, end };
 }
