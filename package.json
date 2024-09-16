@@ -35,6 +35,7 @@
     "build": "node build.mjs",
     "predeploy": "NODE_ENV=production npm run build",
     "deploy": "wrangler deploy --no-bundle",
+    "deploy-tail": "npm run deploy && wrangler tail",
     "typecheck": "tsc --noEmit",
     "predev": "NODE_ENV=dev npm run build",
     "dev": "concurrently --kill-others --names \"watcher,server\" \"chokidar 'src/**/*' 'config.json' 'build.mjs' --ignore 'src/connectors/index.ts' --silent -c 'npm run build'\" \"wrangler dev\""
