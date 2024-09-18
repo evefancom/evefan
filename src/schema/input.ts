@@ -24,11 +24,11 @@ const EventBaseSchema = z.object({
   _metadata: z
     .object({
       /** Array of bundled event names */
-      bundled: z.array(z.string()),
+      bundled: z.array(z.string()).optional(),
       /** Array of bundled event IDs */
-      bundledIds: z.array(z.string()),
+      bundledIds: z.array(z.string()).optional(),
       /** Array of unbundled event names */
-      unbundled: z.array(z.string()),
+      unbundled: z.array(z.string()).optional(),
     })
     .optional(),
   /** Anonymous identifier for the user */

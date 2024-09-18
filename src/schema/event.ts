@@ -287,6 +287,7 @@ export function formatEvent(
     sentAt: rawEvent.sentAt || new Date().toISOString(),
     timestamp: rawEvent.timestamp || new Date().toISOString(),
   });
+
   return {
     ...event,
     extraParams: getEventExtraParams(event, type),
