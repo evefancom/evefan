@@ -30,6 +30,36 @@ const workerMiddleware = createMiddleware<WorkerEnv>(async (c, next) => {
   const config = await getConfig();
   c.set('config', config);
 
+  // Validate writeKey
+  const body = await c.req.json();
+  const writeKey = body.writeKey;
+  if (
+    !writeKey ||
+    !config.sources.some((s) => {
+      return s.writeKey === writeKey;
+    })
+  ) {
+    return c.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const allowedOrigins = config.sources.find(
+    (s) => s.writeKey === writeKey
+  )?.allowedOrigins;
+
+  // Check if config contains allowed origins and if it doesn't contain * wildcard, we check the request origin.
+  if (
+    allowedOrigins &&
+    allowedOrigins.length > 0 &&
+    !allowedOrigins.includes('*')
+  ) {
+    const headers = c.req.header();
+    const origin = headers['origin'];
+
+    if (origin && !allowedOrigins.includes(origin)) {
+      return c.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
   await next();
 });
 
@@ -198,11 +228,6 @@ async function handleAnalyticsJsMethod(
 
   try {
     const body = await c.req.json();
-    const writeKey = body.writeKey;
-
-    if (!writeKey || !config.sources.some((s) => s.writeKey === writeKey)) {
-      return c.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     events = body.batch
       ? body.batch.map((b: any) =>
