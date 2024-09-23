@@ -13,6 +13,7 @@ if (!fs.existsSync('config.json')) {
 }
 
 try {
+  console.log('Building Evefan...');
   const connectorsDeclaration = path.resolve('./src/connectors/index.ts');
 
   const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
@@ -119,6 +120,7 @@ export function createIsValidFunction() {
     treeShaking: true,
     minify: process.NODE_ENV === 'production',
     external: ['cloudflare:workers', '*.wasm'],
+    allowOverwrite: true,
     define: {
       IS_CLOUDFLARE_WORKER: 'true',
     },
