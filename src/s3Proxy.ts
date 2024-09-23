@@ -348,7 +348,7 @@ function combineStreams(streams: ReadableStream<any>[]): ReadableStream<any> {
   });
 }
 
-function createWriterProperties() {
+export function createWriterProperties() {
   debugTempLog('Creating writer properties');
   const properties = new WriterPropertiesBuilder()
     .setWriterVersion(WriterVersion.V1)
