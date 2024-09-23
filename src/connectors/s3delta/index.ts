@@ -13,6 +13,7 @@ import initWasm, {
 } from './../../lib/parquet-wasm';
 import binary from './../../lib/parquet-wasm/parquet_wasm_bg.wasm';
 import * as arrow from 'apache-arrow';
+import { createWriterProperties } from '../../s3Proxy';
 
 export default class S3DeltaConnector implements Connector {
   private client: S3Client | null = null;
@@ -112,9 +113,7 @@ export default class S3DeltaConnector implements Connector {
     const wasmTable = Table.fromIPCStream(arrow.tableToIPC(table, 'stream'));
 
     // Set up writer properties
-    const writerProperties = new WriterPropertiesBuilder()
-      .setCompression(Compression.SNAPPY)
-      .build();
+    const writerProperties = createWriterProperties();
 
     // Write Parquet data
     const parquetUint8Array = writeParquet(wasmTable, writerProperties);
@@ -128,6 +127,7 @@ export default class S3DeltaConnector implements Connector {
     };
     const outputCommand = new PutObjectCommand(outputParams);
     await this.client!.send(outputCommand);
+    writerProperties.free();
 
     console.log(`S3 Delta: ${events.length} event(s) written to ${filePath}`);
   }

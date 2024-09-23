@@ -8,13 +8,18 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import initWasm, {
+  Compression,
+  EnabledStatistics,
   transformParquetStream,
+  WriterPropertiesBuilder,
+  WriterVersion,
 } from './lib/parquet-wasm/parquet_wasm';
-import binary from './lib/parquet-wasm/parquet_wasm_bg.wasm';
 import { ParquetFile } from './lib/parquet-wasm/parquet_wasm';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { XMLBuilder } from 'fast-xml-parser';
+import { ParquetWasm } from './lib/parquet-wasm/wasm';
 
 function debugTempLog(...message: any) {
   // TODO: remove this when we have a logger and proper dev/prod flag
@@ -27,8 +32,8 @@ export async function handleS3ProxyRequest(
 ) {
   debugTempLog(`S3 Proxy Request: Method=${method}, Path=${c.req.path}`);
   const config = c.get('config');
-  const writeKey = c.req.query('writeKey');
 
+  const writeKey = c.req.header('X-Amz-Security-Token');
   if (!writeKey || !config.sources.some((s) => s.writeKey === writeKey)) {
     return c.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -40,7 +45,12 @@ export async function handleS3ProxyRequest(
     return c.json({ error: 'S3 configuration not found' }, { status: 404 });
   }
 
-  const key = c.req.path.replace('/v1/s3/', '');
+  let key = c.req.path.replace(`/v1/s3/evefan/`, '');
+  key = decodeURIComponent(key); // Unescape the key
+
+  if (key.length === 0 && c.req.query('prefix')) {
+    key = decodeURIComponent(c.req.query('prefix') || ''); // Unescape the prefix query parameter
+  }
 
   if (method !== 'LIST' && !key.endsWith('.parquet')) {
     return c.json(
@@ -64,112 +74,266 @@ export async function handleS3ProxyRequest(
         : s3Config.url.split('.')[2],
   });
 
+  let result;
   try {
+    await ParquetWasm.initialize();
+
     switch (method) {
       case 'LIST':
         debugTempLog(`Handling LIST request for key: ${key}`);
-        return await handleListRequest(c, s3Client, s3Config, key);
-
+        result = await handleListRequest(c, s3Client, s3Config, key);
+        break;
       case 'HEAD':
         debugTempLog(`Handling HEAD request for key: ${key}`);
-        const headCommand = new HeadObjectCommand({
-          Bucket: s3Config.bucket,
-          Key: key,
-        });
-        debugTempLog(
-          `Sending HeadObjectCommand for bucket: ${s3Config.bucket}, key: ${key}`
-        );
-        const headResponse = await s3Client.send(headCommand);
-        debugTempLog(`HeadObjectCommand response:`, headResponse);
-        return new Response(null, {
-          status: 200,
-          headers: {
-            'Content-Length': headResponse.ContentLength?.toString() || '0',
-            'Content-Type':
-              headResponse.ContentType || 'application/octet-stream',
-            'Last-Modified': headResponse.LastModified?.toUTCString() || '',
-            ETag: headResponse.ETag || '',
-          },
-        });
-
+        result = await handleHeadRequest(c, s3Client, s3Config, key);
+        break;
       case 'GET':
         debugTempLog(`Handling GET request for key: ${key}`);
-        if (key.includes('virtual_')) {
-          debugTempLog(`Handling virtual merged file fetch for key: ${key}`);
-          return await handleVirtualMergedFileFetch(c, key, s3Client, s3Config);
-        } else {
-          const getCommand = new GetObjectCommand({
-            Bucket: s3Config.bucket,
-            Key: key,
-          });
-          debugTempLog(
-            `Sending GetObjectCommand for bucket: ${s3Config.bucket}, key: ${key}`
-          );
-          const getResponse = await s3Client.send(getCommand);
-          debugTempLog(`GetObjectCommand response:`, getResponse);
-          const stream = getResponse.Body?.transformToWebStream();
-
-          return new Response(stream, {
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              'Content-Disposition': `attachment; filename="${key}"`,
-            },
-          });
-        }
-
+        result = await handleGetRequest(c, s3Client, s3Config, key);
+        break;
       default:
-        return c.json({ error: 'Unsupported method' }, { status: 405 });
+        result = c.json({ error: 'Unsupported method' }, { status: 405 });
     }
   } catch (e) {
     console.error(`Error in handling S3 ${method} request: `, e);
-    return c.json({ error: 'Error in handling S3 request' }, { status: 500 });
+    result = c.json({ error: 'Error in handling S3 request' }, { status: 500 });
+  } finally {
+    ParquetWasm.free();
   }
+
+  return result;
 }
 
-async function handleVirtualMergedFileFetch(
+async function handleGetRequest(
+  c: Context<WorkerEnv>,
+  s3Client: S3Client,
+  s3Config: S3DeltaConfig,
+  key: string
+) {
+  const rangeHeader = c.req.header('range');
+
+  debugTempLog(
+    `Received get request for key: ${key} with Range header: ${rangeHeader}`
+  );
+  const getCommand = new GetObjectCommand({
+    Bucket: s3Config.bucket,
+    Key: key,
+    Range: rangeHeader,
+  });
+  const presignedUrl = await getSignedUrl(s3Client, getCommand, {
+    expiresIn: 60,
+  });
+
+  const headers: HeadersInit = {};
+  if (rangeHeader) {
+    headers['Range'] = rangeHeader;
+  }
+  const response = await fetch(presignedUrl, { headers });
+
+  if (!response.ok) {
+    debugTempLog('Error fetching object', response.status, response.statusText);
+    return c.json(
+      { error: 'Error fetching object' },
+      { status: response.status }
+    );
+  }
+
+  const responseHeaders: Record<string, string> = {
+    'Content-Type':
+      response.headers.get('Content-Type') || 'application/octet-stream',
+    'Content-Disposition': `attachment; filename="${key}"`,
+  };
+
+  if (rangeHeader) {
+    if (
+      rangeHeader.split('=')[1] !==
+      response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+    ) {
+      debugTempLog(
+        'NO MATCH',
+        rangeHeader.split('=')[1],
+        response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+      );
+    }
+    responseHeaders['Content-Range'] =
+      response.headers.get('Content-Range') || '';
+    responseHeaders['Content-Length'] =
+      response.headers.get('Content-Length') || '';
+  }
+
+  return new Response(response.body, {
+    status: rangeHeader ? 206 : 200,
+    headers: responseHeaders,
+  });
+}
+
+async function handleHeadRequest(
+  c: Context<WorkerEnv>,
+  s3Client: S3Client,
+  s3Config: S3DeltaConfig,
+  key: string
+) {
+  const headCommand = new HeadObjectCommand({
+    Bucket: s3Config.bucket,
+    Key: key,
+  });
+  let presignedUrl = await getSignedUrl(s3Client, headCommand, {
+    expiresIn: 60,
+  });
+
+  let response = await fetch(presignedUrl, { method: 'HEAD' });
+
+  const getHeadResponseHeaders = (response: Response) => {
+    return {
+      'Content-Length': response.headers.get('Content-Length') || '0',
+      'Content-Type':
+        response.headers.get('Content-Type') || 'application/octet-stream',
+      'Last-Modified': response.headers.get('Last-Modified') || '',
+      ETag: response.headers.get('ETag') || '',
+    };
+  };
+
+  if (response.ok && response.status == 200) {
+    return new Response(null, {
+      status: response.status,
+      headers: getHeadResponseHeaders(response),
+    });
+  }
+
+  if (key.includes('virtual_')) {
+    await materializeVirtualFile(c, key, s3Client, s3Config);
+    presignedUrl = await getSignedUrl(s3Client, headCommand, {
+      expiresIn: 60,
+    });
+
+    response = await fetch(presignedUrl, { method: 'HEAD' });
+  }
+  return new Response(null, {
+    status: response.status,
+    headers: getHeadResponseHeaders(response),
+  });
+}
+
+async function materializeVirtualFile(
   c: Context<WorkerEnv>,
   key: string,
   s3Client: S3Client,
   s3Config: S3DeltaConfig
 ) {
-  debugTempLog(`Handling virtual merged file fetch for key: ${key}`);
-  const [startTime, endTime] = extractTimeRangeFromMergedFileName(key);
-  debugTempLog(`Extracted time range: ${startTime} - ${endTime}`);
-  const filesToMerge = await getFilesInTimeRange(
-    s3Client,
-    s3Config,
-    startTime,
-    endTime
-  );
-  debugTempLog(`Files to merge:`, filesToMerge);
-  await initWasm(binary);
+  const { startTime, endTime } = extractTimeRangeFromMergedFileName(key);
 
-  // Generate presigned URLs for each file
-  const presignedUrls = await Promise.all(
-    filesToMerge.map(async (file) => {
-      const command = new GetObjectCommand({
-        Bucket: s3Config.bucket,
-        Key: file.Key,
+  try {
+    const filesToMerge = await getFilesInTimeRange(
+      s3Client,
+      s3Config,
+      startTime,
+      endTime
+    );
+    debugTempLog(
+      `${filesToMerge.length} S3 files to merge with total size ${
+        filesToMerge.reduce((acc, file) => acc + (file.Size || 0), 0) /
+        1024 /
+        1024
+      } MB for key: ${key}`
+    );
+
+    const presignedUrls = await Promise.all(
+      filesToMerge.map(async (file) => {
+        const command = new GetObjectCommand({
+          Bucket: s3Config.bucket,
+          Key: file.Key,
+        });
+        return await getSignedUrl(s3Client, command, { expiresIn: 60 });
+      })
+    );
+
+    const MAX_MEMORY_USAGE = 30 * 1024 * 1024; // 30MB
+    const MAX_PAGE_SIZE = 10 * 1024 * 1024;
+
+    const { totalSize, totalRows, averageRowSize, combinedStream } =
+      await createReadStream(presignedUrls, MAX_MEMORY_USAGE, MAX_PAGE_SIZE);
+
+    debugTempLog(
+      `Total size: ${totalSize} bytes, Total rows: ${totalRows}, Average row size: ${averageRowSize} bytes, Batch size: ${Math.min(
+        MAX_MEMORY_USAGE / 3,
+        MAX_PAGE_SIZE
+      )} bytes, Page size: ${Math.floor(
+        Math.min(MAX_MEMORY_USAGE / 3, MAX_PAGE_SIZE) / averageRowSize
+      )} rows. Wasm memory Usage: ${
+        ParquetWasm.getMemoryUsage() / 1024 / 1024
+      } MB`
+    );
+
+    const writerProperties = createWriterProperties();
+    const mergedParquetStream = await transformParquetStream(
+      combinedStream,
+      writerProperties
+    );
+
+    // await writerProperties.free();
+
+    await mergeAndUploadFile(s3Client, s3Config, key, mergedParquetStream);
+  } catch (error) {
+    debugTempLog(`Error in materializeVirtualFile: ${error}`);
+    return c.json(
+      { error: 'Error processing virtual merged file' },
+      { status: 500 }
+    );
+  }
+}
+
+async function createReadStream(
+  urls: string[],
+  MAX_MEMORY_USAGE: number,
+  MAX_PAGE_SIZE: number
+): Promise<{
+  totalSize: number;
+  totalRows: number;
+  averageRowSize: number;
+  combinedStream: ReadableStream<any>;
+}> {
+  let totalSize = 0;
+  let totalRows = 0;
+  const streams: ReadableStream<any>[] = [];
+
+  for (const url of urls) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    const parquetFile = await ParquetFile.fromFile(blob);
+    totalSize += blob.size;
+    const numRows = parquetFile.metadata().fileMetadata().numRows();
+    totalRows += numRows;
+
+    const averageRowSize = totalSize / totalRows;
+    const batchSize = Math.min(MAX_MEMORY_USAGE / 3, MAX_PAGE_SIZE);
+    const pageSize = Math.floor(batchSize / averageRowSize);
+
+    const numPages = Math.ceil(numRows / pageSize);
+
+    for (let i = 0; i < numPages; i++) {
+      const stream = await parquetFile.stream({
+        limit: pageSize,
+        offset: i * pageSize,
+        concurrency: 1,
       });
-      return await getSignedUrl(s3Client, command, { expiresIn: 60 });
-    })
-  );
+      streams.push(stream);
+    }
 
-  // Create an array of ReadableStreams, one for each file
-  const fileStreams = await Promise.all(
-    presignedUrls.map(async (url) => {
-      const response = await fetch(url);
-      // Create a Blob from the response
-      const blob = await response.blob();
-      const fileInstance = await ParquetFile.fromFile(blob);
-      return fileInstance.stream();
-    })
-  );
+    // parquetFile.free();
+  }
 
-  // Combine all file streams
-  const combinedStream = new ReadableStream({
+  const averageRowSize = totalSize / totalRows;
+  const combinedStream = combineStreams(streams);
+  return { totalSize, totalRows, averageRowSize, combinedStream };
+}
+
+function combineStreams(streams: ReadableStream<any>[]): ReadableStream<any> {
+  return new ReadableStream({
     async start(controller) {
-      for (const stream of fileStreams) {
+      for (const stream of streams) {
         const reader = stream.getReader();
         while (true) {
           const { done, value } = await reader.read();
@@ -180,73 +344,72 @@ async function handleVirtualMergedFileFetch(
       controller.close();
     },
   });
+}
 
-  // Transform the combined stream into a Parquet byte stream
-  const parquetByteStream = await transformParquetStream(combinedStream);
-
-  // Tee the stream once
-  const [responseStream, uploadStream] = parquetByteStream.tee();
-
-  debugTempLog(`Starting async task to merge and upload file: ${key}`);
-  c.executionCtx.waitUntil(
-    mergeAndUploadFile(s3Client, s3Config, key, filesToMerge, uploadStream)
-  );
-
-  return new Response(responseStream, {
-    headers: {
-      'Content-Type': 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${key}"`,
-    },
-  });
+export function createWriterProperties() {
+  debugTempLog('Creating writer properties');
+  const properties = new WriterPropertiesBuilder()
+    .setWriterVersion(WriterVersion.V1)
+    .setCompression(Compression.SNAPPY)
+    .setDictionaryEnabled(true)
+    .setStatisticsEnabled(EnabledStatistics.Chunk)
+    .setDataPageSizeLimit(1024 * 1024)
+    .setDictionaryPageSizeLimit(1024 * 1024)
+    .setMaxRowGroupSize(1024 * 1024)
+    .setCreatedBy(`evefan-${Date.now()}`)
+    .build();
+  debugTempLog('Writer properties created');
+  return properties;
 }
 
 async function mergeAndUploadFile(
   s3Client: S3Client,
   s3Config: S3DeltaConfig,
   key: string,
-  filesToMerge: any[],
-  parquetByteStream: ReadableStream
+  mergedParquetStream: ReadableStream<Uint8Array>
 ) {
-  try {
-    debugTempLog(`Merging and uploading file: ${key}`);
+  debugTempLog('Starting mergeAndUploadFile');
+  const chunks: Uint8Array[] = [];
+  const reader = mergedParquetStream.getReader();
 
-    // Create a new Upload object
-    const upload = new Upload({
-      client: s3Client,
-      params: {
-        Bucket: s3Config.bucket,
-        Key: key.replace('virtual_', ''),
-        Body: parquetByteStream,
-      },
-    });
-
-    // Start the upload
-    debugTempLog(
-      `Starting upload for bucket: ${s3Config.bucket}, key: ${key.replace(
-        'virtual_',
-        ''
-      )}`
-    );
-    await upload.done();
-    debugTempLog(`Merged file uploaded: ${key.replace('virtual_', '')}`);
-
-    // Delete the original files
-    for (const file of filesToMerge) {
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: s3Config.bucket,
-        Key: file.Key,
-      });
-      debugTempLog(
-        `Sending DeleteObjectCommand for bucket: ${s3Config.bucket}, key: ${file.Key}`
-      );
-      await s3Client.send(deleteCommand);
-      debugTempLog(`Deleted original file: ${file.Key}`);
-    }
-
-    debugTempLog(`Merged file uploaded and original files deleted: ${key}`);
-  } catch (error) {
-    console.error('Error in merging and uploading file:', error);
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    debugTempLog(`Chunk read, total chunks: ${chunks.length}`);
   }
+
+  const blob = new Blob(chunks, { type: 'application/octet-stream' });
+  const arrayBuffer = await blob.arrayBuffer();
+
+  debugTempLog(`Uploading file: ${key}, size: ${arrayBuffer.byteLength} bytes`);
+
+  const putObjectCommand = new PutObjectCommand({
+    Bucket: s3Config.bucket,
+    Key: key,
+    Body: Buffer.from(arrayBuffer),
+  });
+
+  try {
+    await s3Client.send(putObjectCommand);
+
+    debugTempLog(`Successfully uploaded merged file: ${key}`);
+  } catch (error) {
+    debugTempLog(`Failed to upload merged file: ${error}`);
+    throw error;
+  }
+}
+
+function extractTimeRangeFromMergedFileName(key: string): {
+  startTime: string;
+  endTime: string;
+} {
+  const fileName = key.split('/').pop() || '';
+  const [, , startTime, endTime] = fileName.split('_');
+  return {
+    startTime,
+    endTime: endTime.replace('.parquet', ''),
+  };
 }
 
 async function getFilesInTimeRange(
@@ -255,38 +418,32 @@ async function getFilesInTimeRange(
   startTime: string,
   endTime: string
 ) {
-  debugTempLog(`Getting files in time range: ${startTime} - ${endTime}`);
+  const startDate = new Date(parseInt(startTime));
+  const endDate = new Date(parseInt(endTime));
+
+  const prefix = ''; // Define the prefix if needed
+
   const command = new ListObjectsV2Command({
     Bucket: s3Config.bucket,
-    Prefix: `y=${startTime.slice(0, 4)}/`,
+    Prefix: prefix,
   });
-  debugTempLog(
-    `Sending ListObjectsV2Command for bucket: ${
-      s3Config.bucket
-    }, prefix: y=${startTime.slice(0, 4)}/`
-  );
+
   const response = await s3Client.send(command);
-  debugTempLog(`ListObjectsV2Command response:`, response);
   const allFiles = response.Contents || [];
 
-  const filteredFiles = allFiles.filter((file) => {
-    const fileTimestamp = file.Key?.split('/').pop()?.split('.')[0];
-    return (
-      fileTimestamp && fileTimestamp >= startTime && fileTimestamp <= endTime
-    );
+  const filesToMerge = allFiles.filter((file) => {
+    if (file.Key?.includes('virtual_')) {
+      return false;
+    }
+    const timestampStr = file.Key?.split('/').pop()?.split('.')[0];
+    if (timestampStr) {
+      const fileDate = new Date(parseInt(timestampStr));
+      return fileDate >= startDate && fileDate <= endDate;
+    }
+    return false;
   });
-  debugTempLog(`Filtered files:`, filteredFiles);
-  return filteredFiles;
-}
 
-function extractTimeRangeFromMergedFileName(
-  fileName: string
-): [string, string] {
-  const parts = fileName.split('_');
-  return [
-    parts[2]?.replace('.parquet', ''),
-    parts[3].split('.')[0]?.replace('.parquet', ''),
-  ];
+  return filesToMerge;
 }
 
 async function handleListRequest(
@@ -295,41 +452,83 @@ async function handleListRequest(
   s3Config: S3DeltaConfig,
   key: string
 ) {
-  debugTempLog(`Handling LIST request for key: ${key}`);
   const command = new ListObjectsV2Command({
     Bucket: s3Config.bucket,
-    Prefix: key,
+    Prefix: key && key.length > 0 ? key : undefined,
   });
-  debugTempLog(
-    `Sending ListObjectsV2Command for bucket: ${s3Config.bucket}, prefix: ${key}`
+
+  const existingListResponse = await s3Client.send(command);
+  const files = existingListResponse.Contents || [];
+
+  const filesByDay = groupFilesByDay(
+    files
+      .filter(
+        (f) => f.Key?.endsWith('.parquet') && !f.Key?.includes('virtual_')
+      )
+      .sort((a, b) => {
+        const aKey = a.Key?.split('/');
+        const bKey = b.Key?.split('/');
+        if (aKey && bKey) {
+          // Compare year
+          if (aKey[0] !== bKey[0]) return aKey[0].localeCompare(bKey[0]);
+          // Compare month
+          if (aKey[1] !== bKey[1]) return aKey[1].localeCompare(bKey[1]);
+          // Compare day
+          if (aKey[2] !== bKey[2]) return aKey[2].localeCompare(bKey[2]);
+          // Compare timestamp
+          return aKey[3].localeCompare(bKey[3]);
+        }
+        return 0;
+      })
   );
-  const response = await s3Client.send(command);
-  debugTempLog(`ListObjectsV2Command response:`, response);
-  const files = response.Contents || [];
 
-  debugTempLog(`Grouping files by day`);
-  const filesByDay = groupFilesByDay(files);
-  debugTempLog(`Files grouped by day:`, filesByDay);
-
-  debugTempLog(`Constructing virtual merged files`);
   const virtualMergedFiles = constructVirtualMergedFiles(filesByDay);
-  debugTempLog(`Virtual merged files:`, virtualMergedFiles);
 
-  // Combine actual files and virtual merged files
-  const allFiles = [...files, ...virtualMergedFiles];
+  const filesToRespond = [
+    ...files.filter((f) => f.Key?.includes('virtual_')),
+    ...virtualMergedFiles,
+  ];
+  filesToRespond.sort((a, b) => (a.Key || '').localeCompare(b.Key || ''));
 
-  // Sort all files by their key (which includes the timestamp)
-  allFiles.sort((a, b) => (a.Key || '').localeCompare(b.Key || ''));
+  // debugTempLog(`List files to respond:`, filesToRespond);
 
-  return c.json({
-    ...response,
-    Contents: allFiles,
+  const xmlResponse = generateXMLResponse(existingListResponse, filesToRespond);
+  return new Response(xmlResponse, {
+    headers: {
+      'Content-Type': 'application/xml',
+    },
   });
+}
+
+function generateXMLResponse(response: any, virtualMergedFiles: any[]): string {
+  const xmlObj = {
+    ListBucketResult: {
+      '@xmlns': 'http://s3.amazonaws.com/doc/2006-03-01/',
+      Name: response.Name,
+      Prefix: response.Prefix,
+      KeyCount: virtualMergedFiles.length,
+      MaxKeys: response.MaxKeys,
+      IsTruncated: response.IsTruncated,
+      Contents: virtualMergedFiles.map((file) => ({
+        Key: file.Key,
+        LastModified: file.LastModified,
+        ETag: file.ETag,
+        Size: file.Size,
+        StorageClass: file.StorageClass,
+      })),
+    },
+  };
+
+  const builder = new XMLBuilder({
+    ignoreAttributes: false,
+    format: true,
+  });
+  return builder.build(xmlObj);
 }
 
 function groupFilesByDay(files: any[]): Record<string, any[]> {
   return files.reduce((acc, file) => {
-    const day = file.Key?.split('/').slice(0, 3).join('/'); // Assumes y=YYYY/m=MM/d=DD structure
+    const day = file.Key?.split('/').slice(0, 3).join('/'); // Assumes year=YYYY/m=MM/d=DD structure
     if (day) {
       acc[day] = acc[day] || [];
       acc[day].push(file);
@@ -340,10 +539,9 @@ function groupFilesByDay(files: any[]): Record<string, any[]> {
 
 function constructVirtualMergedFiles(filesByDay: Record<string, any[]>): any[] {
   const virtualFiles = [];
-  const MERGE_THRESHOLD = 5; // Number of files to trigger a merge
-  const TARGET_FILE_SIZE = 220 * 1024 * 1024; // Target file size (220MB)
+  const TARGET_FILE_SIZE = 1 * 1024 * 1024; // 1 MB for now
 
-  for (const [day, files] of Object.entries(filesByDay)) {
+  for (const [date, files] of Object.entries(filesByDay)) {
     let currentSize = 0;
     let currentFiles = [];
     let virtualFileCounter = 1;
@@ -352,24 +550,36 @@ function constructVirtualMergedFiles(filesByDay: Record<string, any[]>): any[] {
       currentFiles.push(file);
       currentSize += file.Size || 0;
 
-      if (
-        currentFiles.length >= MERGE_THRESHOLD ||
-        currentSize >= TARGET_FILE_SIZE
-      ) {
-        const firstFile = currentFiles[0];
-        const lastFile = currentFiles[currentFiles.length - 1];
-        const virtualKey = `${day}/virtual_${virtualFileCounter}_${firstFile.Key?.split(
-          '/'
-        ).pop()}_${lastFile.Key?.split('/').pop()}`;
+      if (currentSize >= TARGET_FILE_SIZE) {
+        if (currentFiles.length > 1) {
+          const firstFile = currentFiles[0];
+          const lastFile = currentFiles[currentFiles.length - 1];
+          const firstTimestamp = firstFile.Key?.split('/').pop()?.split('.')[0];
+          const lastTimestamp = lastFile.Key?.split('/').pop()?.split('.')[0];
+          const virtualKey = `${date}/virtual_${currentSize}_${firstTimestamp}_${lastTimestamp}.parquet`;
 
-        virtualFiles.push({
-          Key: virtualKey,
-          Size: currentSize,
-          LastModified: lastFile.LastModified,
-          IsVirtual: true,
-          OriginalFiles: currentFiles.map((f) => f.Key),
-        });
+          debugTempLog(
+            `Constructing virtual file: ${virtualKey} with size: ${currentSize} bytes which includes files: ${currentFiles
+              .map(
+                (f) => f.Key + ' (' + Math.floor(f.Size / 1024 / 1024) + ' MB)'
+              )
+              .join(', ')} for day: ${date} out of files: ${files
+              .map(
+                (f) => f.Key + ' (' + Math.floor(f.Size / 1024 / 1024) + ' MB)'
+              )
+              .join(', ')}`
+          );
 
+          virtualFiles.push({
+            Key: virtualKey,
+            Size: currentSize,
+            LastModified: lastFile.LastModified,
+            ETag: lastFile.ETag,
+            StorageClass: lastFile.StorageClass,
+          });
+        } else {
+          virtualFiles.push(currentFiles[0]);
+        }
         currentFiles = [];
         currentSize = 0;
         virtualFileCounter++;
@@ -378,19 +588,26 @@ function constructVirtualMergedFiles(filesByDay: Record<string, any[]>): any[] {
 
     // Handle any remaining files
     if (currentFiles.length > 1) {
+      debugTempLog(
+        `files remaining for day: ${date} files: ${currentFiles
+          .map((f) => f.Key)
+          .join(', ')}`
+      );
       const firstFile = currentFiles[0];
       const lastFile = currentFiles[currentFiles.length - 1];
-      const virtualKey = `${day}/virtual_${virtualFileCounter}_${firstFile.Key?.split(
-        '/'
-      ).pop()}_${lastFile.Key?.split('/').pop()}`;
+      const firstTimestamp = firstFile.Key?.split('/').pop()?.split('.')[0];
+      const lastTimestamp = lastFile.Key?.split('/').pop()?.split('.')[0];
+      const virtualKey = `${date}/virtual_${currentSize}_${firstTimestamp}_${lastTimestamp}.parquet`;
 
       virtualFiles.push({
         Key: virtualKey,
         Size: currentSize,
         LastModified: lastFile.LastModified,
-        IsVirtual: true,
-        OriginalFiles: currentFiles.map((f) => f.Key),
+        ETag: lastFile.ETag,
+        StorageClass: lastFile.StorageClass,
       });
+    } else if (currentFiles.length === 1) {
+      virtualFiles.push(currentFiles[0]);
     }
   }
 
