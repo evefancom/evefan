@@ -183,16 +183,20 @@ async function handleHeadRequest(
 
   let response = await fetch(presignedUrl, { method: 'HEAD' });
 
+  const getHeadResponseHeaders = (response: Response) => {
+    return {
+      'Content-Length': response.headers.get('Content-Length') || '0',
+      'Content-Type':
+        response.headers.get('Content-Type') || 'application/octet-stream',
+      'Last-Modified': response.headers.get('Last-Modified') || '',
+      ETag: response.headers.get('ETag') || '',
+    };
+  };
+
   if (response.ok && response.status == 200) {
     return new Response(null, {
       status: response.status,
-      headers: {
-        'Content-Length': response.headers.get('Content-Length') || '0',
-        'Content-Type':
-          response.headers.get('Content-Type') || 'application/octet-stream',
-        'Last-Modified': response.headers.get('Last-Modified') || '',
-        ETag: response.headers.get('ETag') || '',
-      },
+      headers: getHeadResponseHeaders(response),
     });
   }
 
@@ -206,13 +210,7 @@ async function handleHeadRequest(
   }
   return new Response(null, {
     status: response.status,
-    headers: {
-      'Content-Length': response.headers.get('Content-Length') || '0',
-      'Content-Type':
-        response.headers.get('Content-Type') || 'application/octet-stream',
-      'Last-Modified': response.headers.get('Last-Modified') || '',
-      ETag: response.headers.get('ETag') || '',
-    },
+    headers: getHeadResponseHeaders(response),
   });
 }
 
