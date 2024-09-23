@@ -2,7 +2,7 @@
   <img id="theme-icon" width="300" src="https://console.evefan.com/img/brand/evefan-dark.png" alt="evefan">
 </h1>
 <p align="center">
-  <p align="center"><b> Evefan — Self-Hosted Segment Alternative</b></p>
+  <p align="center"><b> Evefan — Serverless Events Ingestion</b></p>
   <p align="center">Achieve <b>99% Costs Savings</b> with <b>Cloudflare Workers 💸</b></p>
   <p align="center"><b> Private by Default;</b> no devops headaches to maintain.</p>
   <p align="center"><b>Your Very Own Internet Scale Events Infrastructure</b></p>
