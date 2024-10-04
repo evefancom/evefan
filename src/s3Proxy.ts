@@ -28,7 +28,7 @@ function debugTempLog(...message: any) {
 
 export async function handleS3ProxyRequest(
   c: Context<WorkerEnv>,
-  method: 'GET' | 'HEAD' | 'LIST'
+  method: 'GET' | 'HEAD' | 'LIST' | string
 ) {
   debugTempLog(`S3 Proxy Request: Method=${method}, Path=${c.req.path}`);
   const config = c.get('config');
@@ -92,6 +92,7 @@ export async function handleS3ProxyRequest(
         result = await handleGetRequest(c, s3Client, s3Config, key);
         break;
       default:
+        // TODO: Simply proxy other methods
         result = c.json({ error: 'Unsupported method' }, { status: 405 });
     }
   } catch (e) {
@@ -482,11 +483,11 @@ async function handleListRequest(
       })
   );
 
-  const virtualMergedFiles = constructVirtualMergedFiles(filesByDay);
+  // const virtualMergedFiles = constructVirtualMergedFiles(filesByDay);
 
   const filesToRespond = [
     ...files.filter((f) => f.Key?.includes('virtual_')),
-    ...virtualMergedFiles,
+    // ...virtualMergedFiles,
   ];
   filesToRespond.sort((a, b) => (a.Key || '').localeCompare(b.Key || ''));
 
