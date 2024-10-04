@@ -2,9 +2,9 @@
   <img id="theme-icon" width="300" src="https://console.evefan.com/img/brand/evefan-dark.png" alt="evefan">
 </h1>
 <p align="center">
-  <p align="center"><b> Evefan — Serverless Events Ingestion</b></p>
+  <p align="center"><b> Evefan — Unmetered Events Ingestion</b></p>
+  <p align="center"><b> Serverless and on-prem </b> — without the overhead of Kafka or Spark.</p>
   <p align="center">Achieve <b>99% Costs Savings</b> with <b>Cloudflare Workers 💸</b></p>
-  <p align="center"><b> Private by Default;</b> no devops headaches to maintain.</p>
   <p align="center"><b>Your Very Own Internet Scale Events Infrastructure</b></p>
 </p>
 
@@ -57,7 +57,7 @@ Evefan currently supports the following destinations for event fan-out:
 
 Each destination has its own specific implementation for data insertion and error handling, ensuring optimal performance and reliability.
 
-Missing an integration? [Let us know](https://tally.so/r/mDev0q) to prioritize it. 
+Missing an integration? [Let us know](https://tally.so/r/mDev0q) to prioritize it.
 
 ## Getting Started with Development
 
