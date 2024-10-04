@@ -2,7 +2,7 @@ import { Connector } from '..';
 import { WorkerConfig } from '../../config';
 import { DestinationEvent } from '../../schema/event';
 import { FanOutResult } from '../../writer';
-import { DestinationType, S3DeltaConfig } from '@evefan/evefan-config';
+import { DestinationType, S3HiveConfig } from '@evefan/evefan-config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { formatEventForDatabases } from '../../schema/databases';
 import initWasm, {
@@ -10,13 +10,15 @@ import initWasm, {
   Table,
   writeParquet,
   WriterPropertiesBuilder,
-} from './../../lib/parquet-wasm';
-import binary from './../../lib/parquet-wasm/parquet_wasm_bg.wasm';
+} from '../../lib/parquet-wasm/parquet_wasm';
+import binary from '../../lib/parquet-wasm/parquet_wasm_bg.wasm';
 import * as arrow from 'apache-arrow';
 import { createWriterProperties } from '../../s3Proxy';
+import { S3HiveClient } from '../../lib/s3/client';
+import { Context } from 'hono';
 
-export default class S3DeltaConnector implements Connector {
-  private client: S3Client | null = null;
+export default class S3HiveConnector implements Connector {
+  private client: S3HiveClient | null = null;
 
   constructor() {
     this.write = this.write.bind(this);
@@ -29,8 +31,8 @@ export default class S3DeltaConnector implements Connector {
     events: DestinationEvent[],
     destinationType: DestinationType
   ): Promise<FanOutResult> {
-    const s3Config = config.destinations.find((d: any) => d.type === 's3delta')
-      ?.config as S3DeltaConfig;
+    const s3Config = config.destinations.find((d: any) => d.type === 's3hive')
+      ?.config as S3HiveConfig;
 
     if (!s3Config) {
       return {
@@ -44,7 +46,7 @@ export default class S3DeltaConnector implements Connector {
 
     try {
       await initWasm(binary);
-      this.initializeClient(s3Config);
+      this.initializeClient(c, s3Config);
       await this.writeEvents(s3Config, events);
       return { destinationType, failedEvents: [] };
     } catch (error) {
@@ -59,19 +61,8 @@ export default class S3DeltaConnector implements Connector {
     }
   }
 
-  private initializeClient(config: S3DeltaConfig): void {
-    this.client = new S3Client({
-      endpoint: config.url,
-      credentials: {
-        accessKeyId: config._secret_credentials.accessKeyId,
-        secretAccessKey: config._secret_credentials.secretAccessKey,
-      },
-      region:
-        config.url.includes('cloudflarestorage') ||
-        config.url.includes('localhost')
-          ? 'auto'
-          : config.url.split('.')[2],
-    });
+  private initializeClient(c: Context, config: S3HiveConfig): void {
+    this.client = new S3HiveClient(c, config).getClient();
   }
 
   private createArrowTable(events: DestinationEvent[]): arrow.Table {
@@ -96,7 +87,7 @@ export default class S3DeltaConnector implements Connector {
     return arrow.tableFromArrays(data);
   }
   private async writeEvents(
-    config: S3DeltaConfig,
+    config: S3HiveConfig,
     events: DestinationEvent[]
   ): Promise<void> {
     const now = new Date();
@@ -129,6 +120,6 @@ export default class S3DeltaConnector implements Connector {
     await this.client!.send(outputCommand);
     writerProperties.free();
 
-    console.log(`S3 Delta: ${events.length} event(s) written to ${filePath}`);
+    console.log(`S3 Hive: ${events.length} event(s) written to ${filePath}`);
   }
 }

@@ -6,7 +6,7 @@ import { getConfig, WorkerConfig } from './config';
 import { handleEventFanout } from './writer';
 import { Bindings } from './env';
 import { Batcher } from './batcher';
-import { DestinationType, S3DeltaConfig } from '@evefan/evefan-config';
+import { DestinationType } from '@evefan/evefan-config';
 import { EventType } from './schema/input';
 import { checkCloudflareQueuesConfiguration } from './queue';
 import { handleS3ProxyRequest } from './s3Proxy';

@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { WorkerEnv } from './routes';
-import { S3DeltaConfig } from '@evefan/evefan-config';
+import { S3HiveConfig } from '@evefan/evefan-config';
 import {
   S3Client,
   ListObjectsV2Command,
@@ -9,6 +9,7 @@ import {
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import initWasm, {
   Compression,
   EnabledStatistics,
@@ -17,9 +18,9 @@ import initWasm, {
   WriterVersion,
 } from './lib/parquet-wasm/parquet_wasm';
 import { ParquetFile } from './lib/parquet-wasm/parquet_wasm';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { XMLBuilder } from 'fast-xml-parser';
 import { ParquetWasm } from './lib/parquet-wasm/wasm';
+import { S3HiveClient } from './lib/s3/client';
 
 function debugTempLog(...message: any) {
   // TODO: remove this when we have a logger and proper dev/prod flag
@@ -38,8 +39,8 @@ export async function handleS3ProxyRequest(
     return c.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const s3Config = config.destinations.find((d) => d.type === 's3delta')
-    ?.config as S3DeltaConfig;
+  const s3Config = config.destinations.find((d) => d.type === 's3hive')
+    ?.config as S3HiveConfig;
 
   if (!s3Config) {
     return c.json({ error: 'S3 configuration not found' }, { status: 404 });
@@ -59,20 +60,7 @@ export async function handleS3ProxyRequest(
     );
   }
 
-  const s3Client = new S3Client({
-    endpoint: s3Config.url.includes('cloudflarestorage')
-      ? s3Config.url
-      : undefined,
-    credentials: {
-      accessKeyId: s3Config._secret_credentials.accessKeyId,
-      secretAccessKey: s3Config._secret_credentials.secretAccessKey,
-    },
-    region:
-      s3Config.url.includes('cloudflarestorage') ||
-      s3Config.url.includes('localhost')
-        ? 'auto'
-        : s3Config.url.split('.')[2],
-  });
+  const s3Client = new S3HiveClient(c, s3Config).getClient();
 
   let result;
   try {
@@ -108,7 +96,7 @@ export async function handleS3ProxyRequest(
 async function handleGetRequest(
   c: Context<WorkerEnv>,
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   key: string
 ) {
   const rangeHeader = c.req.header('range');
@@ -171,7 +159,7 @@ async function handleGetRequest(
 async function handleHeadRequest(
   c: Context<WorkerEnv>,
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   key: string
 ) {
   const headCommand = new HeadObjectCommand({
@@ -219,7 +207,7 @@ async function materializeVirtualFile(
   c: Context<WorkerEnv>,
   key: string,
   s3Client: S3Client,
-  s3Config: S3DeltaConfig
+  s3Config: S3HiveConfig
 ) {
   const { startTime, endTime } = extractTimeRangeFromMergedFileName(key);
 
@@ -365,7 +353,7 @@ export function createWriterProperties() {
 
 async function mergeAndUploadFile(
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   key: string,
   mergedParquetStream: ReadableStream<Uint8Array>
 ) {
@@ -415,7 +403,7 @@ function extractTimeRangeFromMergedFileName(key: string): {
 
 async function getFilesInTimeRange(
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   startTime: string,
   endTime: string
 ) {
@@ -449,39 +437,13 @@ async function getFilesInTimeRange(
 
 async function handleListRequest(
   c: Context<WorkerEnv, any, {}>,
-  s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Client: S3HiveClient,
+  s3Config: S3HiveConfig,
   key: string
 ) {
-  const command = new ListObjectsV2Command({
-    Bucket: s3Config.bucket,
-    Prefix: key && key.length > 0 ? key : undefined,
-  });
+  const [existingListResponse, files] = await s3Client.list(key);
 
-  const existingListResponse = await s3Client.send(command);
-  const files = existingListResponse.Contents || [];
-
-  const filesByDay = groupFilesByDay(
-    files
-      .filter(
-        (f) => f.Key?.endsWith('.parquet') && !f.Key?.includes('virtual_')
-      )
-      .sort((a, b) => {
-        const aKey = a.Key?.split('/');
-        const bKey = b.Key?.split('/');
-        if (aKey && bKey) {
-          // Compare year
-          if (aKey[0] !== bKey[0]) return aKey[0].localeCompare(bKey[0]);
-          // Compare month
-          if (aKey[1] !== bKey[1]) return aKey[1].localeCompare(bKey[1]);
-          // Compare day
-          if (aKey[2] !== bKey[2]) return aKey[2].localeCompare(bKey[2]);
-          // Compare timestamp
-          return aKey[3].localeCompare(bKey[3]);
-        }
-        return 0;
-      })
-  );
+  const filesByDay = groupFilesByDay(files);
 
   // const virtualMergedFiles = constructVirtualMergedFiles(filesByDay);
 
@@ -524,6 +486,7 @@ function generateXMLResponse(response: any, virtualMergedFiles: any[]): string {
     ignoreAttributes: false,
     format: true,
   });
+
   return builder.build(xmlObj);
 }
 
