@@ -60,7 +60,7 @@ export async function handleS3ProxyRequest(
     );
   }
 
-  const s3Client = new S3HiveClient(c, s3Config).getClient();
+  const s3Client = new S3HiveClient(c, s3Config);
 
   let result;
   try {
@@ -95,59 +95,44 @@ export async function handleS3ProxyRequest(
 
 async function handleGetRequest(
   c: Context<WorkerEnv>,
-  s3Client: S3Client,
+  s3Client: S3HiveClient,
   s3Config: S3HiveConfig,
   key: string
 ) {
   const rangeHeader = c.req.header('range');
 
-  debugTempLog(
-    `Received get request for key: ${key} with Range header: ${rangeHeader}`
-  );
-  const getCommand = new GetObjectCommand({
-    Bucket: s3Config.bucket,
-    Key: key,
-    Range: rangeHeader,
-  });
-  const presignedUrl = await getSignedUrl(s3Client, getCommand, {
-    expiresIn: 60,
-  });
+  const response = await s3Client.get(key, rangeHeader);
 
-  const headers: HeadersInit = {};
-  if (rangeHeader) {
-    headers['Range'] = rangeHeader;
-  }
-  const response = await fetch(presignedUrl, { headers });
-
-  if (!response.ok) {
-    debugTempLog('Error fetching object', response.status, response.statusText);
-    return c.json(
-      { error: 'Error fetching object' },
-      { status: response.status }
-    );
+  if (!response) {
+    //debugTempLog('Error fetching object', result.status, result.statusText);
+    return c.json({ error: 'Error fetching object' }, { status: 500 });
   }
 
   const responseHeaders: Record<string, string> = {
-    'Content-Type':
-      response.headers.get('Content-Type') || 'application/octet-stream',
     'Content-Disposition': `attachment; filename="${key}"`,
+    'Content-Type': 'application/octet-stream',
   };
-
-  if (rangeHeader) {
-    if (
-      rangeHeader.split('=')[1] !==
-      response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
-    ) {
-      debugTempLog(
-        'NO MATCH',
-        rangeHeader.split('=')[1],
-        response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
-      );
-    }
+  if (response instanceof Response) {
     responseHeaders['Content-Range'] =
-      response.headers.get('Content-Range') || '';
-    responseHeaders['Content-Length'] =
-      response.headers.get('Content-Length') || '';
+      response.headers.get('Content-Type') || 'application/octet-stream';
+    if (rangeHeader) {
+      if (
+        rangeHeader.split('=')[1] !==
+        response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+      ) {
+        debugTempLog(
+          'NO MATCH',
+          rangeHeader.split('=')[1],
+          response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+        );
+      }
+      responseHeaders['Content-Range'] =
+        response.headers.get('Content-Range') || '';
+      responseHeaders['Content-Length'] =
+        response.headers.get('Content-Length') || '';
+    }
+  } else {
+    responseHeaders['Content-Length'] = response.size.toString();
   }
 
   return new Response(response.body, {

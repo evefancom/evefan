@@ -1,5 +1,6 @@
 import {
   _Object,
+  GetObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
   ListObjectsV2CommandOutput,
@@ -23,7 +24,7 @@ const getHeadResponseHeaders = (response: Response) => {
   };
 };
 
-type HiveClient = S3Client | R2Bucket;
+export type HiveClient = S3Client | R2Bucket;
 
 interface ExtendedR2Object extends R2Object {
   Key: string;
@@ -110,6 +111,33 @@ export class S3HiveClient {
       });
 
     return [originalResult, resultFiles];
+  }
+
+  async get(
+    key: string,
+    rangeHeader?: string
+  ): Promise<Response | R2ObjectBody | null> {
+    let result: Response | R2ObjectBody | null;
+    if (this.client instanceof R2Bucket) {
+      result = await this.client.get(key, { range: rangeHeader });
+    } else {
+      const getCommand = new GetObjectCommand({
+        Bucket: this.config.bucket,
+        Key: key,
+        Range: rangeHeader,
+      });
+      const presignedUrl = await getSignedUrl(this.client, getCommand, {
+        expiresIn: 60,
+      });
+
+      const headers: HeadersInit = {};
+      if (rangeHeader) {
+        headers['Range'] = rangeHeader;
+      }
+      result = await fetch(presignedUrl, { headers });
+    }
+
+    return result;
   }
 
   // async head(key: string): Promise<Object[]> {
