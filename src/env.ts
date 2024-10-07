@@ -10,4 +10,5 @@ type QueueBindings = {
 export type Bindings = {
   BATCHER: DurableObjectNamespace<Batcher>;
   HEALTH: DurableObjectNamespace<HealthChecker>;
+  S3_HIVE_BUCKET: R2Bucket;
 } & QueueBindings;

@@ -1,14 +1,7 @@
 import { Context } from 'hono';
 import { WorkerEnv } from './routes';
-import { S3DeltaConfig } from '@evefan/evefan-config';
-import {
-  S3Client,
-  ListObjectsV2Command,
-  HeadObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} from '@aws-sdk/client-s3';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3HiveConfig } from '@evefan/evefan-config';
+
 import initWasm, {
   Compression,
   EnabledStatistics,
@@ -17,9 +10,9 @@ import initWasm, {
   WriterVersion,
 } from './lib/parquet-wasm/parquet_wasm';
 import { ParquetFile } from './lib/parquet-wasm/parquet_wasm';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { XMLBuilder } from 'fast-xml-parser';
 import { ParquetWasm } from './lib/parquet-wasm/wasm';
+import { S3Client } from './lib/s3/client';
 
 function debugTempLog(...message: any) {
   // TODO: remove this when we have a logger and proper dev/prod flag
@@ -38,8 +31,8 @@ export async function handleS3ProxyRequest(
     return c.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const s3Config = config.destinations.find((d) => d.type === 's3delta')
-    ?.config as S3DeltaConfig;
+  const s3Config = config.destinations.find((d) => d.type === 's3hive')
+    ?.config as S3HiveConfig;
 
   if (!s3Config) {
     return c.json({ error: 'S3 configuration not found' }, { status: 404 });
@@ -59,20 +52,7 @@ export async function handleS3ProxyRequest(
     );
   }
 
-  const s3Client = new S3Client({
-    endpoint: s3Config.url.includes('cloudflarestorage')
-      ? s3Config.url
-      : undefined,
-    credentials: {
-      accessKeyId: s3Config._secret_credentials.accessKeyId,
-      secretAccessKey: s3Config._secret_credentials.secretAccessKey,
-    },
-    region:
-      s3Config.url.includes('cloudflarestorage') ||
-      s3Config.url.includes('localhost')
-        ? 'auto'
-        : s3Config.url.split('.')[2],
-  });
+  const s3Client = new S3Client(c, s3Config);
 
   let result;
   try {
@@ -108,58 +88,43 @@ export async function handleS3ProxyRequest(
 async function handleGetRequest(
   c: Context<WorkerEnv>,
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   key: string
 ) {
   const rangeHeader = c.req.header('range');
 
-  debugTempLog(
-    `Received get request for key: ${key} with Range header: ${rangeHeader}`
-  );
-  const getCommand = new GetObjectCommand({
-    Bucket: s3Config.bucket,
-    Key: key,
-    Range: rangeHeader,
-  });
-  const presignedUrl = await getSignedUrl(s3Client, getCommand, {
-    expiresIn: 60,
-  });
+  const response = await s3Client.get(key, rangeHeader);
 
-  const headers: HeadersInit = {};
-  if (rangeHeader) {
-    headers['Range'] = rangeHeader;
-  }
-  const response = await fetch(presignedUrl, { headers });
-
-  if (!response.ok) {
-    debugTempLog('Error fetching object', response.status, response.statusText);
-    return c.json(
-      { error: 'Error fetching object' },
-      { status: response.status }
-    );
+  if (!response) {
+    //debugTempLog('Error fetching object', result.status, result.statusText);
+    return c.json({ error: 'Error fetching object' }, { status: 500 });
   }
 
   const responseHeaders: Record<string, string> = {
-    'Content-Type':
-      response.headers.get('Content-Type') || 'application/octet-stream',
     'Content-Disposition': `attachment; filename="${key}"`,
+    'Content-Type': 'application/octet-stream',
   };
-
-  if (rangeHeader) {
-    if (
-      rangeHeader.split('=')[1] !==
-      response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
-    ) {
-      debugTempLog(
-        'NO MATCH',
-        rangeHeader.split('=')[1],
-        response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
-      );
-    }
+  if (response instanceof Response) {
     responseHeaders['Content-Range'] =
-      response.headers.get('Content-Range') || '';
-    responseHeaders['Content-Length'] =
-      response.headers.get('Content-Length') || '';
+      response.headers.get('Content-Type') || 'application/octet-stream';
+    if (rangeHeader) {
+      if (
+        rangeHeader.split('=')[1] !==
+        response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+      ) {
+        debugTempLog(
+          'NO MATCH',
+          rangeHeader.split('=')[1],
+          response.headers.get('Content-Range')?.split(' ')[1]?.split('/')[0]
+        );
+      }
+      responseHeaders['Content-Range'] =
+        response.headers.get('Content-Range') || '';
+      responseHeaders['Content-Length'] =
+        response.headers.get('Content-Length') || '';
+    }
+  } else {
+    responseHeaders['Content-Length'] = response.size.toString();
   }
 
   return new Response(response.body, {
@@ -171,46 +136,54 @@ async function handleGetRequest(
 async function handleHeadRequest(
   c: Context<WorkerEnv>,
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   key: string
 ) {
-  const headCommand = new HeadObjectCommand({
-    Bucket: s3Config.bucket,
-    Key: key,
-  });
-  let presignedUrl = await getSignedUrl(s3Client, headCommand, {
-    expiresIn: 60,
-  });
+  let response = await s3Client.head(key);
+  if (!response) {
+    return c.json({ error: 'Error on head request' }, { status: 500 });
+  }
 
-  let response = await fetch(presignedUrl, { method: 'HEAD' });
-
-  const getHeadResponseHeaders = (response: Response) => {
+  const getHeadResponseHeaders = (response: Response | R2Object) => {
     return {
-      'Content-Length': response.headers.get('Content-Length') || '0',
+      'Content-Length':
+        response instanceof Response
+          ? response.headers.get('Content-Length') || '0'
+          : response.size.toString(),
       'Content-Type':
-        response.headers.get('Content-Type') || 'application/octet-stream',
-      'Last-Modified': response.headers.get('Last-Modified') || '',
-      ETag: response.headers.get('ETag') || '',
+        response instanceof Response
+          ? response.headers.get('Content-Type') || 'application/octet-stream'
+          : response.httpMetadata?.contentType || 'application/octet-stream',
+      'Last-Modified':
+        response instanceof Response
+          ? response.headers.get('Last-Modified') || ''
+          : '',
+      ETag:
+        response instanceof Response
+          ? response.headers.get('ETag') || ''
+          : response.etag || '',
     };
   };
 
-  if (response.ok && response.status == 200) {
+  if (response) {
     return new Response(null, {
-      status: response.status,
+      status: 200,
       headers: getHeadResponseHeaders(response),
     });
   }
 
   if (key.includes('virtual_')) {
     await materializeVirtualFile(c, key, s3Client, s3Config);
-    presignedUrl = await getSignedUrl(s3Client, headCommand, {
-      expiresIn: 60,
-    });
 
-    response = await fetch(presignedUrl, { method: 'HEAD' });
+    response = await s3Client.head(key);
   }
+
+  if (!response) {
+    return c.json({ error: 'Error on head request' }, { status: 500 });
+  }
+
   return new Response(null, {
-    status: response.status,
+    status: 200,
     headers: getHeadResponseHeaders(response),
   });
 }
@@ -219,7 +192,7 @@ async function materializeVirtualFile(
   c: Context<WorkerEnv>,
   key: string,
   s3Client: S3Client,
-  s3Config: S3DeltaConfig
+  s3Config: S3HiveConfig
 ) {
   const { startTime, endTime } = extractTimeRangeFromMergedFileName(key);
 
@@ -232,7 +205,11 @@ async function materializeVirtualFile(
     );
     debugTempLog(
       `${filesToMerge.length} S3 files to merge with total size ${
-        filesToMerge.reduce((acc, file) => acc + (file.Size || 0), 0) /
+        filesToMerge.reduce(
+          (acc, file) =>
+            acc + (file instanceof R2Object ? file.size : file.Size || 0),
+          0
+        ) /
         1024 /
         1024
       } MB for key: ${key}`
@@ -240,11 +217,7 @@ async function materializeVirtualFile(
 
     const presignedUrls = await Promise.all(
       filesToMerge.map(async (file) => {
-        const command = new GetObjectCommand({
-          Bucket: s3Config.bucket,
-          Key: file.Key,
-        });
-        return await getSignedUrl(s3Client, command, { expiresIn: 60 });
+        return await s3Client.get(file.Key ?? '');
       })
     );
 
@@ -284,7 +257,7 @@ async function materializeVirtualFile(
 }
 
 async function createReadStream(
-  urls: string[],
+  files: (Response | R2ObjectBody | null)[],
   MAX_MEMORY_USAGE: number,
   MAX_PAGE_SIZE: number
 ): Promise<{
@@ -297,30 +270,28 @@ async function createReadStream(
   let totalRows = 0;
   const streams: ReadableStream<any>[] = [];
 
-  for (const url of urls) {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-    }
-    const blob = await response.blob();
-    const parquetFile = await ParquetFile.fromFile(blob);
-    totalSize += blob.size;
-    const numRows = parquetFile.metadata().fileMetadata().numRows();
-    totalRows += numRows;
+  for (const file of files) {
+    if (file) {
+      const blob = await file.blob();
+      const parquetFile = await ParquetFile.fromFile(blob);
+      totalSize += blob.size;
+      const numRows = parquetFile.metadata().fileMetadata().numRows();
+      totalRows += numRows;
 
-    const averageRowSize = totalSize / totalRows;
-    const batchSize = Math.min(MAX_MEMORY_USAGE / 3, MAX_PAGE_SIZE);
-    const pageSize = Math.floor(batchSize / averageRowSize);
+      const averageRowSize = totalSize / totalRows;
+      const batchSize = Math.min(MAX_MEMORY_USAGE / 3, MAX_PAGE_SIZE);
+      const pageSize = Math.floor(batchSize / averageRowSize);
 
-    const numPages = Math.ceil(numRows / pageSize);
+      const numPages = Math.ceil(numRows / pageSize);
 
-    for (let i = 0; i < numPages; i++) {
-      const stream = await parquetFile.stream({
-        limit: pageSize,
-        offset: i * pageSize,
-        concurrency: 1,
-      });
-      streams.push(stream);
+      for (let i = 0; i < numPages; i++) {
+        const stream = await parquetFile.stream({
+          limit: pageSize,
+          offset: i * pageSize,
+          concurrency: 1,
+        });
+        streams.push(stream);
+      }
     }
 
     // parquetFile.free();
@@ -365,7 +336,7 @@ export function createWriterProperties() {
 
 async function mergeAndUploadFile(
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   key: string,
   mergedParquetStream: ReadableStream<Uint8Array>
 ) {
@@ -385,20 +356,7 @@ async function mergeAndUploadFile(
 
   debugTempLog(`Uploading file: ${key}, size: ${arrayBuffer.byteLength} bytes`);
 
-  const putObjectCommand = new PutObjectCommand({
-    Bucket: s3Config.bucket,
-    Key: key,
-    Body: Buffer.from(arrayBuffer),
-  });
-
-  try {
-    await s3Client.send(putObjectCommand);
-
-    debugTempLog(`Successfully uploaded merged file: ${key}`);
-  } catch (error) {
-    debugTempLog(`Failed to upload merged file: ${error}`);
-    throw error;
-  }
+  s3Client.put(key, new Uint8Array(arrayBuffer));
 }
 
 function extractTimeRangeFromMergedFileName(key: string): {
@@ -415,7 +373,7 @@ function extractTimeRangeFromMergedFileName(key: string): {
 
 async function getFilesInTimeRange(
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   startTime: string,
   endTime: string
 ) {
@@ -423,14 +381,7 @@ async function getFilesInTimeRange(
   const endDate = new Date(parseInt(endTime));
 
   const prefix = ''; // Define the prefix if needed
-
-  const command = new ListObjectsV2Command({
-    Bucket: s3Config.bucket,
-    Prefix: prefix,
-  });
-
-  const response = await s3Client.send(command);
-  const allFiles = response.Contents || [];
+  const [_, allFiles] = await s3Client.list(prefix);
 
   const filesToMerge = allFiles.filter((file) => {
     if (file.Key?.includes('virtual_')) {
@@ -450,16 +401,10 @@ async function getFilesInTimeRange(
 async function handleListRequest(
   c: Context<WorkerEnv, any, {}>,
   s3Client: S3Client,
-  s3Config: S3DeltaConfig,
+  s3Config: S3HiveConfig,
   key: string
 ) {
-  const command = new ListObjectsV2Command({
-    Bucket: s3Config.bucket,
-    Prefix: key && key.length > 0 ? key : undefined,
-  });
-
-  const existingListResponse = await s3Client.send(command);
-  const files = existingListResponse.Contents || [];
+  const [existingListResponse, files] = await s3Client.list(key);
 
   const filesByDay = groupFilesByDay(
     files
@@ -524,6 +469,7 @@ function generateXMLResponse(response: any, virtualMergedFiles: any[]): string {
     ignoreAttributes: false,
     format: true,
   });
+
   return builder.build(xmlObj);
 }
 
