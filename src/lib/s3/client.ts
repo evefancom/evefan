@@ -4,7 +4,8 @@ import {
   HeadObjectCommand,
   ListObjectsV2Command,
   ListObjectsV2CommandOutput,
-  S3Client,
+  PutObjectCommand,
+  S3Client as AwsS3Client,
   S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -24,15 +25,15 @@ const getHeadResponseHeaders = (response: Response) => {
   };
 };
 
-export type HiveClient = S3Client | R2Bucket;
+export type HiveClient = AwsS3Client | R2Bucket;
 
-interface ExtendedR2Object extends R2Object {
+export interface ExtendedR2Object extends R2Object {
   Key: string;
 }
 
 type HiveListResponse = [any, ExtendedR2Object[] | _Object[]];
 
-export class S3HiveClient {
+export class S3Client {
   private client: HiveClient;
   private config: S3HiveConfig;
 
@@ -59,7 +60,7 @@ export class S3HiveClient {
         };
       }
 
-      this.client = new S3Client(clientConfig);
+      this.client = new AwsS3Client(clientConfig);
     } else {
       this.client = c.env.S3_HIVE_BUCKET;
     }
@@ -89,26 +90,6 @@ export class S3HiveClient {
       originalResult = await this.client.send(command);
       resultFiles = originalResult.Contents || [];
     }
-
-    resultFiles = resultFiles
-      .filter((f) => {
-        return f.Key?.endsWith('.parquet') && !f.Key?.includes('virtual_');
-      })
-      .sort((a, b) => {
-        const aKey = a.Key?.split('/');
-        const bKey = b.Key?.split('/');
-        if (aKey && bKey) {
-          // Compare year
-          if (aKey[0] !== bKey[0]) return aKey[0].localeCompare(bKey[0]);
-          // Compare month
-          if (aKey[1] !== bKey[1]) return aKey[1].localeCompare(bKey[1]);
-          // Compare day
-          if (aKey[2] !== bKey[2]) return aKey[2].localeCompare(bKey[2]);
-          // Compare timestamp
-          return aKey[3].localeCompare(bKey[3]);
-        }
-        return 0;
-      });
 
     return [originalResult, resultFiles];
   }
@@ -140,15 +121,41 @@ export class S3HiveClient {
     return result;
   }
 
-  // async head(key: string): Promise<Object[]> {
-  //   const headCommand = new HeadObjectCommand({
-  //     Bucket: this.config.bucket,
-  //     Key: key,
-  //   });
-  //   let presignedUrl = await getSignedUrl(this.client, headCommand, {
-  //     expiresIn: 60,
-  //   });
+  async head(key: string): Promise<Response | R2Object | null> {
+    let result: Response | R2Object | null;
 
-  //   let response = await fetch(presignedUrl, { method: 'HEAD' });
-  // }
+    if (this.client instanceof R2Bucket) {
+      result = await this.client.head(key);
+    } else {
+      const headCommand = new HeadObjectCommand({
+        Bucket: this.config.bucket,
+        Key: key,
+      });
+      let presignedUrl = await getSignedUrl(this.client, headCommand, {
+        expiresIn: 60,
+      });
+
+      result = await fetch(presignedUrl, { method: 'HEAD' });
+    }
+
+    return result;
+  }
+
+  async put(key: string, body: Uint8Array): Promise<void> {
+    if (this.client instanceof R2Bucket) {
+      await this.client.put(key, body);
+    } else {
+      const putCommand = new PutObjectCommand({
+        Bucket: this.config.bucket,
+        Key: key,
+        Body: body,
+      });
+
+      try {
+        await this.client.send(putCommand);
+      } catch (error) {
+        throw error;
+      }
+    }
+  }
 }

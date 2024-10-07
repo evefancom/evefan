@@ -3,7 +3,6 @@ import { WorkerConfig } from '../../config';
 import { DestinationEvent } from '../../schema/event';
 import { FanOutResult } from '../../writer';
 import { DestinationType, S3HiveConfig } from '@evefan/evefan-config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { formatEventForDatabases } from '../../schema/databases';
 import initWasm, {
   Compression,
@@ -14,16 +13,19 @@ import initWasm, {
 import binary from '../../lib/parquet-wasm/parquet_wasm_bg.wasm';
 import * as arrow from 'apache-arrow';
 import { createWriterProperties } from '../../s3Proxy';
-import { S3HiveClient } from '../../lib/s3/client';
+import { S3Client } from '../../lib/s3/client';
 import { Context } from 'hono';
+import { WorkerEnv } from '../../routes';
 
 export default class S3HiveConnector implements Connector {
-  private client: S3HiveClient | null = null;
+  private client: S3Client | null = null;
+  private c: Context<WorkerEnv> | null = null;
 
-  constructor() {
+  constructor(c: Context<WorkerEnv>) {
     this.write = this.write.bind(this);
     this.initializeClient = this.initializeClient.bind(this);
     this.writeEvents = this.writeEvents.bind(this);
+    this.c = c;
   }
 
   async write(
@@ -46,7 +48,7 @@ export default class S3HiveConnector implements Connector {
 
     try {
       await initWasm(binary);
-      this.initializeClient(c, s3Config);
+      this.initializeClient(this.c!, s3Config);
       await this.writeEvents(s3Config, events);
       return { destinationType, failedEvents: [] };
     } catch (error) {
@@ -61,8 +63,8 @@ export default class S3HiveConnector implements Connector {
     }
   }
 
-  private initializeClient(c: Context, config: S3HiveConfig): void {
-    this.client = new S3HiveClient(c, config).getClient();
+  private initializeClient(c: Context<WorkerEnv>, config: S3HiveConfig): void {
+    this.client = new S3Client(c, config);
   }
 
   private createArrowTable(events: DestinationEvent[]): arrow.Table {
@@ -109,15 +111,7 @@ export default class S3HiveConnector implements Connector {
     // Write Parquet data
     const parquetUint8Array = writeParquet(wasmTable, writerProperties);
 
-    // Upload to S3
-    const outputParams = {
-      Bucket: config.bucket,
-      Key: filePath,
-      Body: parquetUint8Array,
-      ContentType: 'application/octet-stream',
-    };
-    const outputCommand = new PutObjectCommand(outputParams);
-    await this.client!.send(outputCommand);
+    await this.client!.put(filePath, parquetUint8Array);
     writerProperties.free();
 
     console.log(`S3 Hive: ${events.length} event(s) written to ${filePath}`);
