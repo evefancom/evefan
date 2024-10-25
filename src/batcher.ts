@@ -1,4 +1,4 @@
-import { DurableObject } from 'cloudflare:gateways';
+import { DurableObject } from 'cloudflare:workers';
 import { DestinationEvent } from './schema/event';
 import { getConfig, GatewayConfig } from './config';
 import { handleEventFanout } from './writer';
