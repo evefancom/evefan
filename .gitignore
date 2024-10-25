@@ -205,14 +205,14 @@ out
 # comment the following lines
 !.yarn/cache
 
-.wrangler
-
-config.json
-
-# config file is auto-generated during the build
-**/wrangler.toml
-
 # and uncomment the following lines
 # .pnp.*
 
 # End of https://www.toptal.com/developers/gitignore/api/node,yarn,nextjs,visualstudiocode
+
+## Gateway files 
+/gateway/.wrangler
+/gateway/dist
+/gateway/node_modules
+/gateway/config.json
+/gateway/wrangler.toml
