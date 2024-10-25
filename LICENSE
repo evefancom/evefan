@@ -1,36 +1,4 @@
-OpenInt monorepo uses multiple licenses.
-
-The license for a particular work is defined with following prioritized rules:
-1. License directly present in the file
-2. LICENSE file in the same directory as the work
-3. First LICENSE found when exploring parent directories up to the project top level directory
-4. Defaults to Elastic License 2.0
-
-Licence is a work in progress and we are borrowing heavily from the pattern established by Airbyte, Cal.com and others. If you have any question / suggestions regarding licenses, contact us at hello@alka.app
-
-------------------------------------------------------------------------------------
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-------------------------------------------------------------------------------------
-Elastic License 2.0 (ELv2)
+# Elastic License 2.0 (ELv2)
 
 **Acceptance**
 By using the software, you agree to all of the terms and conditions below.
@@ -63,16 +31,14 @@ If you use the software in violation of these terms, such use is not licensed, a
 As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.
 
 **Definitions**
-The *licensor* is the entity offering these terms, and the *software* is the software the licensor makes available under these terms, including any portion of it.
+The _licensor_ is the entity offering these terms, and the _software_ is the software the licensor makes available under these terms, including any portion of it.
 
-*you* refers to the individual or entity agreeing to these terms.
+_you_ refers to the individual or entity agreeing to these terms.
 
-*your company* is any legal entity, sole proprietorship, or other kind of organization that you work for, plus all organizations that have control over, are under the control of, or are under common control with that organization. *control* means ownership of substantially all the assets of an entity, or the power to direct its management and policies by vote, contract, or otherwise. Control can be direct or indirect.
+_your company_ is any legal entity, sole proprietorship, or other kind of organization that you work for, plus all organizations that have control over, are under the control of, or are under common control with that organization. _control_ means ownership of substantially all the assets of an entity, or the power to direct its management and policies by vote, contract, or otherwise. Control can be direct or indirect.
 
-*your licenses* are all the licenses granted to you for the software under these terms.
+_your licenses_ are all the licenses granted to you for the software under these terms.
 
-*use* means anything you do with the software requiring one of your licenses.
+_use_ means anything you do with the software requiring one of your licenses.
 
-*trademark* means trademarks, service marks, and similar rights.
-
-------------------------------------------------------------------------------------
+_trademark_ means trademarks, service marks, and similar rights.
