@@ -1,0 +1,239 @@
+/* This does not work for some reason... Even if we simply reference the identical config file... */
+/* @config "../tailwind.tremor.config.ts" */
+/* @config "../tailwind.config.ts" */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Via shadcn */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: #ffffff;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+
+    --button: #8a5df6;
+    --button-foreground: #ffffff;
+    --button-hover: #a082e9;
+    --button-stroke: #6947bb;
+    --button-secondary: #ffffff;
+    --button-secondary-stroke: #e6e6e6;
+    --button-secondary-hover: #efefef;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+}
+
+@layer utilities {
+  .step {
+    counter-increment: step;
+  }
+
+  .step:before {
+    @apply absolute inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-center -indent-px text-base font-medium;
+    @apply ml-[-41px];
+    content: counter(step);
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+}
+
+/* TODO: Move this to schema-form.css */
+
+@layer components {
+  .schema-form {
+    /* Left side is not needed due to fieldset left margin */
+    @apply mr-2;
+  }
+  /* Aka sections */
+  .schema-form fieldset > legend {
+    /* Display block doesn't work for some reason. Does not fill parent width which is still a div, not sure why */
+    @apply mb-3 w-full border-b pb-1 text-xl font-semibold;
+  }
+  .schema-form fieldset > div {
+    /* Offset to indicate hierarchy */
+  }
+  .schema-form fieldset#root {
+    /* Compensate so the root form is not indented */
+  }
+  /* Label + component = group */
+  .schema-form .form-group {
+    @apply mb-2;
+  }
+  /* Tend to be used for object fields */
+  .schema-form .panel {
+    @apply rounded border border-gray-300 p-4 shadow;
+  }
+  .schema-form label.control-label {
+    @apply mb-1 block font-bold;
+  }
+  .schema-form p.field-description {
+    @apply mb-1;
+  }
+  /* Select component, and maybe other .form-control too */
+  .schema-form .form-control {
+    @apply block w-full rounded-md border border-input p-2;
+  }
+  /* Input component */
+  .schema-form input[type='text'] {
+    @apply flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* .schema-form .checkbox label {
+    @apply
+  } */
+  .schema-form input[type='checkbox'] {
+    @apply m-2;
+  }
+
+  /* Array elements */
+  .schema-form .array-item {
+    /* @apply grid grid-cols-12; */
+    @apply flex flex-row items-end gap-4;
+  }
+  .schema-form .array-item .col-xs-9 {
+    /* @apply col-span-9; */
+    @apply grow;
+  }
+  .schema-form .array-item .col-xs-3 {
+    /* @apply col-span-3; */
+    @apply shrink-0;
+  }
+  .schema-form .array-item .array-item-toolbox {
+    /* mb-4 to match .form-group */
+    @apply mb-4 flex items-center justify-end;
+  }
+  /* Icons, @see https://rjsf-team.github.io/react-jsonschema-form/docs/advanced-customization/internals#custom-array-field-buttons */
+  .schema-form .glyphicon {
+    @apply font-normal not-italic;
+  }
+  .schema-form .glyphicon-plus::before {
+    content: 'Add';
+  }
+  .schema-form .glyphicon-remove::before {
+    content: 'Remove';
+  }
+  .schema-form .glyphicon-copy::before {
+    content: 'Copy';
+  }
+  .schema-form .glyphicon-arrow-up::before {
+    content: 'Up';
+  }
+  .schema-form .glyphicon-arrow-down::before {
+    content: 'Down';
+  }
+  /* Buttons (tends to be icon buttons */
+  .schema-form .btn {
+    @apply mx-1 rounded-md border p-2;
+  }
+  .schema-form .btn-danger {
+    @apply w-[80px] border-red-200 bg-red-500 text-white transition-colors duration-200 hover:bg-red-400;
+  }
+  .schema-form .btn-add {
+    @apply w-[80px] border-blue-200;
+  }
+  .schema-form button[type='submit'].btn {
+    @apply inline-flex items-center justify-center bg-primary px-4 text-primary-foreground hover:bg-primary/90;
+  }
+
+  /* Loading state */
+  .schema-form.loading button[type='submit'].btn::before {
+    @apply mr-2 inline-block h-4 w-4 animate-spin bg-primary-foreground;
+    content: ' ';
+    /* https://github.com/lucide-icons/lucide/blob/main/icons/loader-2.svg */
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-6.219-8.56' /%3E%3C/svg%3E");
+    mask-size: contain;
+  }
+
+  /* Readonly state */
+  .schema-form input:read-only {
+    @apply opacity-50;
+  }
+  /* Disabled state */
+  .schema-form button:disabled,
+  .schema-form input:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+  /* Hide extraneous label for select option @see https://share.cleanshot.com/Gqw0mrTZ */
+  .form-group:has(> select) + .field > fieldset > legend {
+    display: none;
+  }
+  .form-group:has(> select) + .field > label {
+    display: none;
+  }
+}

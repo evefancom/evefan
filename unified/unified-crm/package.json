@@ -1,0 +1,13 @@
+{
+  "name": "@openint/unified-crm",
+  "dependencies": {
+    "@openint/vdk": "workspace:*",
+    "@opensdks/sdk-hubspot": "0.0.6",
+    "@opensdks/sdk-pipedrive": "0.0.1",
+    "@opensdks/sdk-salesforce": "0.0.2",
+    "jsforce": "^2.0.0-beta.29",
+    "lru-cache": "^10.2.0",
+    "remeda": "1.6.1"
+  },
+  "devDependencies": {}
+}

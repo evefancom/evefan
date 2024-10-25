@@ -1,0 +1,8 @@
+{
+  "name": "@openint/unified-etl",
+  "dependencies": {
+    "@openint/connector-revert": "workspace:*",
+    "@openint/vdk": "workspace:*"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@openint/connector-hubspot",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/runtime": "^0.0.19",
+    "@opensdks/sdk-hubspot": "0.0.6"
+  },
+  "devDependencies": {}
+}

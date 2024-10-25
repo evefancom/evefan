@@ -1,0 +1,119 @@
+{
+  "name": "openint",
+  "version": "0.0.0",
+  "private": true,
+  "repository": "git@github.com:openint-dev/openint.git",
+  "license": "UNLICENSED",
+  "scripts": {
+    "web": "pnpm run --filter web dev",
+    "generate:docs": "pnpm run --filter app-config dev",
+    "generate:connectorsList": "npx tsx apps/app-config/_generateConnectorLists.ts",
+    "docs": "cd docs && mintlify dev",
+    "lint": "eslint --ext .js,.ts,.tsx --cache .",
+    "mitm": "mitmweb --listen-port 3010 --web-port 3011 --mode reverse:http://localhost:3000",
+    "preinstall": "npx only-allow pnpm",
+    "test::ci": "NODE_OPTIONS=--experimental-vm-modules pnpm run test --ci --forceExit --detectOpenHandles --runInBand",
+    "test::debug": "NODE_OPTIONS=--experimental-vm-modules node --inspect-brk $(pnpm bin)/jest --runInBand --watch",
+    "test::watch": "pnpm run test --watch",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "prepare": "husky install",
+    "typecheck": "tsc --project . --noEmit",
+    "validate": "run-s --silent typecheck lint test",
+    "venice": "tsx ./bin/venice",
+    "migration": "tsx ./apps/cli/pgMigrator-cli",
+    "pgdump": "pg_dump --schema public --schema-only --no-owner --exclude-schema=graphile_migrate --file=apps/web/schema.sql $POSTGRES_URL",
+    "worker:setup": "tsx ./bin/venice setupWorker",
+    "worker:run": "tsx ./bin/venice runWorker",
+    "env:pull": "vercel env pull --environment development .env.dev && vercel env pull --environment preview .env.pre && vercel env pull --environment production .env.prod"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,tsx,json,css,yml,yaml}": "prettier --write",
+    "**/*.{js,ts,tsx}": "eslint --ext .js,.ts,.tsx --cache --fix"
+  },
+  "dependencies": {
+    "@openint/cli": "workspace:*"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@jest/globals": "^29.7.0",
+    "@openint/sdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@roarr/cli": "5.7.0",
+    "@tsconfig/strictest": "1.0.2",
+    "@types/jest": "29.5.10",
+    "@types/node": "18.11.18",
+    "@types/prettier": "3.0.0",
+    "@typescript-eslint/eslint-plugin": "6.21.0",
+    "@typescript-eslint/parser": "6.21.0",
+    "esbuild": "0.17.5",
+    "esbuild-jest": "0.5.0",
+    "eslint": "8.23.0",
+    "eslint-config-next": "14.0.2",
+    "eslint-plugin-codegen": "0.16.1",
+    "eslint-plugin-eslint-comments": "3.2.0",
+    "eslint-plugin-jest": "27.6.0",
+    "eslint-plugin-jest-formatting": "3.1.0",
+    "eslint-plugin-promise": "6.0.1",
+    "eslint-plugin-tailwindcss": "3.12.1",
+    "eslint-plugin-unicorn": "43.0.2",
+    "husky": "8.0.1",
+    "jest": "30.0.0-alpha.6",
+    "jest-date-mock": "1.0.8",
+    "jest-watch-typeahead": "2.2.2",
+    "lint-staged": "13.0.3",
+    "mintlify": "4.0.59",
+    "ngrok": "5.0.0-beta.2",
+    "npm-run-all": "4.1.5",
+    "prettier": "3.1.0",
+    "prettier-plugin-packagejson": "2.5.2",
+    "prettier-plugin-sql": "0.18.1",
+    "prettier-plugin-tailwindcss": "0.6.6",
+    "ts-brand": "0.0.2",
+    "tsx": "3.12.2",
+    "turbo": "^1.10.16",
+    "typescript": "^5.6.2"
+  },
+  "packageManager": "pnpm@9.9.0",
+  "engines": {
+    "node": "20"
+  },
+  "pnpm": {
+    "allowedDeprecatedVersions": {
+      "core-js": "3.6.5",
+      "resolve-url": "0.2.1",
+      "sane": "4.1.0",
+      "shvl": "2.0.3",
+      "source-map-resolve": "0.5.3",
+      "source-map-url": "0.4.1",
+      "urix": "0.1.0"
+    },
+    "neverBuiltDependencies": [
+      "libpq"
+    ],
+    "overrides": {
+      "@types/react": "18.0.27",
+      "@types/react-dom": "18.0.10",
+      "@tanstack/react-query": "4.28.0",
+      "axios": "0.21.1",
+      "react": "18.3.1",
+      "react-dom": "18.3.1",
+      "slonik": "30.3.1",
+      "esbuild": "0.17.5"
+    },
+    "patchedDependencies": {
+      "cac@6.7.12": "patches/cac@6.7.12.patch",
+      "esbuild-jest@0.5.0": "patches/esbuild-jest@0.5.0.patch",
+      "firebase@9.8.1": "patches/firebase@9.8.1.patch",
+      "micro-memoize@4.0.10": "patches/micro-memoize@4.0.10.patch",
+      "@jsonurl/jsonurl@1.1.7": "patches/@jsonurl__jsonurl@1.1.7.patch",
+      "@nangohq/frontend@0.33.8": "patches/@nangohq__frontend@0.33.8.patch",
+      "@stoplight/elements-core@7.7.10": "patches/@stoplight__elements-core@7.7.10.patch",
+      "@lilyrose2798/trpc-openapi@1.3.10": "patches/@lilyrose2798__trpc-openapi@1.3.10.patch"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "slonik": "30"
+      }
+    }
+  }
+}

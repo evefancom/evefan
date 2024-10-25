@@ -1,0 +1,98 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SIMPLE_SCHEDULE_REGEX: 'daily from jan 1 to feb 23' 1`] = `
+[
+  "daily",
+  "jan 1",
+  "feb 23",
+]
+`;
+
+exports[`SIMPLE_SCHEDULE_REGEX: 'daily jan 1 - feb 23' 1`] = `
+[
+  "daily",
+  "jan 1",
+  "feb 23",
+]
+`;
+
+exports[`SIMPLE_SCHEDULE_REGEX: 'daily jan 1 to feb 23' 1`] = `
+[
+  "daily",
+  "jan 1",
+  "feb 23",
+]
+`;
+
+exports[`SIMPLE_SCHEDULE_REGEX: 'daily jan 1' 1`] = `undefined`;
+
+exports[`SIMPLE_SCHEDULE_REGEX: 'jan 3' 1`] = `undefined`;
+
+exports[`SIMPLE_SCHEDULE_REGEX: 'monthly from jan 1 to feb 23' 1`] = `
+[
+  "monthly",
+  "jan 1",
+  "feb 23",
+]
+`;
+
+exports[`SIMPLE_SCHEDULE_REGEX: 'weekly from dec 31 2020 to jan 1, 2020' 1`] = `
+[
+  "weekly",
+  "dec 31 2020",
+  "jan 1, 2020",
+]
+`;
+
+exports[`parseSimpleScheduleExpression: 'daily from jan 1 to feb 23' 1`] = `
+{
+  "frequency": "days",
+  "interval": "2020-01-01/2020-02-23",
+  "reformatted": "Daily from Jan 1, 2020 to Feb 23, 2020",
+}
+`;
+
+exports[`parseSimpleScheduleExpression: 'daily jan 1 - feb 23' 1`] = `
+{
+  "frequency": "days",
+  "interval": "2020-01-01/2020-02-23",
+  "reformatted": "Daily from Jan 1, 2020 to Feb 23, 2020",
+}
+`;
+
+exports[`parseSimpleScheduleExpression: 'daily jan 1 to feb 23' 1`] = `
+{
+  "frequency": "days",
+  "interval": "2020-01-01/2020-02-23",
+  "reformatted": "Daily from Jan 1, 2020 to Feb 23, 2020",
+}
+`;
+
+exports[`parseSimpleScheduleExpression: 'daily jan 1' 1`] = `
+{
+  "date": "2020-01-01",
+  "reformatted": "Jan 1, 2020",
+}
+`;
+
+exports[`parseSimpleScheduleExpression: 'jan 3' 1`] = `
+{
+  "date": "2020-01-03",
+  "reformatted": "Jan 3, 2020",
+}
+`;
+
+exports[`parseSimpleScheduleExpression: 'monthly from jan 1 to feb 23' 1`] = `
+{
+  "frequency": "months",
+  "interval": "2020-01-01/2020-02-23",
+  "reformatted": "Monthly from Jan 1, 2020 to Feb 23, 2020",
+}
+`;
+
+exports[`parseSimpleScheduleExpression: 'weekly from dec 31 2020 to jan 1, 2020' 1`] = `
+{
+  "date": "2020-01-01",
+  "reformatted": "Jan 1, 2020",
+}
+`;

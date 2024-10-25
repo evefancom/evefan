@@ -1,0 +1,14 @@
+{
+  "name": "@openint/connector-apollo",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/runtime": "^0.0.19",
+    "@opensdks/sdk-apollo": "^0.0.18"
+  },
+  "devDependencies": {}
+}

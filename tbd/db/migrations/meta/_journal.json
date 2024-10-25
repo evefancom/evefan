@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1727032261610,
+      "tag": "0000_light_vertigo",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@openint/connector-yodlee",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [
+    "register.node.ts"
+  ],
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/runtime": "^0.0.19",
+    "@opensdks/sdk-yodlee": "^0.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "*"
+  },
+  "peerDependencies": {
+    "react": "*"
+  }
+}

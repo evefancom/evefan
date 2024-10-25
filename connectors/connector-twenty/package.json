@@ -1,0 +1,15 @@
+{
+  "name": "@openint/connector-twenty",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/sdk-revert": "^0.0.1",
+    "@opensdks/sdk-twenty": "^0.0.5",
+    "@opensdks/util-zod": "^0.0.15"
+  },
+  "devDependencies": {}
+}

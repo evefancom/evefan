@@ -1,0 +1,177 @@
+{
+  "name": "OpenInt",
+  "openapi": "./openint.oas.json",
+  "logo": {
+    "light": "/images/logo/openint-logo.png",
+    "dark": "/images/logo/openint-logo-dark.webp"
+  },
+  "favicon": "/images/logo/openint-logo.png",
+  "colors": {
+    "primary": "#0f2a3f",
+    "light": "#8b9cac",
+    "dark": "#8b9cac"
+  },
+  "topbarLinks": [
+    {
+      "name": "Contact us",
+      "url": "mailto:hi@openint.dev"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Sign up",
+    "url": "https://www.openint.dev"
+  },
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/openint-dev/openint"
+    }
+  ],
+  "tabs": [
+    {
+      "name": "API References",
+      "url": "api-reference"
+    },
+    {
+      "name": "OpenAPI.json",
+      "url": "https://raw.githubusercontent.com/openint-dev/openint/main/kits/sdk/openapi.json"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "quickstart/quickstart",
+        "quickstart/use-cases",
+        "quickstart/features"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        {
+          "group": "Internal",
+          "pages": [
+            "api-reference/internal/health-check",
+            "api-reference/internal/get-debugraw-schemas",
+            "api-reference/internal/post-passthrough",
+            "api-reference/internal/post-coreresource-source_sync"
+          ]
+        },
+        {
+          "group": "Connect",
+          "pages": [
+            "api-reference/connect/post-connecttoken",
+            "api-reference/connect/post-connectmagic-link"
+          ]
+        },
+        {
+          "group": "Core",
+          "pages": [
+            "api-reference/core/get-coreresource",
+            "api-reference/core/post-coreresource",
+            "api-reference/core/get-coreresource-1",
+            "api-reference/core/delete-coreresource",
+            "api-reference/core/patch-coreresource",
+            "api-reference/core/post-coreresource-_sync",
+            "api-reference/core/get-coreconnector_config",
+            "api-reference/core/post-coreconnector_config",
+            "api-reference/core/get-coreconnector_config-1",
+            "api-reference/core/delete-coreconnector_config",
+            "api-reference/core/patch-coreconnector_config",
+            "api-reference/core/get-coreconnector_config_info",
+            "api-reference/core/get-corepipeline",
+            "api-reference/core/post-corepipeline",
+            "api-reference/core/delete-corepipeline",
+            "api-reference/core/patch-corepipeline",
+            "api-reference/core/post-corepipeline-_sync"
+          ]
+        },
+        {
+          "group": "Connectors",
+          "pages": [
+            "api-reference/connectors/get-connector",
+            "api-reference/connectors/get-connector-1",
+            "api-reference/connectors/get-connector-oas",
+            "api-reference/connectors/get-connector-schemas"
+          ]
+        },
+        "api-reference/get-current-viewer-accessing-the-api",
+        "api-reference/get-openapijson",
+        "api-reference/get-customers",
+        "api-reference/get-customers-1",
+        "api-reference/put-customers",
+        "api-reference/get-customers-connections",
+        "api-reference/get-customers-connections-1",
+        "api-reference/delete-customers-connections",
+        "api-reference/get-sync_configs",
+        "api-reference/get-connection_sync_configs",
+        "api-reference/put-connection_sync_configs",
+        "api-reference/get-verticalssales-engagementcontact",
+        "api-reference/get-verticalssales-engagementsequence",
+        "api-reference/get-verticalssales-engagementsequence_state",
+        "api-reference/post-verticalssales-engagementsequence_state",
+        "api-reference/get-verticalssales-engagementuser",
+        "api-reference/get-verticalssales-engagementaccount",
+        "api-reference/get-verticalssales-engagementmailbox",
+        "api-reference/post-verticalssales-engagementaccount_upsert",
+        "api-reference/post-verticalssales-engagementcontact_upsert",
+        "api-reference/get-verticalscrm-_count",
+        "api-reference/get-verticalscrmaccount",
+        "api-reference/post-verticalscrmaccount",
+        "api-reference/get-verticalscrmaccount-1",
+        "api-reference/patch-verticalscrmaccount",
+        "api-reference/post-verticalscrmaccount_batch_read",
+        "api-reference/post-verticalscrmaccount_upsert",
+        "api-reference/get-verticalscrmcontact",
+        "api-reference/post-verticalscrmcontact",
+        "api-reference/get-verticalscrmcontact-1",
+        "api-reference/patch-verticalscrmcontact",
+        "api-reference/post-verticalscrmcontact_batch_read",
+        "api-reference/post-verticalscrmcontact_upsert",
+        "api-reference/get-verticalscrmlead",
+        "api-reference/get-verticalscrmlead-1",
+        "api-reference/get-verticalscrmopportunity",
+        "api-reference/get-verticalscrmopportunity-1",
+        "api-reference/get-verticalscrmuser",
+        "api-reference/get-verticalscrmuser-1",
+        "api-reference/get-verticalscrmcustom_objects",
+        "api-reference/post-verticalscrmcustom_objects",
+        "api-reference/get-verticalscrmmetadataobjects",
+        "api-reference/post-verticalscrmmetadataobjects",
+        "api-reference/get-verticalscrmmetadataobjects-properties",
+        "api-reference/post-verticalscrmmetadataassociations",
+        "api-reference/get-verticalsbankingaccount",
+        "api-reference/get-verticalsbankingmerchant",
+        "api-reference/get-verticalsbankingcategory",
+        "api-reference/get-verticalsbankingtransaction",
+        "api-reference/get-verticalsaccountingaccount",
+        "api-reference/get-verticalsaccountingexpense",
+        "api-reference/get-verticalsaccountingvendor",
+        "api-reference/get-verticalsptaaccount",
+        "api-reference/get-verticalsptatransaction",
+        "api-reference/get-verticalsptacommodity",
+        "api-reference/get-verticalsatsjob",
+        "api-reference/get-verticalsatsoffer",
+        "api-reference/get-verticalsatscandidate",
+        "api-reference/get-verticalsatsdepartment",
+        "api-reference/get-verticalsetlread",
+        "api-reference/get-verticalsetldiscover",
+        "api-reference/post-verticalsetlread",
+        "api-reference/post-verticalsetlwrite"
+      ]
+    }
+  ],
+  "backgroundImage": "/images/background.png",
+  "footerSocials": {
+    "github": "https://github.com/openint-dev/openint",
+    "discord": "https://discord.gg/gTMch6Gn2u",
+    "twitter": "https://twitter.com/use_venice"
+  },
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_T3BM4neZzi3z2ruDiN0pYpGHIYjd5AjZw0rSkhzAKSo"
+    }
+  }
+}

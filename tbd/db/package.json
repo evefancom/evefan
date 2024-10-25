@@ -1,0 +1,27 @@
+{
+  "name": "@openint/db",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "scripts": {
+    "db:clean": "rm -rf ./drizzle",
+    "db:pull": "drizzle-kit introspect:pg --connectionString $POSTGRES_URL --driver pg",
+    "db:push": "drizzle-kit push:pg --connectionString $POSTGRES_URL --driver pg --schema ./schema.ts --verbose --strict",
+    "db:run-migration": "npx tsx -e \"import('./').then(r => r.default.runMigration())\"",
+    "db:schema-diff": "pnpm db:clean && pnpm db:pull && drizzle-kit generate:pg --schema ./schema.ts && cd ./drizzle && ls 0001*.sql | xargs cat && pnpm db:clean",
+    "db:schema-generate": "drizzle-kit generate:pg --schema ./schema.ts --out ./migrations",
+    "db:template-dynamic-schema": "drizzle-kit generate:pg --schema ./schema-dynamic.ts --out ./drizzle && cd ./drizzle && ls *.sql | xargs cat && pnpm db:clean"
+  },
+  "dependencies": {
+    "@openint/env": "workspace:*",
+    "drizzle-orm": "^0.29.3",
+    "postgres": "^3.4.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@openint/vdk": "workspace:*",
+    "drizzle-kit": "^0.20.12",
+    "prettier": "3.1.0",
+    "prettier-plugin-sql": "0.18.1"
+  }
+}

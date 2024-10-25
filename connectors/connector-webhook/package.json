@@ -1,0 +1,11 @@
+{
+  "name": "@openint/connector-webhook",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*"
+  },
+  "devDependencies": {}
+}

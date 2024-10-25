@@ -1,0 +1,15 @@
+diff --git a/index.mjs b/index.mjs
+index d2a250bdb64b330ccb0c98070c952afe6767268a..d5a085c0d8fe36da3d7c119a77ea519f1f294837 100644
+--- a/index.mjs
++++ b/index.mjs
+@@ -1931,7 +1931,9 @@ const TryIt = ({ httpOperation, mockUrl, onRequestChange, requestBodyIndex, embe
+             });
+             let response;
+             try {
+-                response = yield fetch(...request);
++                // HACK to allow intercepting fetch requests to instead go through to the passthrough api
++                const _fetch = globalThis._stoplight_fetch ?? fetch
++                response = yield _fetch(...request);
+             }
+             catch (e) {
+                 setResponse({ error: new NetworkError(e.message) });

@@ -1,0 +1,13 @@
+{
+  "name": "@openint/connector-salesloft",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/runtime": "^0.0.19",
+    "@opensdks/sdk-salesloft": "0.0.16"
+  },
+  "devDependencies": {}
+}

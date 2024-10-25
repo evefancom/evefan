@@ -1,0 +1,20 @@
+{
+  "name": "@openint/connector-postgres",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@slonik/migrator": "0.11.3",
+    "handlebars": "4.7.7",
+    "pg": "8.8.0",
+    "pg-native": "3.0.1",
+    "slonik": "30.3.1",
+    "slonik-interceptor-preset": "1.2.10",
+    "zod": "3.22.4"
+  },
+  "devDependencies": {
+    "@types/pg": "8.6.5"
+  }
+}

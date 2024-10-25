@@ -1,0 +1,26 @@
+{
+  "name": "@openint/meta-service-airbyte",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "download": "concurrently npm:download:*",
+    "download:low-code-connector": "curl --fail https://raw.githubusercontent.com/airbytehq/airbyte/master/airbyte-cdk/python/airbyte_cdk/sources/declarative/declarative_component_schema.yaml | ./bin/yaml2json.js -o ./protocol/low-code-connector.oas",
+    "download:protocol": "curl --fail https://raw.githubusercontent.com/airbytehq/airbyte-protocol/main/protocol-models/src/main/resources/airbyte_protocol/airbyte_protocol.yaml | ./bin/yaml2json.js -o ./protocol/protocol.oas"
+  },
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/meta-service-postgres": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/sdk-airbyte": "^0.0.1",
+    "@trpc/server": "10.40.0",
+    "@zodios/core": "10.9.6",
+    "@zodios/fetch": "11.0.0-beta.19",
+    "zod": "3.22.4"
+  },
+  "devDependencies": {
+    "@openint/engine-backend": "workspace:*",
+    "concurrently": "8.2.2",
+    "openapi-fetch": "0.8.1",
+    "yaml": "2.3.4"
+  }
+}

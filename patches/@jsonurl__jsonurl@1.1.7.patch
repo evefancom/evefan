@@ -1,0 +1,17 @@
+diff --git a/dist/jsonurl.common.js b/dist/jsonurl.common.js
+index 4e0cd55988d46282e75dcd29824d6348aff168a3..9bd4ac19e2b63d5640c593b5b717c4c962a88a3d 100644
+--- a/dist/jsonurl.common.js
++++ b/dist/jsonurl.common.js
+@@ -616,6 +616,12 @@ class JsonURLStringifyOptions extends JsonURLOptions {
+ */
+ 
+ function setupToJsonURLText(_ref) {
++  // HACK: patch to prevent duplicate property definition which causes crash...
++  if (Array.prototype.toJsonURLText) {
++    // console.log('[JSONURL] returning due to setup complete already')
++    return
++  }
++  // console.log('[JSONURL] setupToJsonURLText')
+   let {
+     toJsonURLText_Array,
+     toJsonURLText_Boolean,

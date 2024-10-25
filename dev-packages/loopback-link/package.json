@@ -1,0 +1,12 @@
+{
+  "name": "@openint/loopback-link",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@hono/node-server": "^1.11.0",
+    "@opensdks/fetch-links": "^0.0.19"
+  },
+  "devDependencies": {}
+}

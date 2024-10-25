@@ -1,0 +1,8 @@
+{
+  "name": "@openint/unified-accounting",
+  "dependencies": {
+    "@openint/connector-qbo": "workspace:*",
+    "@openint/vdk": "workspace:*"
+  },
+  "devDependencies": {}
+}

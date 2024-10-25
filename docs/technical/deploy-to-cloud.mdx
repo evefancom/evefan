@@ -1,0 +1,110 @@
+---
+title: Deploy to Vercel
+description: Easily deploy Venice to the cloud
+---
+
+While implementing your new Venice pipeline, you'll want to run Venice either [locally](/technical/deploy-locally)
+or to the cloud.
+
+Thankfully the process is straightforward:
+
+1. One-click deploy using [Vercel](https://vercel.com)
+2. Add environment variables (e.g. API key, database credentials, JWT secret)
+3. Test your integration & push any changes
+4. Open a pull request back into Venice's GitHub repo
+
+## Quickstart
+
+### One click deploy with Vercel
+
+Using [Vercel](https://vercel.com), your instance of Venice will be up and running
+in just a few minutes. See [Environment variables](/technical/deploy-to-cloud#environment-variables)
+for more information on the expected environment keys and values.
+
+<a href="https://link.useVenice.com/deploy" rel="nofollow">
+  <img src="https://vercel.com/button" alt="Deploy with Vercel" />
+</a>
+
+1. Click the `Deploy` button above
+2. Create a repository on Vercel
+3. Go to [Supabase](https://supabase.com) and create a new project
+4. On Supabase, go to `Settings` > `Database` and scroll down to `Connection String` and click `URI`
+5. Copy that link and insert it as your `POSTGRES_URL` in Vercel — remember to add your password to the URL when you paste it into Vercel
+6. On Supabase, Go to `Settings` > `API` and scroll down to get your JWT token. Copy this and paste it into Vercel
+7. Go to [Plaid](https://plaid.com) > `Team Settings` > `Keys` and copy the `Plaid ID` and `Sandbox Secret` key into Vercel
+8. Deploy Vercel
+9. Once Vercel is ready, click to open the domain it deployed to
+10. Create a test account & login
+11. Click `Add` next to `Connections` to test your new integration
+12. Visit the database or table in Supabase to see the data
+
+### Hook up to a test database (e.g. Supabase)
+
+Here's a quick video from our founder on how to hook Venice up to a custom
+database in just a few minutes using [Supabase](https://supabase.com).
+
+<p>
+  <a href="https://link.useVenice.com/demo-video" rel="nofollow">
+    <img src="https://cdn.loom.com/sessions/thumbnails/a2eda4cd5c764963bd2d6a56fe5a71e5-with-play.gif" alt="Venice demo" />
+  </a>
+</p>
+
+### Need help?
+
+<Card title="Join our community" icon="discord" href="https://discord.gg/gTMch6Gn2u">
+Join our community of founders & developers building the future of finance together
+</Card>
+
+<Card title="Reach out" icon="screwdriver-wrench" href="mailto:hi@venice.is">
+Need a custom integration? Reach out to our support team and we'll have a quote
+back to you in no time!
+</Card>
+
+## Environment variables
+
+During the deployment process, you'll notice Venice relies upon a few environment
+variables to configure itself. Most of these are optional and have sensible defaults
+to fall back on, but feel free to customize any you wish.
+
+These environment variables are also found within the [.env.example](https://github.com/useVenice/venice/blob/main/.env.example)
+file you can use to deploy Venice locally to your machine.
+
+
+### Supabase
+
+| Name                              | Description                                                              |
+| :-------------------------------- | :----------------------------------------------------------------------- |
+| `NEXT_PUBLIC_Supabase_URL`        | (Required) The URL of the Supabase project to use (from their settings dashboard) |
+| `NEXT_PUBLIC_Supabase_ANON_KEY`   | (Required) The public anon key of the Supabase project to use. |
+| `POSTGRES_URL`                    | (Required) The URI of the database or webhook to sync data to.<br /><br />Pass a valid `postgres(ql)://` url for stateful mode. Will be used Primary database used for metadata and user data storage<br/><br />Pass a valid `http(s)://` url for stateless mode. Sync data and metadata be sent to provided URL and you are responsible for your own persistence |
+| `JWT_SECRET`        | (Required) The JavaScript Web Token (JWT) secret used for signing and verifying tokens (found within your Supabase project settings).<br /><br />Used for validating authenticity of access tokens |
+
+### Plaid
+
+| Name                              | Description          |
+| :-------------------------------- | :--------------------------------------------------------------------------- |
+| `int_plaid__clientId`             | (Required) `string` = The client identifier from your Plaid dashboard. |
+| `int_plaid__secrets__sandbox`     | (Optional) `string` = The secret key from your Plaid dashboard for sandbox mode.<br /><br />Note: this environment is for testing only and will not work with real banking credentials. |
+| `int_plaid__secrets__development` | (Optional) `string` = The secret key from your Plaid dashboard for development mode.<br /><br />Note: Development environment can be used with real banking credentials. |
+| `int_plaid__secrets__production`  | (Optional) `string` = The secret key from your Plaid dashboard for production mode.<br /><br />Note: Plaid requires you to get approval before using production mode.|
+| `int_plaid__products`             | `Array<assets \| auth \| balance \| identity \| investments \| liabilities \| payment_initiation \| transactions \| credit_details \| income \| income_verification \| deposit_switch \| standing_orders \| transfer \| employment \| recurring_transactions>`<br /><br />The default value is an array: `["transactions"]`    |
+| `int_plaid__countryCodes`         | `Array<US \| GB \| ES \| NL \| FR \| IE \| CA \| DE \| IT>` <br /><br /> The default value is `["US"]` |
+| `int_plaid__language`             | `en \| fr \| es \| nl \| de`<br /><br />The default value is `"en"`  |
+| `int_plaid__clientName`           | (Optional) `string` with a default value of "This Application"`. The name of your application, as it should be displayed in Link (max length of 30 characters)<br /><br />If a value longer than 30 characters is provided, Link will display `This Application` instead.   |
+
+## Environments
+
+There are three environments Venice operates in when creating new connections,
+and they correspond to the same environments in data aggregators like Plaid.
+
+- **sandbox**: access to test data only (e.g. `Platypus` bank using `user_good` & `pass_good` credentials)
+- **development**: limited access to live data
+- **production**: access to live financial data
+
+The default is `sandbox`. To change the environment when creating new connections,
+append `&env=development` (or `&env=production`) to the end of the add pipeline URL.
+
+This setting only affects new connections. Existing connections store which
+environment they are part of and automatically use the correct environment-specific
+keys from environment variables when communicating with data aggregators.
+

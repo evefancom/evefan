@@ -1,0 +1,12 @@
+{
+  "name": "@openint/connector-debug",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*"
+  },
+  "devDependencies": {}
+}

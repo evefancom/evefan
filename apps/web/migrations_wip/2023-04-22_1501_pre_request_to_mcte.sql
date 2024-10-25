@@ -1,0 +1,4 @@
+-- @see https://github.com/orgs/supabase/discussions/9311#discussioncomment-5690939
+-- Should be more scalable than the previous approach, which was to use pre-request hooks
+-- for postgrest but it does not work for things like postgres-realtime, nor does it work in
+-- non-postgrest environments such as non-supabase-postgres or any kind of direct user login

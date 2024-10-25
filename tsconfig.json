@@ -1,0 +1,32 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["DOM", "DOM.Iterable", "ES2021"],
+    "allowJs": true,
+    "checkJs": false,
+    "exactOptionalPropertyTypes": false,
+    "importsNotUsedAsValues": "remove",
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ES2020",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "paths": {
+      // This is a hack because eslint is not picking up the correct tsconfig.json
+      // inside the apps/web module. This is a temporary workaround
+      // In practice no module outside apps/web should use the `@/` alias ever
+      // In addition to opening the door to invalid imports this also prevents us
+      // from two separate next.js apps in the same monorepo which might be relevant for future
+      "@/*": ["./apps/web/*"],
+      "@openint/sdk": ["./kits/sdk/src"],
+      "@openint/sdk/*": ["./kits/sdk/src/*"],
+      "@openint/connect": ["./kits/connect/src"],
+      "@openint/connect/*": ["./kits/connect/src/*"]
+    }
+  },
+  "include": ["env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

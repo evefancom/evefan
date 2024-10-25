@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "name": "Attach Worker",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "cwd": "/",
+      "resolveSourceMapLocations": null,
+      "attachExistingChildren": false,
+      "autoAttachChildProcesses": false
+    }
+  ]
+}

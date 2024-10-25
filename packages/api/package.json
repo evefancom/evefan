@@ -1,0 +1,35 @@
+{
+  "name": "@openint/api",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "module": "./index.ts",
+  "scripts": {
+    "gen": "run-s gen:*",
+    "gen:oas": "npx tsx ./appRouter.ts > ./client/openapi.json",
+    "gen:types": "npx @opensdks/cli --meta-dir ./client/ --types-dir ./client/ ./client/openapi.json"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "5.6.0",
+    "@lilyrose2798/trpc-openapi": "1.3.10",
+    "@openint/app-config": "workspace:*",
+    "@openint/cdk": "workspace:*",
+    "@openint/engine-backend": "workspace:*",
+    "@openint/env": "workspace:*",
+    "@openint/events": "workspace:*",
+    "@openint/trpc": "workspace:*",
+    "@openint/unified-accounting": "workspace:*",
+    "@openint/unified-ats": "workspace:*",
+    "@openint/unified-banking": "workspace:*",
+    "@openint/unified-crm": "workspace:*",
+    "@openint/unified-etl": "workspace:*",
+    "@openint/unified-hris": "workspace:*",
+    "@openint/unified-pta": "workspace:*",
+    "@openint/unified-sales-engagement": "workspace:*",
+    "@openint/vdk": "workspace:*",
+    "@opensdks/fetch-links": "^0.0.19",
+    "@opensdks/util-zod": "0.0.15",
+    "remeda": "1.6.1"
+  },
+  "devDependencies": {}
+}

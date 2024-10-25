@@ -1,0 +1,55 @@
+---
+title: Run locally
+description: Easily test your new integrations by running Venice locally
+---
+
+While implementing your new Venice pipeline, you may want to run locally 
+to test your changes.
+
+Note: we welcome [pull requests](https://github.com/usevenice/venice)!
+
+## Localhost Quickstart
+
+1. Clone repo `git clone git@github.com:usevenice/venice.git`
+
+2. Make a copy of the [.env.example](https://github.com/useVenice/venice/blob/main/.env.example) file named `.env`
+
+3. Populate your environment keys:
+
+If you have an existing [Vercel CLI](https://vercel.com/docs/cli) setup, you can pull your environment keys using:
+
+```bash
+vercel env pull --environment production .env.prod
+```
+
+4. Install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) & [pnpm](https://pnpm.io/installation) and then run:
+
+```bash
+nvm use 18 # Optional, we recommend node 18.x
+
+pnpm preinstall
+pnpm install
+pnpm run web
+```
+
+Note: if you need to run database migrations, you can use:
+
+```bash
+pnpm run migration up # (optional) we support Postgres for now, but feel free to extend Venice and add more
+```
+
+5. Visit http://localhost:3000
+
+6. Run the background scheduler in a new (separate) terminal
+
+```bash
+$ npx inngest-cli@latest dev
+```
+
+### Pro Tips
+
+- Use [shdotenv](https://github.com/ko1nksm/shdotenv) to load env vars from `.env` files
+
+```bash
+shdotenv -e .env.prod pnpm run web
+```

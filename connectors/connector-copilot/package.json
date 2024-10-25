@@ -1,0 +1,13 @@
+{
+  "name": "@openint/connector-copilot",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/connector-firebase": "workspace:*",
+    "@openint/util": "workspace:*"
+  },
+  "devDependencies": {}
+}

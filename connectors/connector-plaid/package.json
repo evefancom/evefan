@@ -1,0 +1,27 @@
+{
+  "name": "@openint/connector-plaid",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [
+    "register.node.ts"
+  ],
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/fetch-links": "^0.0.19",
+    "@opensdks/runtime": "^0.0.19",
+    "@opensdks/sdk-plaid": "^0.0.14",
+    "@t3-oss/env-core": "0.7.1",
+    "plaid": "12.3.0",
+    "react-plaid-link": "3.3.2"
+  },
+  "devDependencies": {
+    "@types/react": "*",
+    "prettier": "3.1.0",
+    "yamljs": "0.3.0"
+  },
+  "peerDependencies": {
+    "react": "*"
+  }
+}

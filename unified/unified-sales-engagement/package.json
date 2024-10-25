@@ -1,0 +1,9 @@
+{
+  "name": "@openint/unified-sales-engagement",
+  "dependencies": {
+    "@openint/vdk": "workspace:*",
+    "@opensdks/sdk-apollo": "0.0.21",
+    "@opensdks/sdk-outreach": "0.0.16",
+    "@opensdks/sdk-salesloft": "0.0.17"
+  }
+}

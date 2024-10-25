@@ -1,0 +1,27 @@
+# Unignore dotfiles
+!.*
+
+# dependencies
+**/node_modules/
+
+# temporary files
+**/temp/
+
+# generated files
+**/__generated__/
+*.generated.*
+*.gen.*
+*.oas.*
+
+# jest
+*.snap
+
+# next.js
+/apps/gondola/.next/
+/apps/web/.next/
+/apps/web/out/
+
+# vim: set filetype=ignore:
+.obsidian/
+
+docs/openint.oas.json
