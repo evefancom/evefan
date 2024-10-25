@@ -1,18 +1,18 @@
 ---
 title: Run locally
-description: Easily test your new integrations by running Venice locally
+description: Easily test your new integrations by running OpenInt locally
 ---
 
-While implementing your new Venice pipeline, you may want to run locally 
+While implementing your new OpenInt pipeline, you may want to run locally
 to test your changes.
 
-Note: we welcome [pull requests](https://github.com/usevenice/venice)!
+Note: we welcome [pull requests](https://github.com/openintegrations/openint)!
 
 ## Localhost Quickstart
 
-1. Clone repo `git clone git@github.com:usevenice/venice.git`
+1. Clone repo `git clone git@github.com:openintegrations/openint.git`
 
-2. Make a copy of the [.env.example](https://github.com/useVenice/venice/blob/main/.env.example) file named `.env`
+2. Make a copy of the [.env.example](https://github.com/openintegrations/openint/blob/main/.env.example) file named `.env`
 
 3. Populate your environment keys:
 
@@ -35,7 +35,7 @@ pnpm run web
 Note: if you need to run database migrations, you can use:
 
 ```bash
-pnpm run migration up # (optional) we support Postgres for now, but feel free to extend Venice and add more
+pnpm run migration up # (optional) we support Postgres for now, but feel free to extend OpenInt and add more
 ```
 
 5. Visit http://localhost:3000

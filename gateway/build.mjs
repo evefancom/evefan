@@ -13,7 +13,7 @@ if (!fs.existsSync('config.json')) {
 }
 
 try {
-  console.log('Building Evefan...');
+  console.log('Building OpenInt Gateway...');
   const connectorsDeclaration = path.resolve('./src/connectors/index.ts');
 
   const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
@@ -41,7 +41,7 @@ try {
   // Replace the specific line with the new function content
   const modifiedContent = fileContent.replace(
     /export async function loadConnector\(type: string\) \{.*\}/s,
-    newFunctionContent
+    newFunctionContent,
   );
 
   // Write the modified content back to the file
@@ -76,7 +76,7 @@ try {
             const destWasmPath = path.resolve(
               process.cwd(),
               'dist',
-              wasmFileName
+              wasmFileName,
             );
 
             // Ensure the destination directory exists

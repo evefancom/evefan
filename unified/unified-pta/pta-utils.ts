@@ -313,7 +313,7 @@ export function defaultAccountNotesForType(type: Pta.AccountType) {
   switch (type) {
     case 'equity/initial_balance':
       return `
-    This category is automaticaly managed by Alka based on the current balance of your accounts
+    This category is automaticaly managed by Openint based on the current balance of your accounts
     and the history of transactions.
     `
   }

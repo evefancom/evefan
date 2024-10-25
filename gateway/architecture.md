@@ -1,8 +1,8 @@
-# Evefan Architecture
+# OpenInt Gateway Architecture
 
-Evefan is architected to scale horizontally on Cloudflare Gateways. It has been tested at 300 events per second over a sustained period of time achieving 99.999% delivery rate.
+OpenInt Gateway is architected to scale horizontally on Cloudflare Gateways. It has been tested at 300 events per second over a sustained period of time achieving 99.999% delivery rate.
 
-Evefan consists of several key components:
+OpenInt Gateway consists of several key components:
 
 1. Gateway Router
 2. Durable Objects for Batching and Error Tracking

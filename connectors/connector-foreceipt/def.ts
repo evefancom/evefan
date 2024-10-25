@@ -50,7 +50,8 @@ export const foreceiptHelpers = connHelpers(foreceiptSchemas)
 export const foreceiptDef = {
   name: 'foreceipt',
   schemas: foreceiptSchemas,
-  metadata: {verticals: ['expense-management'],
+  metadata: {
+    verticals: ['expense-management'],
     logoUrl: '/_assets/logo-foreceipt.svg',
   },
   standardMappers: {
@@ -91,7 +92,7 @@ export const foreceiptDef = {
             date: t.receipt_date,
             payee: t.merchant,
             description: t.notes ?? '',
-            // TODO: Split transactions should be handled via deleting one of the receipts in Alka
+            // TODO: Split transactions should be handled via deleting one of the receipts in Openint
             removed: t.status === 'Deleted',
             postingsMap: makePostingsMap({
               main: {

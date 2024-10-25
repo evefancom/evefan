@@ -1,3 +1,3 @@
-# Venice on Airbyte
+# Openint on Airbyte
 
-This is an experimental package demonstrating running Venice integrations on top of Airbyte's integration
+This is an experimental package demonstrating running Openint integrations on top of Airbyte's integration

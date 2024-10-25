@@ -341,7 +341,7 @@ export interface Balance {
   custom?: Record<string, unknown> & {
     /**
      * Used by beancount converter to determine whether to generate padding.
-     * Not currently used by Alka. Will need padding account for it to be correct though
+     * Not currently used by Openint. Will need padding account for it to be correct though
      */
     paddingAmount?: AmountMap
   }
