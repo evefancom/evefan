@@ -1,4 +1,3 @@
-[![MIT License](https://img.shields.io/badge/license-MIT-green)](https://tldrlegal.com/license/mit-license)
 [![ELv2 License](https://img.shields.io/badge/license-ELv2-green)](https://www.elastic.co/licensing/elastic-license)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 ![TypeScript](https://img.shields.io/badge/language-TypeScript-blue)
@@ -65,10 +64,7 @@ local-ssl-proxy --source 443 --target 3000 --cert ~/.ssh/local.openint.dev.pem -
 
 <img src="https://contributors-img.web.app/image?repo=openint-dev/openint"/>
 
-
-
 ### Random commands that are useful
-
 
 ```bash
 pnpm --dir  kits/connect/ clean
