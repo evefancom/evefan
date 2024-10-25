@@ -1,11 +1,11 @@
 import { DestinationType } from '@evefan/evefan-config';
-import { WorkerConfig } from '../config';
+import { GatewayConfig } from '../config';
 import { DestinationEvent } from '../schema/event';
 import { FanOutResult } from '../writer';
 
 export interface Connector {
   write(
-    config: WorkerConfig,
+    config: GatewayConfig,
     events: DestinationEvent[],
     destinationType: DestinationType
   ): Promise<FanOutResult>;

@@ -4,7 +4,7 @@
 <p align="center">
   <p align="center"><b> Evefan — Unmetered Events Ingestion</b></p>
   <p align="center"><b> Serverless and on-prem </b> — without the overhead of Kafka or Spark.</p>
-  <p align="center">Achieve <b>99% Costs Savings</b> with <b>Cloudflare Workers 💸</b></p>
+  <p align="center">Achieve <b>99% Costs Savings</b> with <b>Cloudflare Gateways 💸</b></p>
   <p align="center"><b>Your Very Own Internet Scale Events Infrastructure</b></p>
 </p>
 
@@ -29,7 +29,7 @@
 
 Evefan enables developers to privately capture, transform and deliver customer events at any scale.
 
-Evefan is open source and self-hosted on Cloudflare workers. It can be configured either via Evefan Console or using Wrangler. Get started in minutes using the [Evefan Console](https://console.evefan.com).
+Evefan is open source and self-hosted on Cloudflare gateways. It can be configured either via Evefan Console or using Wrangler. Get started in minutes using the [Evefan Console](https://console.evefan.com).
 
 <h1 align="center">
     <img src="https://console.evefan.com/img/brand/event-fan.png" alt="event-fan">
@@ -61,7 +61,7 @@ Missing an integration? [Let us know](https://tally.so/r/mDev0q) to prioritize i
 
 ## Getting Started with Development
 
-To start developing with the Evefan Worker, follow these steps:
+To start developing with the Evefan Gateway, follow these steps:
 
 1. Clone the repository and navigate to the project directory.
 
@@ -80,13 +80,13 @@ To start developing with the Evefan Worker, follow these steps:
    npm run dev
    ```
 
-5. To build the worker:
+5. To build the gateway:
 
    ```
    npm run build
    ```
 
-6. To deploy to Cloudflare Workers:
+6. To deploy to Cloudflare Gateways:
 
    ```
    npm run deploy

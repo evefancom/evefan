@@ -1,11 +1,11 @@
 import { delay } from './utils';
-import { WorkerConfig } from './config';
+import { GatewayConfig } from './config';
 import { DestinationEvent } from './schema/event';
 import { DestinationType, isCloudDestination } from '@evefan/evefan-config';
 import { Bindings } from './env';
 
 export async function handleEventFanout(
-  config: WorkerConfig,
+  config: GatewayConfig,
   env: Bindings,
   events: DestinationEvent[]
 ) {
@@ -48,10 +48,10 @@ const requestCounters: { [key: string]: { count: number; timestamp: number } } =
   {};
 
 async function attemptWriteWithShortBackoff(
-  config: WorkerConfig,
+  config: GatewayConfig,
   destinationType: DestinationType,
   writeHandler: (
-    config: WorkerConfig,
+    config: GatewayConfig,
     events: DestinationEvent[],
     destinationType: DestinationType
   ) => Promise<FanOutResult>,
@@ -108,7 +108,7 @@ async function rateLimit(destination: string, maxRps: number): Promise<void> {
 }
 
 async function forwardEventsToConsole(
-  config: WorkerConfig,
+  config: GatewayConfig,
   events: DestinationEvent[],
   destinationType: DestinationType
 ): Promise<FanOutResult> {
@@ -168,7 +168,7 @@ export type FanOutResult = {
 };
 
 export async function fanOutEventData(
-  config: WorkerConfig,
+  config: GatewayConfig,
   events: DestinationEvent[],
   destinationType?: DestinationType
 ): Promise<FanOutResult[]> {

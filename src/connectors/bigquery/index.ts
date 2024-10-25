@@ -1,6 +1,6 @@
 import { getTokenFromGCPServiceAccount } from '@sagi.io/workers-jwt';
 import { Connector } from '..';
-import { WorkerConfig } from '../../config';
+import { GatewayConfig } from '../../config';
 import { DestinationEvent } from '../../schema/event';
 import { propertyWithPath } from '../../utils';
 import { FanOutResult } from '../../writer';
@@ -188,7 +188,7 @@ async function writeEvents(config: BigqueryConfig, events: DestinationEvent[]) {
 
 export default class BigqueryConnector implements Connector {
   async write(
-    config: WorkerConfig,
+    config: GatewayConfig,
     events: DestinationEvent[],
     destinationType: DestinationType
   ): Promise<FanOutResult> {

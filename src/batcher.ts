@@ -1,6 +1,6 @@
-import { DurableObject } from 'cloudflare:workers';
+import { DurableObject } from 'cloudflare:gateways';
 import { DestinationEvent } from './schema/event';
-import { getConfig, WorkerConfig } from './config';
+import { getConfig, GatewayConfig } from './config';
 import { handleEventFanout } from './writer';
 import { Bindings } from './env';
 
@@ -17,7 +17,7 @@ export class Batcher extends DurableObject<BatcherEnv> {
     await this.ctx.storage.deleteAlarm();
   }
 
-  private async checkAndSetAlarm(config: WorkerConfig) {
+  private async checkAndSetAlarm(config: GatewayConfig) {
     const currentAlarm = await this.ctx.storage.getAlarm();
     if (currentAlarm == null) {
       await this.ctx.storage.setAlarm(
@@ -26,7 +26,7 @@ export class Batcher extends DurableObject<BatcherEnv> {
     }
   }
 
-  private async flush(config: WorkerConfig) {
+  private async flush(config: GatewayConfig) {
     const eventsToSend = await this.ctx.blockConcurrencyWhile(async () => {
       const events = [...this.batchedEvents];
       this.batchedEvents = [];

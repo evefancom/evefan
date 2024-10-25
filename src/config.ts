@@ -2,21 +2,21 @@ import { Connector, loadConnector } from './connectors';
 import configJson from './../config.json';
 import { Config, Destination, DestinationType } from '@evefan/evefan-config';
 
-export type WorkerConfig = Omit<Config, 'destinations'> & {
+export type GatewayConfig = Omit<Config, 'destinations'> & {
   destinations: Array<
     Destination<DestinationType, any> & { handler: Connector }
   >;
 };
 
-let config: WorkerConfig;
+let config: GatewayConfig;
 
-export async function getConfig(): Promise<WorkerConfig> {
-  // cache it for the lifetime of the worker
+export async function getConfig(): Promise<GatewayConfig> {
+  // cache it for the lifetime of the gateway
   if (config) {
     return config;
   }
 
-  config = configJson as unknown as WorkerConfig;
+  config = configJson as unknown as GatewayConfig;
   const handlerPromises = config.destinations.map(async (destination) => {
     try {
       const handler = (await loadConnector(destination.type)) as unknown as {

@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 import { Connector } from '..';
-import { WorkerConfig } from '../../config';
+import { GatewayConfig } from '../../config';
 import { DestinationEvent } from '../../schema/event';
 import { FanOutResult } from '../../writer';
 import { Field, schema } from '../../schema/databases';
@@ -106,7 +106,7 @@ async function writeEvents(
 
 export default class PostgresConnector implements Connector {
   async write(
-    config: WorkerConfig,
+    config: GatewayConfig,
     events: DestinationEvent[],
     destinationType: DestinationType
   ): Promise<FanOutResult> {

@@ -1,16 +1,16 @@
 # Evefan Architecture
 
-Evefan is architected to scale horizontally on Cloudflare Workers. It has been tested at 300 events per second over a sustained period of time achieving 99.999% delivery rate.
+Evefan is architected to scale horizontally on Cloudflare Gateways. It has been tested at 300 events per second over a sustained period of time achieving 99.999% delivery rate.
 
 Evefan consists of several key components:
 
-1. Worker Router
+1. Gateway Router
 2. Durable Objects for Batching and Error Tracking
 3. Queues for Failure Handling
 
-### 1. Worker Router
+### 1. Gateway Router
 
-The worker router is the entry point for all incoming requests. It's responsible for:
+The gateway router is the entry point for all incoming requests. It's responsible for:
 
 - Parsing incoming requests
 - Routing requests to the appropriate handlers

@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { WorkerEnv } from './routes';
+import { GatewayEnv } from './routes';
 import { S3DeltaConfig } from '@evefan/evefan-config';
 import {
   S3Client,
@@ -27,7 +27,7 @@ function debugTempLog(...message: any) {
 }
 
 export async function handleS3ProxyRequest(
-  c: Context<WorkerEnv>,
+  c: Context<GatewayEnv>,
   method: 'GET' | 'HEAD' | 'LIST' | string
 ) {
   debugTempLog(`S3 Proxy Request: Method=${method}, Path=${c.req.path}`);
@@ -106,7 +106,7 @@ export async function handleS3ProxyRequest(
 }
 
 async function handleGetRequest(
-  c: Context<WorkerEnv>,
+  c: Context<GatewayEnv>,
   s3Client: S3Client,
   s3Config: S3DeltaConfig,
   key: string
@@ -169,7 +169,7 @@ async function handleGetRequest(
 }
 
 async function handleHeadRequest(
-  c: Context<WorkerEnv>,
+  c: Context<GatewayEnv>,
   s3Client: S3Client,
   s3Config: S3DeltaConfig,
   key: string
@@ -216,7 +216,7 @@ async function handleHeadRequest(
 }
 
 async function materializeVirtualFile(
-  c: Context<WorkerEnv>,
+  c: Context<GatewayEnv>,
   key: string,
   s3Client: S3Client,
   s3Config: S3DeltaConfig
@@ -448,7 +448,7 @@ async function getFilesInTimeRange(
 }
 
 async function handleListRequest(
-  c: Context<WorkerEnv, any, {}>,
+  c: Context<GatewayEnv, any, {}>,
   s3Client: S3Client,
   s3Config: S3DeltaConfig,
   key: string

@@ -4,7 +4,7 @@ import {
   MixpanelDestination,
 } from '@evefan/evefan-config';
 import { Connector } from '..';
-import { WorkerConfig } from '../../config';
+import { GatewayConfig } from '../../config';
 import {
   DestinationAliasEvent,
   DestinationEvent,
@@ -375,7 +375,7 @@ const transformEvents = (
 
 export default class MixpanelConnector implements Connector {
   async write(
-    config: WorkerConfig,
+    config: GatewayConfig,
     events: DestinationEvent[],
     destinationType: DestinationType
   ): Promise<FanOutResult> {

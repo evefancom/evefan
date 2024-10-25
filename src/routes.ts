@@ -2,7 +2,7 @@ import { Context, Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { cors } from 'hono/cors';
 import { formatEvent, DestinationEvent } from './schema/event';
-import { getConfig, WorkerConfig } from './config';
+import { getConfig, GatewayConfig } from './config';
 import { handleEventFanout } from './writer';
 import { Bindings } from './env';
 import { Batcher } from './batcher';
@@ -11,18 +11,18 @@ import { EventType } from './schema/input';
 import { checkCloudflareQueuesConfiguration } from './queue';
 import { handleS3ProxyRequest } from './s3Proxy';
 
-export type WorkerEnv = {
+export type GatewayEnv = {
   Bindings: Bindings;
   Variables: {
-    config: WorkerConfig;
+    config: GatewayConfig;
     batcher: DurableObjectStub<Batcher>;
   };
 };
 
-export const app = new Hono<WorkerEnv>();
+export const app = new Hono<GatewayEnv>();
 app.use('*', cors());
 
-const workerMiddleware = createMiddleware<WorkerEnv>(async (c, next) => {
+const gatewayMiddleware = createMiddleware<GatewayEnv>(async (c, next) => {
   const batcherId = c.env.BATCHER.idFromName('batcher');
   const batcher = c.env.BATCHER.get(batcherId);
   c.set('batcher', batcher);
@@ -63,7 +63,7 @@ const workerMiddleware = createMiddleware<WorkerEnv>(async (c, next) => {
   await next();
 });
 
-const consoleAuthMiddleware = createMiddleware<WorkerEnv>(async (c, next) => {
+const consoleAuthMiddleware = createMiddleware<GatewayEnv>(async (c, next) => {
   const config = c.get('config');
 
   const environmentId = c.req.header('x-evefan-environment-id');
@@ -83,33 +83,33 @@ const consoleAuthMiddleware = createMiddleware<WorkerEnv>(async (c, next) => {
 
 // Analytics.js legacy API
 
-app.post('/v1/t', workerMiddleware, async (c) => {
+app.post('/v1/t', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'track');
 });
 
-app.post('/v1/p', workerMiddleware, async (c) => {
+app.post('/v1/p', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'page');
 });
 
-app.post('/v1/s', workerMiddleware, async (c) => {
+app.post('/v1/s', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'screen');
 });
 
-app.post('/v1/i', workerMiddleware, async (c) => {
+app.post('/v1/i', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'identify');
 });
 
-app.post('/v1/g', workerMiddleware, async (c) => {
+app.post('/v1/g', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'group');
 });
 
-app.post('/v1/a', workerMiddleware, async (c) => {
+app.post('/v1/a', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'alias');
 });
 
 // Segment API
 
-app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
+app.get('/v1/projects/:writeKey/settings', gatewayMiddleware, (c) => {
   const { writeKey } = c.req.param();
   const config = c.get('config');
 
@@ -167,35 +167,35 @@ app.get('/v1/projects/:writeKey/settings', workerMiddleware, (c) => {
   return c.json(settings);
 });
 
-app.post('/v1/track', workerMiddleware, async (c) => {
+app.post('/v1/track', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'track');
 });
 
-app.post('/v1/page', workerMiddleware, async (c) => {
+app.post('/v1/page', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'page');
 });
 
-app.post('/v1/screen', workerMiddleware, async (c) => {
+app.post('/v1/screen', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'screen');
 });
 
-app.post('/v1/identify', workerMiddleware, async (c) => {
+app.post('/v1/identify', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'identify');
 });
 
-app.post('/v1/group', workerMiddleware, async (c) => {
+app.post('/v1/group', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'group');
 });
 
-app.post('/v1/alias', workerMiddleware, async (c) => {
+app.post('/v1/alias', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c, 'alias');
 });
 
-app.post('/v1/batch', workerMiddleware, async (c) => {
+app.post('/v1/batch', gatewayMiddleware, async (c) => {
   return handleAnalyticsJsMethod(c);
 });
 
-app.get('/v1/health', workerMiddleware, consoleAuthMiddleware, async (c) => {
+app.get('/v1/health', gatewayMiddleware, consoleAuthMiddleware, async (c) => {
   const config = c.get('config');
 
   const state: Record<DestinationType, string[]> = config.destinations.reduce(
@@ -220,7 +220,7 @@ app.get('/v1/health', workerMiddleware, consoleAuthMiddleware, async (c) => {
 });
 
 async function handleAnalyticsJsMethod(
-  c: Context<WorkerEnv>,
+  c: Context<GatewayEnv>,
   type?: EventType
 ) {
   const config = c.get('config');
@@ -255,7 +255,7 @@ async function handleAnalyticsJsMethod(
 }
 
 async function processEvents(
-  c: Context<WorkerEnv>,
+  c: Context<GatewayEnv>,
   events: DestinationEvent[]
 ) {
   const config = c.get('config');
@@ -283,7 +283,7 @@ async function processEvents(
 }
 
 // S3 compatible endpoints
-app.get('/v1/s3/*', workerMiddleware, async (c) => {
+app.get('/v1/s3/*', gatewayMiddleware, async (c) => {
   const method = c.req.method as 'GET' | 'HEAD' | 'LIST';
   const isListRequest = !c.req.path.endsWith('.parquet');
   return handleS3ProxyRequest(c, isListRequest ? 'LIST' : method);

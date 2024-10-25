@@ -1,5 +1,5 @@
 import { Connector } from '..';
-import { WorkerConfig } from '../../config';
+import { GatewayConfig } from '../../config';
 import { DestinationEvent } from '../../schema/event';
 import { FanOutResult } from '../../writer';
 import { DestinationType, S3DeltaConfig } from '@evefan/evefan-config';
@@ -25,7 +25,7 @@ export default class S3DeltaConnector implements Connector {
   }
 
   async write(
-    config: WorkerConfig,
+    config: GatewayConfig,
     events: DestinationEvent[],
     destinationType: DestinationType
   ): Promise<FanOutResult> {

@@ -1,4 +1,4 @@
-import { DurableObject } from 'cloudflare:workers';
+import { DurableObject } from 'cloudflare:gateways';
 import { Bindings } from './env';
 import { FailedEvent } from './writer';
 
