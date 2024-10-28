@@ -177,7 +177,7 @@ export async function checkCloudflareQueuesConfiguration(): Promise<
     data.result.map((queue) => [queue.queue_name, queue])
   );
 
-  // @ts-ignore
+  // @ts-expect-error
   const errors: Record<DestinationType, string[]> = {};
 
   config.destinations.forEach((dest) => {

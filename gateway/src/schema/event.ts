@@ -229,10 +229,10 @@ export const getLocationFromCFData = (
 };
 
 export const getEventExtraParams = (event: Event, type: EventType) => {
-  var extraProperties = {};
-  var extraTraits = {};
-  var eventContextExtra = {};
-  var eventCampaignExtra = {};
+  let extraProperties = {};
+  let extraTraits = {};
+  let eventContextExtra = {};
+  let eventCampaignExtra = {};
 
   if (type === 'page' && event.properties) {
     extraProperties = removeKeysFromObject(

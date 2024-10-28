@@ -134,7 +134,7 @@ const transformTrackEvent = (
   config: MixpanelConfig,
   event: DestinationTrackEvent
 ) => {
-  let properties = transformBaseEvent(config, event);
+  const properties = transformBaseEvent(config, event);
 
   return {
     event: event.event,
@@ -152,7 +152,7 @@ const transformIdentifyEvent = (
   config: MixpanelConfig,
   event: DestinationIdentifyEvent
 ) => {
-  let payload = constructPayload(event, mapping.identify);
+  const payload = constructPayload(event, mapping.identify);
 
   if (!payload.$name && payload.$first_name && payload.$last_name) {
     payload.$name = `${payload.$first_name} ${payload.$last_name}`;
@@ -171,7 +171,7 @@ const transformPageOrScreenEvent = (
   config: MixpanelConfig,
   event: DestinationPageEvent | DestinationScreenEvent
 ) => {
-  let properties = transformBaseEvent(config, event);
+  const properties = transformBaseEvent(config, event);
 
   if (event.name) {
     properties.name = event.name;
