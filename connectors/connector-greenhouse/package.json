@@ -1,0 +1,13 @@
+{
+  "name": "@openint/connector-greenhouse",
+  "version": "0.0.1",
+  "private": true,
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/runtime": "^0.0.19",
+    "@opensdks/sdk-greenhouse": "^0.0.8"
+  },
+  "devDependencies": {}
+}

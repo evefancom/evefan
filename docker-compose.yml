@@ -1,0 +1,13 @@
+# NOTE: Postgres (and certainly supabase) is not a requirement for usage in Venice, though it is the default set
+# Therefore this docker-compose file is entirely optional
+version: '3'
+services:
+  postgres:
+    image: supabase/postgres
+    ports:
+      - 5432:5432
+    # command: postgres -c log_statement=all
+    restart: always
+    environment:
+      POSTGRES_DB: postgres # Only database named `postgres` works with pg_cron by default
+      POSTGRES_PASSWORD: masterpass

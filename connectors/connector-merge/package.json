@@ -1,0 +1,20 @@
+{
+  "name": "@openint/connector-merge",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/sdk-merge": "^0.0.6"
+  },
+  "devDependencies": {
+    "@mergeapi/react-merge-link": "2.0.6",
+    "@types/react": "*"
+  },
+  "peerDependencies": {
+    "react": "*"
+  }
+}

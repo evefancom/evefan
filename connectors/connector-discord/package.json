@@ -1,0 +1,13 @@
+{
+  "name": "@openint/connector-discord",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/sdk-discord": "^0.0.14"
+  },
+  "devDependencies": {}
+}

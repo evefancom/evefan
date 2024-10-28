@@ -1,0 +1,27 @@
+# dependencies
+**/node_modules/
+
+# temporary files
+**/temp/
+
+# generated files
+**/__generated__/
+*.generated.*
+*.gen.*
+# *.oas.*
+
+# jest
+*.snap
+
+# next.js
+/apps/web/.next/
+/apps/web/out/
+
+# pnpm
+pnpm-lock.yaml
+
+# vim: set filetype=ignore:
+
+.obsidian/
+
+docs/openint.oas.json

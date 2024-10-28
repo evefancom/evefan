@@ -1,0 +1,27 @@
+{
+  "name": "@openint/worker",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/api": "workspace:*",
+    "@openint/cdk": "workspace:*",
+    "@openint/db": "workspace:*",
+    "@openint/env": "workspace:*",
+    "@openint/events": "workspace:*",
+    "@openint/sdk": "workspace:*",
+    "@openint/sync": "workspace:*",
+    "@openint/unified-etl": "workspace:*",
+    "drizzle-orm": "^0.29.3",
+    "inngest": "^3.22.13",
+    "postgres": "^3.4.3",
+    "remeda": "1.6.1",
+    "rxjs": "7.5.6",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@openint/engine-backend": "workspace:*",
+    "drizzle-kit": "^0.20.12"
+  }
+}

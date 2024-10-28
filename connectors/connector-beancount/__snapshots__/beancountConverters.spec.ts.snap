@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convTransaction.reverse({
+  date: '2020-01-01',
+  description: 'Latte',
+  postingsMap: {
+    main: { accountName: 'Cash', amount: { quantity: 10, unit: 'USD' } },
+    remainder: { accountName: 'Drinks' }
+  }
+}) 1`] = `
+2020-01-01 ? "Latte"
+  Equity:Cash    10 USD
+  Equity:Drinks
+`;
+
+exports[`convTransaction.reverse({
+  date: '2020-01-01',
+  description: 'Pad balance',
+  postingsMap: {
+    main: { accountName: 'Cash', amount: { quantity: 10, unit: 'USD' } },
+    remainder: { accountName: 'Drinks' }
+  }
+}) 1`] = `
+2020-01-01 ? "Pad balance"
+  Equity:Cash    10 USD
+  Equity:Drinks
+`;
+
+exports[`degenerate case: no transactions 1`] = ``;
+
+exports[`ledger with default unit 1`] = `
+option "operating_currency" "IDR"
+option "inferred_tolerance_default" "IDR:100"
+option "inferred_tolerance_default" "MXN:0.1" ; 50 cents
+option "inferred_tolerance_default" "*:0.01"
+option "render_commas" "TRUE"
+`;

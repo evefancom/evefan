@@ -1,0 +1,8 @@
+{
+  "name": "@openint/unified-hris",
+  "dependencies": {
+    "@openint/connector-finch": "workspace:*",
+    "@openint/vdk": "workspace:*"
+  },
+  "devDependencies": {}
+}

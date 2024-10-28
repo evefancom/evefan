@@ -1,0 +1,19 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "pipeline": {
+    "download": {
+      "outputs": ["*.oas.json"]
+    },
+    "generate": {
+      "dependsOn": ["^generate", "download"],
+      "cache": false,
+      "outputs": ["*.oas.d.ts"]
+    },
+    "clean": {},
+    "build": {
+      "dependsOn": ["^build", "clean"],
+      "cache": false
+    },
+    "pub": {"cache": false, "dependsOn": ["build"]}
+  }
+}

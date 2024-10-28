@@ -1,0 +1,12 @@
+{
+  "name": "@openint/connector-mercury",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*"
+  }
+}

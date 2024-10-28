@@ -1,0 +1,12 @@
+{
+  "name": "@openint/events",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@opensdks/util-zod": "0.0.15",
+    "inngest": "^3.22.13"
+  },
+  "devDependencies": {}
+}

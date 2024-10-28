@@ -1,0 +1,5 @@
+**/__generated__/ linguist-generated=true
+**/*.generated.* linguist-generated=true
+**/*.gen.* linguist-generated=true
+**/*.openapi.* linguist-generated=true
+**/*.oas.* linguist-generated=true

@@ -1,0 +1,14 @@
+{
+  "name": "@openint/connector-fs",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [
+    "register.node.ts"
+  ],
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*"
+  },
+  "devDependencies": {}
+}

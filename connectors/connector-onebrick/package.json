@@ -1,0 +1,21 @@
+{
+  "name": "@openint/connector-onebrick",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [
+    "register.node.ts"
+  ],
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/sdk-onebrick": "^0.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "*"
+  },
+  "peerDependencies": {
+    "react": "*"
+  }
+}

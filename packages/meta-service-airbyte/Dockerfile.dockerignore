@@ -1,0 +1,5 @@
+**/node_modules
+**/.next
+**/tests
+# Causes build failure, and not needed for just connectors
+apps/web

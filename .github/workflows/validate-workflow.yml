@@ -1,0 +1,101 @@
+name: Validate
+
+on: [push, pull_request]
+
+jobs:
+  main:
+    name: Run type checks, lint, and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      # https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers
+      postgres:
+        image: postgres:latest
+        # service environment variables
+        # `POSTGRES_HOST` is `postgres`
+        env:
+          # optional (defaults to `postgres`)
+          POSTGRES_DB: test
+          # required
+          POSTGRES_PASSWORD: test
+          # optional (defaults to `5432`)
+          POSTGRES_PORT: 5432
+          # optional (defaults to `postgres`)
+          POSTGRES_USER: postgres
+        ports:
+          # maps tcp port 5432 on service container to the host
+          - 5432:5432
+        # set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20 # TODO: Can we get this from "engine" field in package.json?
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 9.9.0 # Ideally we should get this from engine field too...
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # - name: Set up tmate session
+      #   uses: mxschmitt/action-tmate@v2
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
+      - name: Run type checks
+        run: pnpm run typecheck
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+        # TODO: Figure out a pattern to make environment variables parsed / required on demand rather than on startup time
+        # Ideally have a way to switch between the two... Where we can also choose proactive parsing for sanity checking...
+      - name: Run health check
+        run: NANGO_SECRET_KEY=noop JWT_SECRET=NOOP POSTGRES_URL=postgres:// npx tsx ./bin/openint.ts health
+
+      - name: Run migration check
+        run: POSTGRES_URL=postgres://postgres:test@localhost:5432/test pnpm migration up
+        # To test this with a locally install postgres, run
+        # psql postgres -c 'drop database if exists test;' && psql postgres -c 'create database test;' && POSTGRES_URL=postgres://localhost:5432/test pnpm migration up
+
+      - name: Run lint
+        run: pnpm run lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Run tests
+        run: pnpm run test::ci
+
+      - name: Send Slack notification for job status
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest # selectable (default: repo,message)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLATIFY_SLACK_WEBHOOK_URL }} # required
+        if: ${{ env.SLACK_WEBHOOK_URL != '' && always() }} # Pick up events even if the job fails or is canceled.

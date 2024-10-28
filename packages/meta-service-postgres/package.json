@@ -1,0 +1,15 @@
+{
+  "name": "@openint/meta-service-postgres",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "module": "./index.ts",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/connector-postgres": "workspace:*",
+    "@openint/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@openint/engine-backend": "workspace:*"
+  }
+}

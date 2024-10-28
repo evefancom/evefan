@@ -1,0 +1,77 @@
+// Used for creating visualizations of the schema via https://prismaliser.app/
+// and https://prisma-erd.simonknott.de/
+model Connector {
+  id           String            @id
+  type         ConnectorType
+  integrations Integration[]
+  configs      ConnectorConfig[]
+}
+
+model Integration {
+  id           String     @id
+  provider     Provider   @relation(fields: [provider_id], references: [id])
+  provider_id  String
+  connector    Connector  @relation(fields: [connector_id], references: [id])
+  connector_id String
+  resources    Resource[]
+}
+
+model Provider {
+  id           String        @id
+  integrations Integration[]
+}
+
+model ConnectorConfig {
+  id             String        @id
+  connector      Connector     @relation(fields: [connector_id], references: [id])
+  connector_id   String
+  resources      Resource[]
+  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+}
+
+model Resource {
+  id                    String          @id
+  integration           Integration     @relation(fields: [integration_id], references: [id])
+  integration_id        String
+  connector_config      ConnectorConfig @relation(fields: [connector_config_id], references: [id])
+  connector_config_id   String
+  pipeline_sources      Pipeline[]      @relation(name: "source")
+  pipeline_destinations Pipeline[]      @relation(name: "destination")
+  end_user              EndUser?        @relation(fields: [end_user_id], references: [id])
+  end_user_id           String?
+}
+
+model Pipeline {
+  id             String   @id
+  source         Resource @relation(name: "source", fields: [source_id], references: [id])
+  source_id      String
+  destination    Resource @relation(name: "destination", fields: [destination_id], references: [id])
+  destination_id String
+}
+
+enum ConnectorType {
+  Direct
+  Aggregator
+}
+
+model EndUser {
+  id             String        @id
+  resources      Resource[]
+  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+}
+
+model Organization {
+  id                String            @id
+  apikey            String
+  end_users         EndUser[]
+  members           User[]
+  connector_configs ConnectorConfig[]
+}
+
+model User {
+  id             String        @id
+  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@openint/sync",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Sync core",
+  "sideEffects": false,
+  "module": "./index.ts",
+  "dependencies": {
+    "@opensdks/util-zod": "0.0.15"
+  },
+  "devDependencies": {}
+}

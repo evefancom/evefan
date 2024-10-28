@@ -1,0 +1,511 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`#0 "2021-01-01" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-01-01",
+  "unparse": "2021-01-01",
+}
+`;
+
+exports[`#0 "2021-01-01" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-01-01T00:00:00.000Z/2021-01-02T00:00:00.000Z",
+  "toISODate": "2021-01-01/2021-01-02",
+  "unparse": "2021-01-01T00:00:00.000Z/2021-01-02T00:00:00.000Z",
+}
+`;
+
+exports[`#1 "2021-03" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03",
+  "unparse": "2021-03",
+}
+`;
+
+exports[`#1 "2021-03" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-01T00:00:00.000Z/2021-04-01T00:00:00.000Z",
+  "toISODate": "2021-03-01/2021-04-01",
+  "unparse": "2021-03-01T00:00:00.000Z/2021-04-01T00:00:00.000Z",
+}
+`;
+
+exports[`#2 "2021" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021",
+  "unparse": "2021",
+}
+`;
+
+exports[`#2 "2021" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-01-01T00:00:00.000Z/2022-01-01T00:00:00.000Z",
+  "toISODate": "2021-01-01/2022-01-01",
+  "unparse": "2021-01-01T00:00:00.000Z/2022-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`#3 "today" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14",
+  "unparse": "today",
+}
+`;
+
+exports[`#3 "today" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T17:00:00.000-07:00/2021-03-15T17:00:00.000-07:00",
+  "toISODate": "2021-03-14/2021-03-15",
+  "unparse": "today",
+}
+`;
+
+exports[`#4 "this month" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03",
+  "unparse": "this month",
+}
+`;
+
+exports[`#4 "this month" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-01T00:00:00.000-08:00/2021-03-31T23:59:59.999-07:00",
+  "toISODate": "2021-03-01/2021-03-31",
+  "unparse": "this month",
+}
+`;
+
+exports[`#5 "this year" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021",
+  "unparse": "this year",
+}
+`;
+
+exports[`#5 "this year" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-01-01T00:00:00.000-08:00/2021-12-31T23:59:59.999-08:00",
+  "toISODate": "2021-01-01/2021-12-31",
+  "unparse": "this year",
+}
+`;
+
+exports[`#6 "jan 2020 to mar 2020" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2020-01",
+  "unparse": "jan 2020 to mar 2020",
+}
+`;
+
+exports[`#6 "jan 2020 to mar 2020" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2020-01-01T12:00:00.000-08:00/2020-03-01T12:00:00.000-08:00",
+  "toISODate": "2020-01-01/2020-03-01",
+  "unparse": "jan 2020 to mar 2020",
+}
+`;
+
+exports[`#7 "jan 1 to mar 1" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-01-01",
+  "unparse": "jan 1 to mar 1",
+}
+`;
+
+exports[`#7 "jan 1 to mar 1" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-01-01T12:00:00.000-08:00/2021-03-01T12:00:00.000-08:00",
+  "toISODate": "2021-01-01/2021-03-01",
+  "unparse": "jan 1 to mar 1",
+}
+`;
+
+exports[`#8 "2021-03-14T19:00:00.000-07:00" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T19:00:00.000-07:00",
+  "unparse": "2021-03-14T19:00:00.000-07:00",
+}
+`;
+
+exports[`#8 "2021-03-14T19:00:00.000-07:00" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-15T02:00:00.000Z/2021-03-15T02:00:00.001Z",
+  "toISODate": "2021-03-15/2021-03-15",
+  "unparse": "2021-03-15T02:00:00.000Z/2021-03-15T02:00:00.001Z",
+}
+`;
+
+exports[`#9 "2021-03-14" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14",
+  "unparse": "2021-03-14",
+}
+`;
+
+exports[`#9 "2021-03-14" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T00:00:00.000Z/2021-03-15T00:00:00.000Z",
+  "toISODate": "2021-03-14/2021-03-15",
+  "unparse": "2021-03-14T00:00:00.000Z/2021-03-15T00:00:00.000Z",
+}
+`;
+
+exports[`#10 "2021-03" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03",
+  "unparse": "2021-03",
+}
+`;
+
+exports[`#10 "2021-03" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-01T00:00:00.000Z/2021-04-01T00:00:00.000Z",
+  "toISODate": "2021-03-01/2021-04-01",
+  "unparse": "2021-03-01T00:00:00.000Z/2021-04-01T00:00:00.000Z",
+}
+`;
+
+exports[`#11 "2021" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021",
+  "unparse": "2021",
+}
+`;
+
+exports[`#11 "2021" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-01-01T00:00:00.000Z/2022-01-01T00:00:00.000Z",
+  "toISODate": "2021-01-01/2022-01-01",
+  "unparse": "2021-01-01T00:00:00.000Z/2022-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`#12 "today" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14",
+  "unparse": "today",
+}
+`;
+
+exports[`#12 "today" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T17:00:00.000-07:00/2021-03-15T17:00:00.000-07:00",
+  "toISODate": "2021-03-14/2021-03-15",
+  "unparse": "today",
+}
+`;
+
+exports[`#13 "tomorrow" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-15",
+  "unparse": "tomorrow",
+}
+`;
+
+exports[`#13 "tomorrow" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-15T17:00:00.000-07:00/2021-03-16T17:00:00.000-07:00",
+  "toISODate": "2021-03-15/2021-03-16",
+  "unparse": "tomorrow",
+}
+`;
+
+exports[`#14 "last month" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-02",
+  "unparse": "last month",
+}
+`;
+
+exports[`#14 "last month" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-02-01T00:00:00.000-08:00/2021-02-28T23:59:59.999-08:00",
+  "toISODate": "2021-02-01/2021-02-28",
+  "unparse": "last month",
+}
+`;
+
+exports[`#15 "next year" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2022",
+  "unparse": "next year",
+}
+`;
+
+exports[`#15 "next year" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2022-01-01T00:00:00.000-08:00/2022-12-31T23:59:59.999-08:00",
+  "toISODate": "2022-01-01/2022-12-31",
+  "unparse": "next year",
+}
+`;
+
+exports[`#16 "now" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T17:00:00.000-07:00",
+  "unparse": "now",
+}
+`;
+
+exports[`#16 "now" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T17:00:00.000-07:00/2021-03-14T17:00:00.001-07:00",
+  "toISODate": "2021-03-14/2021-03-14",
+  "unparse": "now",
+}
+`;
+
+exports[`#17 "today 2pm" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T14:00:00.000-07:00",
+  "unparse": "today 2pm",
+}
+`;
+
+exports[`#17 "today 2pm" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T14:00:00.000-07:00/2021-03-14T14:00:00.001-07:00",
+  "toISODate": "2021-03-14/2021-03-14",
+  "unparse": "today 2pm",
+}
+`;
+
+exports[`#18 "2pm today" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T14:00:00.000-07:00",
+  "unparse": "2pm today",
+}
+`;
+
+exports[`#18 "2pm today" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T14:00:00.000-07:00/2021-03-14T14:00:00.001-07:00",
+  "toISODate": "2021-03-14/2021-03-14",
+  "unparse": "2pm today",
+}
+`;
+
+exports[`#19 "Mar 21 2pm" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-21T14:00:00.000-07:00",
+  "unparse": "Mar 21 2pm",
+}
+`;
+
+exports[`#19 "Mar 21 2pm" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-21T14:00:00.000-07:00/2021-03-21T14:00:00.001-07:00",
+  "toISODate": "2021-03-21/2021-03-21",
+  "unparse": "Mar 21 2pm",
+}
+`;
+
+exports[`#20 "2pm Mar 21" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-21T14:00:00.000-07:00",
+  "unparse": "2pm Mar 21",
+}
+`;
+
+exports[`#20 "2pm Mar 21" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-21T14:00:00.000-07:00/2021-03-21T14:00:00.001-07:00",
+  "toISODate": "2021-03-21/2021-03-21",
+  "unparse": "2pm Mar 21",
+}
+`;
+
+exports[`#21 "today 2pm UTC" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T07:00:00.000-07:00",
+  "unparse": "today 2pm UTC",
+}
+`;
+
+exports[`#21 "today 2pm UTC" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T07:00:00.000-07:00/2021-03-14T07:00:00.001-07:00",
+  "toISODate": "2021-03-14/2021-03-14",
+  "unparse": "today 2pm UTC",
+}
+`;
+
+exports[`#22 "today 2pm UTC-4" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T11:00:00.000-07:00",
+  "unparse": "today 2pm UTC-4",
+}
+`;
+
+exports[`#22 "today 2pm UTC-4" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T11:00:00.000-07:00/2021-03-14T11:00:00.001-07:00",
+  "toISODate": "2021-03-14/2021-03-14",
+  "unparse": "today 2pm UTC-4",
+}
+`;
+
+exports[`#23 "1am UTC-4" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-13T21:00:00.000-08:00",
+  "unparse": "1am UTC-4",
+}
+`;
+
+exports[`#23 "1am UTC-4" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-13T21:00:00.000-08:00/2021-03-13T21:00:00.001-08:00",
+  "toISODate": "2021-03-13/2021-03-13",
+  "unparse": "1am UTC-4",
+}
+`;
+
+exports[`#24 "today 1am UTC-4" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-13T21:00:00.000-08:00",
+  "unparse": "today 1am UTC-4",
+}
+`;
+
+exports[`#24 "today 1am UTC-4" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-13T21:00:00.000-08:00/2021-03-13T21:00:00.001-08:00",
+  "toISODate": "2021-03-13/2021-03-13",
+  "unparse": "today 1am UTC-4",
+}
+`;
+
+exports[`#25 "tomorrow 1am UTC-4" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T22:00:00.000-07:00",
+  "unparse": "tomorrow 1am UTC-4",
+}
+`;
+
+exports[`#25 "tomorrow 1am UTC-4" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T22:00:00.000-07:00/2021-03-14T22:00:00.001-07:00",
+  "toISODate": "2021-03-14/2021-03-14",
+  "unparse": "tomorrow 1am UTC-4",
+}
+`;
+
+exports[`#26 "1am UTC-4 tomorrow" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-14T22:00:00.000-07:00",
+  "unparse": "1am UTC-4 tomorrow",
+}
+`;
+
+exports[`#26 "1am UTC-4 tomorrow" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-14T22:00:00.000-07:00/2021-03-14T22:00:00.001-07:00",
+  "toISODate": "2021-03-14/2021-03-14",
+  "unparse": "1am UTC-4 tomorrow",
+}
+`;
+
+exports[`#27 "Mar 21 1am UTC-4" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-20T22:00:00.000-07:00",
+  "unparse": "Mar 21 1am UTC-4",
+}
+`;
+
+exports[`#27 "Mar 21 1am UTC-4" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-20T22:00:00.000-07:00/2021-03-20T22:00:00.001-07:00",
+  "toISODate": "2021-03-20/2021-03-20",
+  "unparse": "Mar 21 1am UTC-4",
+}
+`;
+
+exports[`#28 "1am UTC-4 Mar 21" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03-20T22:00:00.000-07:00",
+  "unparse": "1am UTC-4 Mar 21",
+}
+`;
+
+exports[`#28 "1am UTC-4 Mar 21" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-20T22:00:00.000-07:00/2021-03-20T22:00:00.001-07:00",
+  "toISODate": "2021-03-20/2021-03-20",
+  "unparse": "1am UTC-4 Mar 21",
+}
+`;
+
+exports[`#29 "show me this month" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-03",
+  "unparse": "this month",
+}
+`;
+
+exports[`#29 "show me this month" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-03-01T00:00:00.000-08:00/2021-03-31T23:59:59.999-07:00",
+  "toISODate": "2021-03-01/2021-03-31",
+  "unparse": "this month",
+}
+`;
+
+exports[`#30 "jan" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": undefined,
+  "unparse": undefined,
+}
+`;
+
+exports[`#30 "jan" MPInterval.parse(...) 1`] = `
+{
+  "toISO": undefined,
+  "toISODate": undefined,
+  "unparse": undefined,
+}
+`;
+
+exports[`#31 "this jan" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": undefined,
+  "unparse": undefined,
+}
+`;
+
+exports[`#31 "this jan" MPInterval.parse(...) 1`] = `
+{
+  "toISO": undefined,
+  "toISODate": undefined,
+  "unparse": undefined,
+}
+`;
+
+exports[`#32 "last 30 days" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-02-12",
+  "unparse": "last 30 days",
+}
+`;
+
+exports[`#32 "last 30 days" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-02-12T00:00:00.000-08:00/2021-03-14T17:00:00.000-07:00",
+  "toISODate": "2021-02-12/2021-03-14",
+  "unparse": "last 30 days",
+}
+`;
+
+exports[`#33 "An appointment on Sep 12-13" MPDate.parse(...) 1`] = `
+{
+  "toISOMPDate": "2021-09-12",
+  "unparse": "Sep 12-13",
+}
+`;
+
+exports[`#33 "An appointment on Sep 12-13" MPInterval.parse(...) 1`] = `
+{
+  "toISO": "2021-09-12T12:00:00.000-07:00/2021-09-13T12:00:00.000-07:00",
+  "toISODate": "2021-09-12/2021-09-13",
+  "unparse": "Sep 12-13",
+}
+`;

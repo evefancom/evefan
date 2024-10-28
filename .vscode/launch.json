@@ -1,14 +1,22 @@
 {
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
   "configurations": [
     {
-      "name": "Attach Worker",
+      "type": "node",
+      "request": "launch",
+      "name": "Run file",
+      "runtimeArgs": ["--loader", "tsx"],
+      "console": "integratedTerminal",
+      "args": ["${file}"]
+    },
+    {
       "type": "node",
       "request": "attach",
-      "port": 9229,
-      "cwd": "/",
-      "resolveSourceMapLocations": null,
-      "attachExistingChildren": false,
-      "autoAttachChildProcesses": false
+      "name": "Attach to --inspect-brk",
+      "port": 9229
     }
   ]
 }

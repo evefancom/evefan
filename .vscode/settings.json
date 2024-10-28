@@ -1,0 +1,88 @@
+{
+  "[beancount]": {
+    "editor.defaultFormatter": "dongfg.vscode-beancount-formatter"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "adpyke.vscode-sql-formatter"
+  },
+  "[tailwindcss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "css.validate": false,
+  "editor.insertSpaces": true,
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "editor.rulers": [80],
+  "editor.tabSize": 2,
+  "files.associations": {
+    ".env.*": "properties",
+    "venice": "typescript"
+  },
+  "highlight.regexes": {
+    "(// ?(?:FIXME|HACK):?)(.*)": [
+      {
+        "backgroundColor": "#ff0000",
+        "color": "#1f1f1f",
+        "fontWeight": "bold",
+        "overviewRulerColor": "#ff0000"
+      },
+      {
+        "backgroundColor": "#d90000",
+        "color": "#1f1f1f"
+      }
+    ],
+    "(// ?TODO:?)(.*)": [
+      {
+        "backgroundColor": "#ffcc00",
+        "color": "#1f1f1f",
+        "fontWeight": "bold",
+        "overviewRulerColor": "#ffcc00"
+      },
+      {
+        "backgroundColor": "#ffcc00",
+        "color": "#1f1f1f"
+      }
+    ]
+  },
+  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+  "js/ts.implicitProjectConfig.checkJs": true,
+  "markJump.strictLimit": "disable",
+  "search.exclude": {
+    "**/*.generated": true
+  },
+  "tailwindCSS.experimental.configFile": "apps/web/tailwind.config.ts",
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#0C4B33"
+  },
+  "files.watcherExclude": {
+    "**/target": true
+  }
+}

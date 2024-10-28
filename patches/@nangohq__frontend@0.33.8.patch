@@ -1,0 +1,62 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 91d370b7ada12e8b27cc6706151d676b27a72c20..bee8cc225dc1e621bbab0902e0d7648cb81e1845 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -1,4 +1,5 @@
+-type AuthError = {
++/** Gets thrown by `create` and `auth` methods */
++export type AuthError = {
+     message: string;
+     type: string;
+ };
+@@ -14,14 +15,16 @@ export default class Nango {
+         publicKey: string;
+         debug?: boolean;
+     });
++    /** @throws `AuthError` */
+     create(providerConfigKey: string, connectionId: string, connectionConfig: ConnectionConfig): Promise<{
+         providerConfigKey: string;
+         connectionId: string;
+-    } | AuthError>;
++    }>;
++    /** @throws `AuthError` */
+     auth(providerConfigKey: string, connectionId: string, conectionConfigOrCredentials?: ConnectionConfig | BasicApiCredentials | ApiKeyCredentials): Promise<{
+         providerConfigKey: string;
+         connectionId: string;
+-    } | AuthError>;
++    }>;
+     convertCredentialsToConfig(credentials: BasicApiCredentials | ApiKeyCredentials): ConnectionConfig;
+     private apiAuth;
+     private toQueryString;
+diff --git a/dist/index.js b/dist/index.js
+index 3ee0e9e9a72cb4d3fd611066811dd494b6839c7f..0014509fc6df476c7e662f4e7a44bd5dc355523e 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -217,6 +217,7 @@ class AuthorizationModal {
+         this.swClient.onmessage = (message) => {
+             this.handleMessage(message, successHandler, errorHandler);
+         };
++        this.errorHandler = errorHandler;
+     }
+     /**
+      * Handles the messages received from the Nango server via WebSocket.
+@@ -269,6 +270,19 @@ class AuthorizationModal {
+      */
+     open(wsClientId) {
+         this.modal.location = this.url + '&ws_client_id=' + wsClientId;
++        // @see https://github.com/NangoHQ/nango/pull/1073 for a real fix
++        // Can remove this patch once it merges into master and gets released
++        this.interval = setInterval(() => {
++          if (this.modal?.closed) {
++            setTimeout(() => {
++              if (this.swClient.readyState !== this.swClient.CLOSED) {
++                this.errorHandler('user_cancelled', 'User cancelled the authorization process.')
++                this.swClient.close();
++              }
++              clearInterval(this.interval)
++            }, 500)
++          }
++        }, 500)
+         return this.modal;
+     }
+     /**

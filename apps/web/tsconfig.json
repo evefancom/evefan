@@ -1,0 +1,22 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["DOM", "DOM.Iterable", "ES2021"],
+    "allowJs": true,
+    "exactOptionalPropertyTypes": false,
+    "importsNotUsedAsValues": "remove",
+    "noEmit": true,
+    "incremental": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "strictNullChecks": true,
+    "plugins": [{"name": "next"}],
+    "paths": {"@/*": ["./*"]}
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

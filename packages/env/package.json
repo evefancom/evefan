@@ -1,0 +1,12 @@
+{
+  "name": "@openint/env",
+  "version": "0.0.0",
+  "private": true,
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@opensdks/util-zod": "0.0.15",
+    "@t3-oss/env-nextjs": "0.7.3"
+  },
+  "devDependencies": {}
+}

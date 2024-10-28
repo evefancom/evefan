@@ -1,0 +1,199 @@
+{
+  "id": "5d712a4c-7380-4bc1-9bbf-740ee52c3a4e",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "5",
+  "dialect": "pg",
+  "tables": {
+    "customer": {
+      "name": "customer",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "substr(md5(random()::text), 0, 25)"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "sync_run": {
+      "name": "sync_run",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "substr(md5(random()::text), 0, 25)"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "input_event": {
+          "name": "input_event",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration": {
+          "name": "duration",
+          "type": "interval",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "initial_state": {
+          "name": "initial_state",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "final_state": {
+          "name": "final_state",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metrics": {
+          "name": "metrics",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_detail": {
+          "name": "error_detail",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_type": {
+          "name": "error_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_resource_id": {
+          "name": "idx_resource_id",
+          "columns": [
+            "resource_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "sync_state": {
+      "name": "sync_state",
+      "schema": "",
+      "columns": {
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

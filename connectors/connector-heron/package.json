@@ -1,0 +1,14 @@
+{
+  "name": "@openint/connector-heron",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "module": "./index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/util": "workspace:*",
+    "@opensdks/sdk-heron": "^0.0.1"
+  },
+  "devDependencies": {}
+}

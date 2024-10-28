@@ -1,0 +1,29 @@
+diff --git a/esbuild-jest.js b/esbuild-jest.js
+index 82ddd86..b354dff 100644
+--- a/esbuild-jest.js
++++ b/esbuild-jest.js
+@@ -42,15 +42,15 @@ const createTransformer = (options)=>({
+             /// this will support the jest.mock
+             /// https://github.com/aelbore/esbuild-jest/issues/12
+             /// TODO: transform the jest.mock to a function using babel traverse/parse then hoist it
+-            if (sources.code.indexOf("ock(") >= 0 || (opts === null || opts === void 0 ? void 0 : opts.instrument)) {
+-                const source = require('./transformer').babelTransform({
+-                    sourceText: content,
+-                    sourcePath: filename,
+-                    config,
+-                    options: opts
+-                });
+-                sources.code = source;
+-            }
++            // if (sources.code.indexOf("ock(") >= 0 || (opts === null || opts === void 0 ? void 0 : opts.instrument)) {
++            //     const source = require('./transformer').babelTransform({
++            //         sourceText: content,
++            //         sourcePath: filename,
++            //         config,
++            //         options: opts
++            //     });
++            //     sources.code = source;
++            // }
+             const result = esbuild.transformSync(sources.code, {
+                 loader,
+                 format: (options === null || options === void 0 ? void 0 : options.format) || 'cjs',

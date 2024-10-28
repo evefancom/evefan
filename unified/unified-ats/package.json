@@ -1,0 +1,14 @@
+{
+  "name": "@openint/unified-ats",
+  "dependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/connector-greenhouse": "workspace:*",
+    "@openint/connector-lever": "workspace:*",
+    "@openint/vdk": "workspace:*",
+    "rxjs": "7.5.6"
+  },
+  "devDependencies": {
+    "@openint/cdk": "workspace:*",
+    "@openint/connector-postgres": "workspace:*"
+  }
+}

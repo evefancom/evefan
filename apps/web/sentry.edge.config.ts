@@ -1,0 +1,1 @@
+import './sentry.server.config'

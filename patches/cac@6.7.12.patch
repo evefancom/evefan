@@ -1,0 +1,18 @@
+diff --git a/dist/index.js b/dist/index.js
+index 017d3a4..8bccef6 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -16,6 +16,13 @@ function toVal(out, key, val, opts) {
+ 		: (x = +val,x * 0 === 0) ? x : val
+ 	);
+ 	out[key] = old == null ? nxt : (Array.isArray(old) ? old.concat(nxt) : [old, nxt]);
++
++  // HACK to fix CAC parsing string as number and truncating precision
++  // e.g. '525323154705352826' -> 525323154705352800 causing problem things like SaltEdgeClient
++  // @see https://github.com/cacjs/cac/issues/23
++  if (typeof out[key] === 'number' && String(out[key]) !== val) {
++    out[key] = val
++  }
+ }
+ 
+ function mri2 (args, opts) {
