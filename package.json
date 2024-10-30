@@ -9,7 +9,7 @@
     "generate:docs": "pnpm run --filter app-config dev",
     "generate:connectorsList": "npx tsx apps/app-config/_generateConnectorLists.ts",
     "docs": "cd docs && mintlify dev",
-    "lint": "eslint --ext .js,.ts,.tsx --cache .",
+    "lint": "eslint --ext .js,.ts,.tsx --cache . --quiet --ignore-pattern /gateway",
     "mitm": "mitmweb --listen-port 3010 --web-port 3011 --mode reverse:http://localhost:3000",
     "preinstall": "npx only-allow pnpm",
     "test::ci": "NODE_OPTIONS=--experimental-vm-modules pnpm run test --ci --forceExit --detectOpenHandles --runInBand",
@@ -78,6 +78,14 @@
     "node": "20"
   },
   "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "slonik": "30"
+      }
+    },
+    "neverBuiltDependencies": [
+      "libpq"
+    ],
     "allowedDeprecatedVersions": {
       "core-js": "3.6.5",
       "resolve-url": "0.2.1",
@@ -87,33 +95,25 @@
       "source-map-url": "0.4.1",
       "urix": "0.1.0"
     },
-    "neverBuiltDependencies": [
-      "libpq"
-    ],
     "overrides": {
+      "@tanstack/react-query": "4.28.0",
       "@types/react": "18.0.27",
       "@types/react-dom": "18.0.10",
-      "@tanstack/react-query": "4.28.0",
       "axios": "0.21.1",
+      "esbuild": "0.17.5",
       "react": "18.3.1",
       "react-dom": "18.3.1",
-      "slonik": "30.3.1",
-      "esbuild": "0.17.5"
+      "slonik": "30.3.1"
     },
     "patchedDependencies": {
+      "@jsonurl/jsonurl@1.1.7": "patches/@jsonurl__jsonurl@1.1.7.patch",
+      "@lilyrose2798/trpc-openapi@1.3.10": "patches/@lilyrose2798__trpc-openapi@1.3.10.patch",
+      "@nangohq/frontend@0.33.8": "patches/@nangohq__frontend@0.33.8.patch",
+      "@stoplight/elements-core@7.7.10": "patches/@stoplight__elements-core@7.7.10.patch",
       "cac@6.7.12": "patches/cac@6.7.12.patch",
       "esbuild-jest@0.5.0": "patches/esbuild-jest@0.5.0.patch",
       "firebase@9.8.1": "patches/firebase@9.8.1.patch",
-      "micro-memoize@4.0.10": "patches/micro-memoize@4.0.10.patch",
-      "@jsonurl/jsonurl@1.1.7": "patches/@jsonurl__jsonurl@1.1.7.patch",
-      "@nangohq/frontend@0.33.8": "patches/@nangohq__frontend@0.33.8.patch",
-      "@stoplight/elements-core@7.7.10": "patches/@stoplight__elements-core@7.7.10.patch",
-      "@lilyrose2798/trpc-openapi@1.3.10": "patches/@lilyrose2798__trpc-openapi@1.3.10.patch"
-    },
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "slonik": "30"
-      }
+      "micro-memoize@4.0.10": "patches/micro-memoize@4.0.10.patch"
     }
   }
 }

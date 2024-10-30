@@ -242,8 +242,8 @@ async function handleAnalyticsJsMethod(
           )
         )
       : Array.isArray(body)
-      ? body.map((b) => formatEvent(b, c, type!!))
-      : [formatEvent(body, c, type!!)];
+      ? body.map((b) => formatEvent(b, c, type!))
+      : [formatEvent(body, c, type!)];
   } catch (e: any) {
     console.error('Error parsing request body: ', JSON.stringify(e));
     return c.json({ error: 'Error parsing request body' }, { status: 400 });

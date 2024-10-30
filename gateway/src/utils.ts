@@ -59,8 +59,8 @@ export function removeKeysFromObject(
  * @returns The object with the keys mapped
  **/
 export function mapKeys(keyMap: Record<string, any>, obj: Record<string, any>) {
-  let res: Record<string, any> = {};
-  for (let key of Object.keys(obj)) {
+  const res: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
     if (key in keyMap) {
       res[keyMap[key]] = obj[key]; //this is ES7 changes issue - will fix later
     } else {

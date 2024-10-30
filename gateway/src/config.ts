@@ -29,7 +29,7 @@ export async function getConfig(): Promise<GatewayConfig> {
     }
   });
 
-  // @ts-ignore
+  // @ts-expect-error
   config.destinations = await Promise.all(handlerPromises);
   return config;
 }

@@ -2,16 +2,9 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://makeapullrequest.com)
 ![TypeScript](https://img.shields.io/badge/language-TypeScript-blue)
 
-# OpenInt
+# Open Integrations
 
-Open source integrations with a vision
-
-- Modular
-  - Auth
-  - Unify
-  - Sync
-- Extensible
-- Self hostable
+OpenInt enables teams to ship product integrations in hours, not weeks, using no or low code. Read and write data using unified APIs or sync it straight to your database.
 
 ## Usage guide (WIP)
 
@@ -62,7 +55,7 @@ local-ssl-proxy --source 443 --target 3000 --cert ~/.ssh/local.openint.dev.pem -
 
 ## Contributors
 
-<img src="https://contributors-img.web.app/image?repo=openint-dev/openint"/>
+<img src="https://contributors-img.web.app/image?repo=openintegrations/openint"/>
 
 ### Random commands that are useful
 
