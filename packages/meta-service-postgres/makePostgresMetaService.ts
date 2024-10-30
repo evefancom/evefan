@@ -102,12 +102,12 @@ export const makePostgresMetaService = zFunction(
             SELECT
               end_user_id as id,
               count(*) AS resource_count,
-              min(createdAt) AS first_created_at,
-              max(updatedAt) AS last_updated_at
+              min(created_at) AS first_created_at,
+              max(updated_at) AS last_updated_at
             FROM
               resource
             ${where}
-            GROUP BY clientId
+            GROUP BY end_user_id
           `,
           rest,
         )
