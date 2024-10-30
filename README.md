@@ -55,7 +55,7 @@ local-ssl-proxy --source 443 --target 3000 --cert ~/.ssh/local.openint.dev.pem -
 
 ## Contributors
 
-<img src="https://contributors-img.web.app/image?repo=openint-dev/openint"/>
+<img src="https://contributors-img.web.app/image?repo=openintegrations/openint"/>
 
 ### Random commands that are useful
 
