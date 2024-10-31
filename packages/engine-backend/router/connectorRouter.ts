@@ -1,10 +1,5 @@
 import {zodToOas31Schema} from '@opensdks/util-zod'
-import {
-  extractId,
-  metaForConnector,
-  zId,
-  zVerticalKey,
-} from '@openint/cdk'
+import {extractId, metaForConnector, zId, zVerticalKey} from '@openint/cdk'
 import type {RouterMeta} from '@openint/trpc'
 import {TRPCError} from '@openint/trpc'
 import {R, z} from '@openint/util'
@@ -156,7 +151,7 @@ const _connectorRouter = trpc.router({
           ...res,
           items: res.items.map((item) => ({
             ...item,
-            id: `${name}_${item.id}`,
+            id: `int_${name}_${item.id}`,
             connector_name: name,
           })),
         }))

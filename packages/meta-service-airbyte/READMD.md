@@ -1,3 +1,3 @@
-# Openint on Airbyte
+# OpenInt on Airbyte
 
-This is an experimental package demonstrating running Openint integrations on top of Airbyte's integration
+This is an experimental package demonstrating running OpenInt integrations on top of Airbyte's integration

@@ -1,5 +1,3 @@
-## Deploy
-
 ## Environment variables
 
 | Name                                      | Description                                                                                                                                                                                                                                                                       |

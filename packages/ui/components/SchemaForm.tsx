@@ -101,7 +101,7 @@ export const SchemaForm = React.forwardRef(function SchemaForm<
         'schema-form',
         loading && 'loading',
         props.className,
-        'overflow-y-auto',
+        'max-h-[450px] overflow-y-auto',
       )}
       schema={jsonSchema}
       validator={validator}

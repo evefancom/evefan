@@ -81,7 +81,7 @@ export function cachingTransformLink(
 
 /**
  * Used to workaround beancount limitation https://groups.google.com/g/beancount/c/PmkPVgLNKgg
- * Not ideal that we have to use Venice link to workaround
+ * Not ideal that we have to use Openint link to workaround
  * beancount quirk. Maybe this should actually be a beancount plugin in python?
  * @see https://share.cleanshot.com/8AVFxc
  * We have two options instead

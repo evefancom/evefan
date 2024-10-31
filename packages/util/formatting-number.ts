@@ -46,6 +46,7 @@ export const getIntlNumberFormat = memoizeBy(
         err.message.includes('currencyDisplay') &&
         options.currencyDisplay === 'narrowSymbol'
       ) {
+        // https://alkafinance.slack.com/archives/DG5JKSDQX/p1635082629020500
         // Some browsers do not support narrow symbol formatting.
         return new Intl.NumberFormat(locales, {
           ...options,

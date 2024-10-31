@@ -45,6 +45,7 @@
     --button-hover: #a082e9;
     --button-stroke: #6947bb;
     --button-secondary: #ffffff;
+    --button-secondary-foreground: #000000;
     --button-secondary-stroke: #e6e6e6;
     --button-secondary-hover: #efefef;
   }
