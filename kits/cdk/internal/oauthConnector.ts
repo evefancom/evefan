@@ -80,17 +80,35 @@ export function oauthConnect({
   connectorName,
   connectorConfigId,
   resourceId,
+  authOptions,
 }: {
   nangoFrontend: NangoFrontend
   connectorName: string
   connectorConfigId: Id['ccfg']
   /** Should address the re-connect scenario, but let's see... */
   resourceId?: Id['reso']
+  authOptions?: {
+    authorization_params?: Record<string, string | undefined>
+  }
 }): Promise<OauthBaseTypes['connectOutput']> {
+  // console.log('oauthConnect', {
+  //   connectorName,
+  //   connectorConfigId,
+  //   resourceId,
+  //   authOptions,
+  // })
   return nangoFrontend
     .auth(
       connectorConfigId,
       resourceId ?? makeId('reso', connectorName, makeUlid()),
+      {
+        params: {},
+        ...authOptions,
+        // authOptions would tend to contain the authorization_params needed to make the initial connection
+        // authorization_params: {
+        //   scope: 'https://www.googleapis.com/auth/drive.readonly',
+        // },
+      },
     )
     .then((r) => oauthBaseSchema.connectOutput.parse(r))
     .catch((err) => {

@@ -481,6 +481,13 @@
             "schema": {
               "type": ["string", "null"]
             }
+          },
+          {
+            "in": "query",
+            "name": "forceRefresh",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -695,6 +702,13 @@
               "description": "Must start with 'reso_'"
             },
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "forceRefresh",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -1338,7 +1352,8 @@
                             "hris",
                             "payroll",
                             "calendar",
-                            "ats"
+                            "ats",
+                            "email"
                           ]
                         }
                       }
@@ -2362,6 +2377,12 @@
                           "type": "string",
                           "title": "Webhook URL",
                           "description": "Events like sync.completed and connection.created can be sent to url of your choosing"
+                        },
+                        "migrate_tables": {
+                          "type": "boolean",
+                          "title": "Migrate Tables",
+                          "description": "If enabled, table migrations will be run if needed when entities are persisted",
+                          "default": true
                         }
                       }
                     }
@@ -5866,24 +5887,51 @@
         "parameters": [
           {
             "in": "query",
-            "name": "sync_mode",
+            "name": "start_date",
             "schema": {
-              "type": "string",
-              "enum": ["full", "incremental"]
+              "type": "string"
             }
           },
           {
             "in": "query",
-            "name": "cursor",
+            "name": "end_date",
             "schema": {
-              "type": ["string", "null"]
+              "type": "string"
             }
           },
           {
             "in": "query",
-            "name": "page_size",
+            "name": "sort_order",
             "schema": {
-              "type": "number"
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customer",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "department",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_macro",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "summarize_by",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -5999,24 +6047,44 @@
         "parameters": [
           {
             "in": "query",
-            "name": "sync_mode",
+            "name": "start_date",
             "schema": {
-              "type": "string",
-              "enum": ["full", "incremental"]
+              "type": "string"
             }
           },
           {
             "in": "query",
-            "name": "cursor",
+            "name": "end_date",
             "schema": {
-              "type": ["string", "null"]
+              "type": "string"
             }
           },
           {
             "in": "query",
-            "name": "page_size",
+            "name": "sort_order",
             "schema": {
-              "type": "number"
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customer",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "department",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_macro",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -6074,6 +6142,758 @@
                     "netIncome"
                   ]
                 }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unified/accounting/cash-flow": {
+      "get": {
+        "operationId": "accounting-getCashFlow",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_order",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customer",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "department",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_macro",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "summarize_by",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reportName": {
+                      "type": "string"
+                    },
+                    "startPeriod": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "endPeriod": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "netIncome": {
+                      "type": ["number", "null"]
+                    },
+                    "totalOperatingAdjustments": {
+                      "type": ["number", "null"]
+                    },
+                    "netCashFromOperatingActivities": {
+                      "type": ["number", "null"]
+                    },
+                    "netCashFromFinancingActivities": {
+                      "type": ["number", "null"]
+                    },
+                    "netCashIncrease": {
+                      "type": ["number", "null"]
+                    },
+                    "endingCash": {
+                      "type": ["number", "null"]
+                    }
+                  },
+                  "required": [
+                    "reportName",
+                    "startPeriod",
+                    "endPeriod",
+                    "currency",
+                    "netIncome",
+                    "totalOperatingAdjustments",
+                    "netCashFromOperatingActivities",
+                    "netCashFromFinancingActivities",
+                    "netCashIncrease",
+                    "endingCash"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unified/accounting/transaction-list": {
+      "get": {
+        "operationId": "accounting-getTransactionList",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_order",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customer",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "department",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_macro",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reportName": {
+                      "type": "string"
+                    },
+                    "startPeriod": {
+                      "type": "string"
+                    },
+                    "endPeriod": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string"
+                          },
+                          "transactionType": {
+                            "type": "string"
+                          },
+                          "documentNumber": {
+                            "type": "string"
+                          },
+                          "posting": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "department": {
+                            "type": "string"
+                          },
+                          "memo": {
+                            "type": "string"
+                          },
+                          "account": {
+                            "type": "string"
+                          },
+                          "split": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "number"
+                          }
+                        },
+                        "required": ["date", "transactionType", "amount"]
+                      }
+                    }
+                  },
+                  "required": [
+                    "reportName",
+                    "startPeriod",
+                    "endPeriod",
+                    "currency",
+                    "transactions"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unified/accounting/customer-balance": {
+      "get": {
+        "operationId": "accounting-getCustomerBalance",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_order",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customer",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "department",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_macro",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "summarize_by",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reportName": {
+                      "type": "string"
+                    },
+                    "reportDate": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "customerId": {
+                            "type": "string"
+                          },
+                          "customerName": {
+                            "type": "string"
+                          },
+                          "balance": {
+                            "type": "number"
+                          }
+                        },
+                        "required": ["customerId", "customerName", "balance"]
+                      }
+                    },
+                    "totalBalance": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "reportName",
+                    "reportDate",
+                    "currency",
+                    "entries",
+                    "totalBalance"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unified/accounting/customer-income": {
+      "get": {
+        "operationId": "accounting-getCustomerIncome",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_order",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "customer",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "department",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_macro",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "summarize_by",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reportName": {
+                      "type": "string"
+                    },
+                    "startPeriod": {
+                      "type": "string"
+                    },
+                    "endPeriod": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "customerId": {
+                            "type": "string"
+                          },
+                          "customerName": {
+                            "type": "string"
+                          },
+                          "totalIncome": {
+                            "type": "number"
+                          },
+                          "totalExpenses": {
+                            "type": "number"
+                          },
+                          "netIncome": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "customerId",
+                          "customerName",
+                          "totalIncome",
+                          "totalExpenses",
+                          "netIncome"
+                        ]
+                      }
+                    },
+                    "totalIncome": {
+                      "type": "number"
+                    },
+                    "totalExpenses": {
+                      "type": "number"
+                    },
+                    "netIncome": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "reportName",
+                    "startPeriod",
+                    "endPeriod",
+                    "currency",
+                    "entries",
+                    "totalIncome",
+                    "totalExpenses",
+                    "netIncome"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unified/accounting/bank-accounts": {
+      "get": {
+        "operationId": "accounting-getBankAccounts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "customer",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "updated": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "default": {
+                        "type": "boolean"
+                      },
+                      "created": {
+                        "type": "string"
+                      },
+                      "inputType": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "accountType": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "updated",
+                      "name",
+                      "accountNumber",
+                      "default",
+                      "created",
+                      "inputType",
+                      "phone",
+                      "accountType",
+                      "routingNumber",
+                      "id"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unified/accounting/payment-receipt": {
+      "get": {
+        "operationId": "accounting-getPaymentReceipts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "customer_transaction_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -6416,6 +7236,100 @@
                       "type": "array",
                       "items": {
                         "$ref": "#/components/schemas/ats.job"
+                      }
+                    }
+                  },
+                  "required": ["has_next_page", "items"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unified/ats/job/{jobId}/opening": {
+      "get": {
+        "operationId": "ats-listJobOpenings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "jobId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "sync_mode",
+            "schema": {
+              "type": "string",
+              "enum": ["full", "incremental"]
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": ["string", "null"]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "next_cursor": {
+                      "type": ["string", "null"]
+                    },
+                    "has_next_page": {
+                      "type": "boolean"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ats.opening"
                       }
                     }
                   },
@@ -7597,7 +8511,13 @@
       },
       "Link": {
         "type": "string",
-        "enum": ["banking", "prefix_connector_name", "single_table", "ats"]
+        "enum": [
+          "banking",
+          "prefix_connector_name",
+          "single_table",
+          "ats",
+          "ag_column_rename"
+        ]
       },
       "core.integration": {
         "type": "object",
@@ -7644,7 +8564,8 @@
                 "hris",
                 "payroll",
                 "calendar",
-                "ats"
+                "ats",
+                "email"
               ]
             }
           },
@@ -9042,6 +9963,32 @@
           }
         },
         "description": "A department in an organization"
+      },
+      "ats.opening": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "modified_at": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "raw_data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": ["id", "created_at", "modified_at", "status", "job_id"],
+        "description": "An opening for a job"
       },
       "ats.offer": {
         "type": "object",

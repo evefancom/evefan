@@ -24,6 +24,7 @@ import type {
 import type {EndUserId, Id} from './id.types'
 import {makeId} from './id.types'
 import type {ZStandard} from './models'
+import {VerticalKey} from './verticals'
 
 /**
  * Equivalent to to airbyte's low code connector spec,
@@ -226,6 +227,7 @@ export interface ConnectorServer<
       name: string
       logo_url?: string | null
       updated_at: string
+      verticals?: VerticalKey[]
       raw_data: T['_intOpType']['data']
     }>
   }>

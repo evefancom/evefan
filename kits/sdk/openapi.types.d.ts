@@ -232,6 +232,24 @@ export interface paths {
   '/unified/accounting/profit-and-loss': {
     get: operations['accounting-getProfitAndLoss']
   }
+  '/unified/accounting/cash-flow': {
+    get: operations['accounting-getCashFlow']
+  }
+  '/unified/accounting/transaction-list': {
+    get: operations['accounting-getTransactionList']
+  }
+  '/unified/accounting/customer-balance': {
+    get: operations['accounting-getCustomerBalance']
+  }
+  '/unified/accounting/customer-income': {
+    get: operations['accounting-getCustomerIncome']
+  }
+  '/unified/accounting/bank-accounts': {
+    get: operations['accounting-getBankAccounts']
+  }
+  '/unified/accounting/payment-receipt': {
+    get: operations['accounting-getPaymentReceipts']
+  }
   '/unified/pta/account': {
     get: operations['pta-listAccounts']
   }
@@ -243,6 +261,9 @@ export interface paths {
   }
   '/unified/ats/job': {
     get: operations['ats-listJobs']
+  }
+  '/unified/ats/job/{jobId}/opening': {
+    get: operations['ats-listJobOpenings']
   }
   '/unified/ats/offer': {
     get: operations['ats-listOffers']
@@ -458,7 +479,12 @@ export interface components {
       metadata?: unknown
     }
     /** @enum {string} */
-    Link: 'banking' | 'prefix_connector_name' | 'single_table' | 'ats'
+    Link:
+      | 'banking'
+      | 'prefix_connector_name'
+      | 'single_table'
+      | 'ats'
+      | 'ag_column_rename'
     'core.integration': {
       id: string
       /** @description ISO8601 date string */
@@ -489,6 +515,7 @@ export interface components {
             | 'payroll'
             | 'calendar'
             | 'ats'
+            | 'email'
           )[]
         | null
       connector_name: string
@@ -1036,6 +1063,17 @@ export interface components {
         [key: string]: unknown
       }
     }
+    /** @description An opening for a job */
+    'ats.opening': {
+      id: string
+      created_at: string
+      modified_at: string
+      status: string
+      job_id: string
+      raw_data?: {
+        [key: string]: unknown
+      }
+    }
     /** @description An offer to a candidate */
     'ats.offer': {
       id: string
@@ -1304,6 +1342,7 @@ export interface operations {
         endUserId?: string | null
         connectorConfigId?: string | null
         connectorName?: string | null
+        forceRefresh?: boolean
       }
     }
     responses: {
@@ -1380,6 +1419,9 @@ export interface operations {
   }
   getResource: {
     parameters: {
+      query?: {
+        forceRefresh?: boolean
+      }
       path: {
         id: string
       }
@@ -1836,6 +1878,7 @@ export interface operations {
               | 'payroll'
               | 'calendar'
               | 'ats'
+              | 'email'
             )[]
           }[]
         }
@@ -2386,6 +2429,12 @@ export interface operations {
                * @description Events like sync.completed and connection.created can be sent to url of your choosing
                */
               webhook_url?: string
+              /**
+               * Migrate Tables
+               * @description If enabled, table migrations will be run if needed when entities are persisted
+               * @default true
+               */
+              migrate_tables?: boolean
             }
           }
         }
@@ -4154,9 +4203,13 @@ export interface operations {
   'accounting-getBalanceSheet': {
     parameters: {
       query?: {
-        sync_mode?: 'full' | 'incremental'
-        cursor?: string | null
-        page_size?: number
+        start_date?: string
+        end_date?: string
+        sort_order?: string
+        customer?: string
+        department?: string
+        date_macro?: string
+        summarize_by?: string
       }
     }
     responses: {
@@ -4206,9 +4259,12 @@ export interface operations {
   'accounting-getProfitAndLoss': {
     parameters: {
       query?: {
-        sync_mode?: 'full' | 'incremental'
-        cursor?: string | null
-        page_size?: number
+        start_date?: string
+        end_date?: string
+        sort_order?: string
+        customer?: string
+        department?: string
+        date_macro?: string
       }
     }
     responses: {
@@ -4229,6 +4285,293 @@ export interface operations {
             netOperatingIncome: number | null
             netIncome: number | null
           }
+        }
+      }
+      /** @description Invalid input data */
+      400: {
+        content: {
+          'application/json': components['schemas']['error.BAD_REQUEST']
+        }
+      }
+      /** @description Not found */
+      404: {
+        content: {
+          'application/json': components['schemas']['error.NOT_FOUND']
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['error.INTERNAL_SERVER_ERROR']
+        }
+      }
+    }
+  }
+  'accounting-getCashFlow': {
+    parameters: {
+      query?: {
+        start_date?: string
+        end_date?: string
+        sort_order?: string
+        customer?: string
+        department?: string
+        date_macro?: string
+        summarize_by?: string
+      }
+    }
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          'application/json': {
+            reportName: string
+            /** Format: date */
+            startPeriod: string
+            /** Format: date */
+            endPeriod: string
+            currency: string
+            netIncome: number | null
+            totalOperatingAdjustments: number | null
+            netCashFromOperatingActivities: number | null
+            netCashFromFinancingActivities: number | null
+            netCashIncrease: number | null
+            endingCash: number | null
+          }
+        }
+      }
+      /** @description Invalid input data */
+      400: {
+        content: {
+          'application/json': components['schemas']['error.BAD_REQUEST']
+        }
+      }
+      /** @description Not found */
+      404: {
+        content: {
+          'application/json': components['schemas']['error.NOT_FOUND']
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['error.INTERNAL_SERVER_ERROR']
+        }
+      }
+    }
+  }
+  'accounting-getTransactionList': {
+    parameters: {
+      query?: {
+        start_date?: string
+        end_date?: string
+        sort_order?: string
+        customer?: string
+        department?: string
+        date_macro?: string
+      }
+    }
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          'application/json': {
+            reportName: string
+            startPeriod: string
+            endPeriod: string
+            currency: string
+            transactions: {
+              date: string
+              transactionType: string
+              documentNumber?: string
+              posting?: string
+              name?: string
+              department?: string
+              memo?: string
+              account?: string
+              split?: string
+              amount: number
+            }[]
+          }
+        }
+      }
+      /** @description Invalid input data */
+      400: {
+        content: {
+          'application/json': components['schemas']['error.BAD_REQUEST']
+        }
+      }
+      /** @description Not found */
+      404: {
+        content: {
+          'application/json': components['schemas']['error.NOT_FOUND']
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['error.INTERNAL_SERVER_ERROR']
+        }
+      }
+    }
+  }
+  'accounting-getCustomerBalance': {
+    parameters: {
+      query?: {
+        start_date?: string
+        end_date?: string
+        sort_order?: string
+        customer?: string
+        department?: string
+        date_macro?: string
+        summarize_by?: string
+      }
+    }
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          'application/json': {
+            reportName: string
+            reportDate: string
+            currency: string
+            entries: {
+              customerId: string
+              customerName: string
+              balance: number
+            }[]
+            totalBalance: number
+          }
+        }
+      }
+      /** @description Invalid input data */
+      400: {
+        content: {
+          'application/json': components['schemas']['error.BAD_REQUEST']
+        }
+      }
+      /** @description Not found */
+      404: {
+        content: {
+          'application/json': components['schemas']['error.NOT_FOUND']
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['error.INTERNAL_SERVER_ERROR']
+        }
+      }
+    }
+  }
+  'accounting-getCustomerIncome': {
+    parameters: {
+      query?: {
+        start_date?: string
+        end_date?: string
+        sort_order?: string
+        customer?: string
+        department?: string
+        date_macro?: string
+        summarize_by?: string
+      }
+    }
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          'application/json': {
+            reportName: string
+            startPeriod: string
+            endPeriod: string
+            currency: string
+            entries: {
+              customerId: string
+              customerName: string
+              totalIncome: number
+              totalExpenses: number
+              netIncome: number
+            }[]
+            totalIncome: number
+            totalExpenses: number
+            netIncome: number
+          }
+        }
+      }
+      /** @description Invalid input data */
+      400: {
+        content: {
+          'application/json': components['schemas']['error.BAD_REQUEST']
+        }
+      }
+      /** @description Not found */
+      404: {
+        content: {
+          'application/json': components['schemas']['error.NOT_FOUND']
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['error.INTERNAL_SERVER_ERROR']
+        }
+      }
+    }
+  }
+  'accounting-getBankAccounts': {
+    parameters: {
+      query: {
+        customer: string
+      }
+    }
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          'application/json': {
+            updated: string
+            name: string
+            accountNumber: string
+            default: boolean
+            created: string
+            inputType: string
+            phone: string
+            accountType: string
+            routingNumber: string
+            id: string
+          }[]
+        }
+      }
+      /** @description Invalid input data */
+      400: {
+        content: {
+          'application/json': components['schemas']['error.BAD_REQUEST']
+        }
+      }
+      /** @description Not found */
+      404: {
+        content: {
+          'application/json': components['schemas']['error.NOT_FOUND']
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['error.INTERNAL_SERVER_ERROR']
+        }
+      }
+    }
+  }
+  'accounting-getPaymentReceipts': {
+    parameters: {
+      query: {
+        customer_transaction_id: string
+      }
+    }
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          'application/json': unknown
         }
       }
       /** @description Invalid input data */
@@ -4384,6 +4727,48 @@ export interface operations {
             next_cursor?: string | null
             has_next_page: boolean
             items: components['schemas']['ats.job'][]
+          }
+        }
+      }
+      /** @description Invalid input data */
+      400: {
+        content: {
+          'application/json': components['schemas']['error.BAD_REQUEST']
+        }
+      }
+      /** @description Not found */
+      404: {
+        content: {
+          'application/json': components['schemas']['error.NOT_FOUND']
+        }
+      }
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['error.INTERNAL_SERVER_ERROR']
+        }
+      }
+    }
+  }
+  'ats-listJobOpenings': {
+    parameters: {
+      query?: {
+        sync_mode?: 'full' | 'incremental'
+        cursor?: string | null
+        page_size?: number
+      }
+      path: {
+        jobId: string
+      }
+    }
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          'application/json': {
+            next_cursor?: string | null
+            has_next_page: boolean
+            items: components['schemas']['ats.opening'][]
           }
         }
       }
