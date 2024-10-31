@@ -1,6 +1,8 @@
 import {Loader, Settings} from 'lucide-react'
+import {Fragment} from 'react'
 import {
   Badge,
+  Button,
   ConnectorLogo,
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +11,6 @@ import {
   Separator,
 } from '@openint/ui'
 import type {ConnectorConfig} from '../hocs/WithConnectConfig'
-import {ConnectDialog} from './ConnectDialog'
 
 interface ConnectionsTabContentProps {
   connectionCount: number
@@ -23,17 +24,17 @@ interface ConnectionsTabContentProps {
       syncInProgress: boolean
     }>
   }>
-  refetch: () => void
   isLoading: boolean
   deleteResource: ({id}: {id: string}) => void
+  onConnect: () => void
 }
 
 export function ConnectionsTabContent({
   connectionCount,
-  refetch,
   isLoading,
   deleteResource,
   categoriesWithConnections,
+  onConnect,
 }: ConnectionsTabContentProps) {
   return connectionCount === 0 ? (
     <div className="flex flex-col gap-2 p-4">
@@ -41,15 +42,11 @@ export function ConnectionsTabContent({
         <p className="text-base font-semibold">No connections yet</p>
         <p className="text-base">Add a connection to get started</p>
       </div>
-      <ConnectDialog
-        className="self-end bg-[#8A5DF6] hover:bg-[#A082E9]"
-        connectorConfigFilters={{}}
-        onEvent={(event) => {
-          if (event.type === 'close') {
-            refetch() // Trigger refetch
-          }
-        }}
-      />
+      <Button
+        onClick={onConnect}
+        className="inline-flex h-10 items-center justify-center self-end">
+        Connect
+      </Button>
     </div>
   ) : (
     <div className="p-4">
@@ -61,10 +58,8 @@ export function ConnectionsTabContent({
         categoriesWithConnections.map((category) => (
           <div key={category.name} className="flex flex-col space-y-4">
             {category.connections.map((conn) => (
-              <>
-                <div
-                  key={conn.id}
-                  className="flex flex-row justify-between gap-4">
+              <Fragment key={conn.id}>
+                <div className="flex flex-row justify-between gap-4">
                   <div className="flex flex-row gap-4">
                     <ConnectorLogo
                       connector={conn.connectorConfig.connector}
@@ -113,7 +108,7 @@ export function ConnectionsTabContent({
         over all categories and all connections, would be good to have a single array of connections with the category 
         information included already */}
                 <Separator className="w-full" />
-              </>
+              </Fragment>
             ))}
           </div>
         ))

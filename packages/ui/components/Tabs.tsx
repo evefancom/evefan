@@ -12,12 +12,22 @@ interface TabsProps {
     title: string
     content: ReactElement
   }>
-  defaultValue: string
+  defaultValue?: string
+  value?: string
+  onValueChange?: (value: string) => void
 }
 
-export function Tabs({tabConfig, defaultValue}: TabsProps) {
+export function Tabs({
+  tabConfig,
+  defaultValue,
+  value,
+  onValueChange,
+}: TabsProps) {
   return (
-    <ShadcnTabs defaultValue="connections">
+    <ShadcnTabs
+      defaultValue={defaultValue}
+      value={value}
+      onValueChange={onValueChange}>
       <TabsList>
         {tabConfig.map((config) => (
           <TabsTrigger key={config.key} value={config.key}>
