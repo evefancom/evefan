@@ -13,3 +13,12 @@ export function getValidChildren(children: React.ReactNode) {
     React.isValidElement(child),
   ) as React.ReactElement[]
 }
+
+export function parseCategory(category: string) {
+  return category.length < 5
+    ? category.toUpperCase()
+    : category
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+}

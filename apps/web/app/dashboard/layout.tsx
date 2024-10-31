@@ -9,7 +9,13 @@ export default function AdminLayout(props: {children: React.ReactNode}) {
   // createBrowserSupabaseClient which only uses cookie and does not use header etc.
 
   return (
-    <ClerkProvider>
+    <ClerkProvider 
+      appearance={{
+        elements: {
+          footer: 'hidden',
+          },
+        }}
+    >
       <ClientRootWithClerk>{props.children}</ClientRootWithClerk>
     </ClerkProvider>
   )

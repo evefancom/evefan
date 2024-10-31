@@ -40,6 +40,7 @@ const _VERTICAL_BY_KEY = {
                 one-way with no impact on original data.`,
     objects: ['job', 'offer', 'candidate', 'opening'],
   },
+  email: {},
 } satisfies Record<string, VerticalInfo>
 
 // MARK: -

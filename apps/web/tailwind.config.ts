@@ -87,6 +87,12 @@ export default {
           foreground: 'var(--button-foreground)',
           hover: 'var(--button-hover)',
           stroke: 'var(--button-stroke)',
+          secondary: {
+            DEFAULT: 'var(--button-secondary)',
+            foreground: 'var(--button-secondary-foreground)',
+            stroke: 'var(--button-secondary-stroke)',
+            hover: 'var(--button-secondary-hover)',
+          },
         },
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

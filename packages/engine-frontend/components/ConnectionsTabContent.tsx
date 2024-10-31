@@ -48,7 +48,8 @@ export function ConnectionsTabContent({
           if (event.type === 'close') {
             refetch() // Trigger refetch
           }
-        }}></ConnectDialog>
+        }}
+      />
     </div>
   ) : (
     <div className="p-4">
@@ -72,10 +73,12 @@ export function ConnectionsTabContent({
                     <div className="flex h-full flex-col justify-center">
                       <div className="flex flex-row items-center gap-2">
                         <h4 className="font-bold">
-                          {conn.connectorName.charAt(0).toUpperCase() +
-                            conn.connectorName.slice(1)}
+                          {conn.connectorConfig.connector.displayName
+                            .charAt(0)
+                            .toUpperCase() +
+                            conn.connectorConfig.connector.displayName.slice(1)}
                         </h4>
-                        <Badge variant="secondary">{category.name}</Badge>
+                        <Badge variant="outline">{category.name}</Badge>
                       </div>
                       {conn.pipelineIds.length > 0 && (
                         <div className="mt-2">

@@ -66,7 +66,6 @@ export function ConnectionPortal({className}: ConnectionPortalProps) {
           ),
         }))
         const connectionCount = connections.length
-        console.log({connectionCount})
 
         const tabConfig = [
           {

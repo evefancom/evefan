@@ -19,7 +19,6 @@ export default {
   args: {onApply: fn()},
 }
 
-// More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Primary = {
   args: {
     options: ['Accounting', 'ATS', 'Banking', 'Database'],

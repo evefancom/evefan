@@ -40,11 +40,15 @@ const __DEBUG__ = Boolean(
 
 export const WithConnectorConnect = ({
   connectorConfig: ccfg,
+  integration,
   resource,
   onEvent,
   children,
 }: {
   connectorConfig: {id: Id['ccfg']; connector: ConnectorMeta}
+  integration?: {
+    id: Id['int']
+  }
   resource?: Resource
   onEvent?: (event: {type: ConnectEventType}) => void
   children: (props: {
@@ -77,7 +81,7 @@ export const WithConnectorConnect = ({
       openDialog: () => {},
     }) ??
     (nangoProvider
-      ? (_, {connectorConfigId}) => {
+      ? (connInput, {connectorConfigId}) => {
           if (!nangoFrontend) {
             throw new Error('Missing nango public key')
           }
@@ -85,15 +89,20 @@ export const WithConnectorConnect = ({
             connectorConfigId,
             nangoFrontend,
             connectorName: ccfg.connector.name,
+            resourceId: resource?.id,
+            authOptions: connInput,
           })
         }
       : undefined)
 
   const resourceExternalId = resource ? extractId(resource.id)[2] : undefined
+  const integrationExternalId = integration
+    ? extractId(integration.id)[2]
+    : undefined
 
   // TODO: Handle preConnectInput schema and such... for example for Plaid
   const preConnect = _trpcReact.preConnect.useQuery(
-    [ccfg.id, {resourceExternalId}, {}],
+    [ccfg.id, {resourceExternalId, integrationExternalId}, {}],
     {enabled: ccfg.connector.hasPreConnect},
   )
   const postConnect = _trpcReact.postConnect.useMutation()
@@ -196,21 +205,18 @@ export const WithConnectorConnect = ({
         label: resource ? 'Reconnect' : 'Connect',
       })}
 
-      <DialogContent
-        className="flex flex-col overflow-visible"
-        style={{
-          maxHeight: 'min(90vh, 700px)',
-        }}>
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-h-[600px] overflow-visible">
+        <DialogHeader>
           <DialogTitle>
             <div className="flex items-center">
               <span className="mr-2">
                 Connect to {ccfg.connector.displayName}
               </span>
               {ccfg.connector.name === 'greenhouse' && (
-                <div className="relative inline-block">
-                  <InfoIcon className="peer h-5 w-5 cursor-help text-gray-500" />
-                  <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-md bg-[#272731] p-2 text-sm text-white opacity-0 transition-opacity peer-hover:opacity-100">
+                <div className="group relative inline-block">
+                  <InfoIcon className="h-5 w-5 cursor-help text-gray-500" />
+                  <div className="invisible absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 rounded-md bg-[#272731] p-2 text-sm text-white opacity-0 transition-opacity group-hover:visible group-hover:opacity-100">
+                    <div className="absolute bottom-[-8px] left-0 h-2 w-full" />
                     <p className="italic">
                       Generate a custom API key with{' '}
                       <a
@@ -233,23 +239,23 @@ export const WithConnectorConnect = ({
             </DialogDescription>
           )}
         </DialogHeader>
-        <div className="overflow-y-auto">
-          <SchemaForm
-            ref={formRef}
-            schema={z.object({})}
-            jsonSchemaTransform={(schema) =>
-              ccfg.connector.schemas.resourceSettings ?? schema
-            }
-            formData={{}}
-            loading={connect.isLoading}
-            onSubmit={({formData}) => {
-              console.log('resource form submitted', formData)
-              connect.mutate({connectorConfigId: ccfg.id, settings: formData})
-            }}
-            hideSubmitButton
-          />
-        </div>
-        <DialogFooter className="flex-shrink-0">
+        <SchemaForm
+          ref={formRef}
+          schema={z.object({})}
+          jsonSchemaTransform={(schema) =>
+            ccfg.connector.schemas.resourceSettings ?? schema
+          }
+          formData={{}}
+          // formData should be non-null at this point, we should fix the typing
+          loading={connect.isLoading}
+          onSubmit={({formData}) => {
+            console.log('resource form submitted', formData)
+            connect.mutate({connectorConfigId: ccfg.id, settings: formData})
+          }}
+          hideSubmitButton
+        />
+        {/* Children here */}
+        <DialogFooter>
           <Button
             disabled={connect.isLoading}
             onClick={() => formRef.current?.submit()}

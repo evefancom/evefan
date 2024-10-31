@@ -22,6 +22,7 @@ import type {SchemaFormElement, UIProps, UIPropsNoChildren} from '@openint/ui'
 import {
   Button,
   ConnectorConfigCard,
+  DeprecatedIntegrationCard,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -36,7 +37,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  IntegrationCard,
   ResourceCard,
   SchemaForm,
   useToast,
@@ -364,7 +364,7 @@ export function _OpenIntConnect({
         ))}
       {!debugConnectorConfigs &&
         configuredIntegrations.map((int) => (
-          <IntegrationCard
+          <DeprecatedIntegrationCard
             {...uiProps}
             key={int.id}
             integration={{
@@ -382,7 +382,7 @@ export function _OpenIntConnect({
                 onEvent?.({type: e.type, ccfgId: int.connector_config_id})
               }}
             />
-          </IntegrationCard>
+          </DeprecatedIntegrationCard>
         ))}
     </div>
   )
