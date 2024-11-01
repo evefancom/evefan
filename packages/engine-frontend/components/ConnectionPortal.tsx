@@ -1,5 +1,6 @@
 'use client'
 
+import {Loader} from 'lucide-react'
 import {usePathname, useRouter, useSearchParams} from 'next/navigation'
 import type {Id} from '@openint/cdk'
 import type {UIPropsNoChildren} from '@openint/ui'
@@ -110,12 +111,22 @@ export function ConnectionPortal({className}: ConnectionPortalProps) {
         ]
 
         return (
-          <div className={cn('gap-4 p-4 lg:p-8', className)}>
-            <Tabs
-              tabConfig={tabConfig}
-              value={searchParams?.get('connectTab') ?? 'connections'}
-              onValueChange={navigateToTab}
-            />
+          <div
+            className={cn(
+              'flex size-full flex-col gap-4 p-4 lg:p-8',
+              className,
+            )}>
+            {listConnectionsRes.isLoading ? (
+              <div className="flex h-full min-h-[500px] flex-1 items-center justify-center">
+                <Loader className="size-8 animate-spin text-button" />
+              </div>
+            ) : (
+              <Tabs
+                tabConfig={tabConfig}
+                value={searchParams?.get('connectTab') ?? 'connections'}
+                onValueChange={navigateToTab}
+              />
+            )}
           </div>
         )
       }}
