@@ -101,6 +101,9 @@ export function ConnectionPortal({className}: ConnectionPortalProps) {
               <AddConnectionTabContent
                 connectorConfigFilters={{}}
                 refetch={listConnectionsRes.refetch}
+                onSuccessCallback={() => {
+                  navigateToTab('connections')
+                }}
               />
             ),
           },
