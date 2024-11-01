@@ -4,11 +4,12 @@ import {RefreshCw} from 'lucide-react'
 import type {RouterOutput} from '@openint/engine-backend'
 import {useToast, type UIProps} from '@openint/ui'
 import type {ConnectorConfig} from '../hocs/WithConnectConfig'
-import {WithConnectorConnect} from '../hocs/WithConnectorConnect'
+import {
+  WithConnectorConnect,
+  type ConnectEventType,
+} from '../hocs/WithConnectorConnect'
 import {useOptionalOpenIntConnectContext} from '../providers/OpenIntConnectProvider'
 import {_trpcReact} from '../providers/TRPCProvider'
-
-type ConnectEventType = 'open' | 'close' | 'error' | 'success'
 
 type Resource = RouterOutput['listConnections'][number]
 
