@@ -8,11 +8,10 @@ import {Card, ResourceCard} from '@openint/ui'
 import {cn} from '@openint/ui/utils'
 import {R} from '@openint/util'
 import {WithConnectConfig} from '../hocs/WithConnectConfig'
+import {ConnectEventType} from '../hocs/WithConnectorConnect'
 import {_trpcReact} from '../providers/TRPCProvider'
 import {AgResourceRowActions} from './AgResourceRowActions'
 import {ConnectDialog} from './ConnectDialog'
-
-type ConnectEventType = 'open' | 'close' | 'error'
 
 export interface AGConnectionPortalProps extends UIPropsNoChildren {
   onEvent?: (event: {type: ConnectEventType; ccfgId: Id['ccfg']}) => void

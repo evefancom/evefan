@@ -1,5 +1,7 @@
 'use client'
 
+import {Loader} from 'lucide-react'
+import {usePathname, useRouter, useSearchParams} from 'next/navigation'
 import type {Id} from '@openint/cdk'
 import type {UIPropsNoChildren} from '@openint/ui'
 import {useToast} from '@openint/ui'
@@ -21,6 +23,10 @@ export interface ConnectionPortalProps extends UIPropsNoChildren {
 // Also it would be nice if there was an easy way to automatically prefetch on the server side
 // based on calls to useQuery so it doesn't need to be separately handled again on the client...
 export function ConnectionPortal({className}: ConnectionPortalProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+
   const {toast} = useToast()
   const ctx = _trpcReact.useContext()
   const listConnectionsRes = _trpcReact.listConnections.useQuery({})
@@ -40,6 +46,14 @@ export function ConnectionPortal({className}: ConnectionPortalProps) {
       ctx.listConnections.invalidate()
     },
   })
+
+  const navigateToTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams ?? {})
+    params.set('connectTab', tab)
+    router.replace(`${pathname}?${params.toString()}`, {
+      scroll: false,
+    })
+  }
 
   return (
     <WithConnectConfig>
@@ -74,10 +88,10 @@ export function ConnectionPortal({className}: ConnectionPortalProps) {
             content: (
               <ConnectionsTabContent
                 connectionCount={connectionCount}
-                refetch={listConnectionsRes.refetch}
                 isLoading={listConnectionsRes.isLoading}
                 deleteResource={deleteResource.mutate}
                 categoriesWithConnections={categoriesWithConnections}
+                onConnect={() => navigateToTab('add-connection')}
               />
             ),
           },
@@ -88,14 +102,33 @@ export function ConnectionPortal({className}: ConnectionPortalProps) {
               <AddConnectionTabContent
                 connectorConfigFilters={{}}
                 refetch={listConnectionsRes.refetch}
+                onSuccessCallback={() => {
+                  navigateToTab('connections')
+                }}
               />
             ),
           },
         ]
 
         return (
-          <div className={cn('gap-4 p-4 lg:p-8', className)}>
-            <Tabs tabConfig={tabConfig} defaultValue="connections" />
+          <div
+            className={cn(
+              'flex size-full flex-col gap-4 p-4 lg:p-8',
+              className,
+            )}>
+            {listConnectionsRes.isLoading ||
+            listConnectionsRes.isFetching ||
+            listConnectionsRes.isRefetching ? (
+              <div className="flex h-full min-h-[500px] flex-1 items-center justify-center">
+                <Loader className="size-8 animate-spin text-button" />
+              </div>
+            ) : (
+              <Tabs
+                tabConfig={tabConfig}
+                value={searchParams?.get('connectTab') ?? 'connections'}
+                onValueChange={navigateToTab}
+              />
+            )}
           </div>
         )
       }}

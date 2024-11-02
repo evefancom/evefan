@@ -26,7 +26,7 @@ import {
 } from '../providers/OpenIntConnectProvider'
 import {_trpcReact} from '../providers/TRPCProvider'
 
-export type ConnectEventType = 'open' | 'close' | 'error'
+export type ConnectEventType = 'open' | 'close' | 'error' | 'success'
 
 type Resource = RouterOutput['listConnections'][number]
 
@@ -153,7 +153,7 @@ export const WithConnectorConnect = ({
           })
         }
         setOpen(false)
-        onEvent?.({type: 'close'})
+        onEvent?.({type: 'success'})
       },
       onError: (err) => {
         if (err === CANCELLATION_TOKEN) {

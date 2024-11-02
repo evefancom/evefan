@@ -1,14 +1,15 @@
 'use client'
 
-import { RefreshCw} from 'lucide-react'
+import {RefreshCw} from 'lucide-react'
 import type {RouterOutput} from '@openint/engine-backend'
 import {useToast, type UIProps} from '@openint/ui'
 import type {ConnectorConfig} from '../hocs/WithConnectConfig'
-import {WithConnectorConnect} from '../hocs/WithConnectorConnect'
+import {
+  WithConnectorConnect,
+  type ConnectEventType,
+} from '../hocs/WithConnectorConnect'
 import {useOptionalOpenIntConnectContext} from '../providers/OpenIntConnectProvider'
 import {_trpcReact} from '../providers/TRPCProvider'
-
-type ConnectEventType = 'open' | 'close' | 'error'
 
 type Resource = RouterOutput['listConnections'][number]
 
@@ -91,19 +92,21 @@ export function AgResourceRowActions(
                 syncResourceMutate()
                 e.preventDefault()
               }}
-              className="inline-flex items-center justify-center gap-1 whitespace-nowrap group border bg-white border-stroke enabled:active:bg-background-mid enabled:active:border-1 focus:border-1 hover:border-[#8192FF] enabled:hover:bg-background-mid disabled:bg-background-mid disabled:border-stroke disabled:cursor-not-allowed disabled:text-black-light disabled:opacity-50 h-9 py-2 px-3 rounded-lg"
-            >
-              <RefreshCw className="text-black-light w-5 h-5" />
-              <p className="antialiased text-sm tracking-[-0.01em] text-[#8192FF]">Update</p>
+              className="border-stroke enabled:active:bg-background-mid enabled:active:border-1 focus:border-1 enabled:hover:bg-background-mid disabled:bg-background-mid disabled:border-stroke disabled:text-black-light group inline-flex h-9 items-center justify-center gap-1 whitespace-nowrap rounded-lg border bg-white px-3 py-2 hover:border-[#8192FF] disabled:cursor-not-allowed disabled:opacity-50">
+              <RefreshCw className="text-black-light h-5 w-5" />
+              <p className="text-sm tracking-[-0.01em] text-[#8192FF] antialiased">
+                Update
+              </p>
             </button>
           )}
           <button
             type="button"
             onClick={() => deleteResource.mutate({id: props.resource.id})}
-            className="inline-flex items-center justify-center gap-1 whitespace-nowrap group border bg-white border-stroke enabled:active:bg-background-mid enabled:active:border-1 focus:border-1 hover:border-[#8192FF] enabled:hover:bg-background-mid disabled:bg-background-mid disabled:border-stroke disabled:cursor-not-allowed disabled:text-black-light disabled:opacity-50 h-9 py-2 px-3 rounded-lg"
-          >
-            <RefreshCw className="text-black-light w-5 h-5" />
-            <p className="antialiased text-sm tracking-[-0.01em] text-[#8192FF]">Disconnect</p>
+            className="border-stroke enabled:active:bg-background-mid enabled:active:border-1 focus:border-1 enabled:hover:bg-background-mid disabled:bg-background-mid disabled:border-stroke disabled:text-black-light group inline-flex h-9 items-center justify-center gap-1 whitespace-nowrap rounded-lg border bg-white px-3 py-2 hover:border-[#8192FF] disabled:cursor-not-allowed disabled:opacity-50">
+            <RefreshCw className="text-black-light h-5 w-5" />
+            <p className="text-sm tracking-[-0.01em] text-[#8192FF] antialiased">
+              Disconnect
+            </p>
           </button>
         </div>
       )}
