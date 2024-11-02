@@ -116,7 +116,9 @@ export function ConnectionPortal({className}: ConnectionPortalProps) {
               'flex size-full flex-col gap-4 p-4 lg:p-8',
               className,
             )}>
-            {listConnectionsRes.isLoading ? (
+            {listConnectionsRes.isLoading ||
+            listConnectionsRes.isFetching ||
+            listConnectionsRes.isRefetching ? (
               <div className="flex h-full min-h-[500px] flex-1 items-center justify-center">
                 <Loader className="size-8 animate-spin text-button" />
               </div>
